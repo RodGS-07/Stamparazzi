@@ -1,4 +1,5 @@
 #include <SDL2/SDL.h>
+#include <GL/glut.h>
 #include <iostream>
 
 int main(int argc, char* argv[]) {
