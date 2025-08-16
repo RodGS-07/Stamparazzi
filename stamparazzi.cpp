@@ -1,4 +1,16 @@
-#include <GL/glut.h>
+#include <SDL2/SDL.h>
+#include <iostream>
+
+int main(int argc, char* argv[]) {
+    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+        std::cerr << "Erro ao iniciar SDL: " << SDL_GetError() << std::endl;
+        return 1;
+    }
+    SDL_Quit();
+    return 0;
+}
+
+/*#include <GL/glut.h>
 #include <math.h>
 
 #define PI acos(-1.0)
@@ -79,7 +91,7 @@ void Surface()
 {
    int i,j,ki,kj;
    double mui,muj,bi,bj;
-   /* Create a random surface */
+   // Create a random surface 
    for (i=0;i<RESOLUTIONI;i++) {
       mui = i / (double)(RESOLUTIONI-1);
       for (j=0;j<RESOLUTIONJ;j++) {
@@ -292,4 +304,4 @@ int main(int argc, char **argv){
 	glutTimerFunc(20,anima,0);
 	glutMainLoop();
 	return 0;
-}
+}*/
