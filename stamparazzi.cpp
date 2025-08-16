@@ -2,14 +2,144 @@
 #include <GL/glut.h>
 #include <iostream>
 
+float angle = 0.0f;
+
+void drawCube() {
+    glBegin(GL_QUADS);
+
+    // Frente (vermelha)
+    glColor3f(1, 0, 0);
+    glVertex3f(-1, -1,  1);
+    glVertex3f( 1, -1,  1);
+    glVertex3f( 1,  1,  1);
+    glVertex3f(-1,  1,  1);
+
+    // Trás (verde)
+    glColor3f(0, 1, 0);
+    glVertex3f(-1, -1, -1);
+    glVertex3f(-1,  1, -1);
+    glVertex3f( 1,  1, -1);
+    glVertex3f( 1, -1, -1);
+
+    // Esquerda (azul)
+    glColor3f(0, 0, 1);
+    glVertex3f(-1, -1, -1);
+    glVertex3f(-1, -1,  1);
+    glVertex3f(-1,  1,  1);
+    glVertex3f(-1,  1, -1);
+
+    // Direita (amarelo)
+    glColor3f(1, 1, 0);
+    glVertex3f(1, -1, -1);
+    glVertex3f(1,  1, -1);
+    glVertex3f(1,  1,  1);
+    glVertex3f(1, -1,  1);
+
+    // Topo (ciano)
+    glColor3f(0, 1, 1);
+    glVertex3f(-1, 1, -1);
+    glVertex3f(-1, 1,  1);
+    glVertex3f( 1, 1,  1);
+    glVertex3f( 1, 1, -1);
+
+    // Base (magenta)
+    glColor3f(1, 0, 1);
+    glVertex3f(-1, -1, -1);
+    glVertex3f( 1, -1, -1);
+    glVertex3f( 1, -1,  1);
+    glVertex3f(-1, -1,  1);
+
+    glEnd();
+}
+
 int main(int argc, char* argv[]) {
+    // Inicializa SDL2
+    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+        std::cerr << "Erro ao inicializar SDL2: " << SDL_GetError() << std::endl;
+        return -1;
+    }
+
+    // Cria a janela com contexto OpenGL
+    SDL_Window* window = SDL_CreateWindow("Exemplo SDL2 + OpenGL",
+        SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+        800, 600, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
+
+    if (!window) {
+        std::cerr << "Erro ao criar janela: " << SDL_GetError() << std::endl;
+        SDL_Quit();
+        return -1;
+    }
+
+    SDL_GLContext glContext = SDL_GL_CreateContext(window);
+    if (!glContext) {
+        std::cerr << "Erro ao criar contexto OpenGL: " << SDL_GetError() << std::endl;
+        SDL_DestroyWindow(window);
+        SDL_Quit();
+        return -1;
+    }
+
+    // Configuração básica do OpenGL
+    glEnable(GL_DEPTH_TEST);
+    glMatrixMode(GL_PROJECTION);
+    gluPerspective(45.0, 800.0/600.0, 0.1, 100.0);
+    glMatrixMode(GL_MODELVIEW);
+
+    bool rodando = true;
+    SDL_Event evento;
+
+	Uint32 ultimoTempo = SDL_GetTicks();
+
+    while (rodando) {
+        while (SDL_PollEvent(&evento)) {
+            if (evento.type == SDL_QUIT) {
+                rodando = false;
+            }
+
+			// Atualiza ângulo
+        	if(evento.type == SDL_KEYDOWN) {
+				if(evento.key.keysym.sym == SDLK_LEFT) angle -= 5.0f;
+				else if(evento.key.keysym.sym == SDLK_RIGHT) angle += 5.0f;
+			}
+        }
+
+		// Animação automática (rotação contínua a cada frame)
+        Uint32 agora = SDL_GetTicks();
+        float deltaTime = (agora - ultimoTempo) / 1000.0f; // segundos
+        ultimoTempo = agora;
+
+        angle += 50.0f * deltaTime; // 50 graus por segundo
+
+        // Limpa tela
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glLoadIdentity();
+
+        // Move câmera
+        glTranslatef(0.0f, 0.0f, -5.0f);
+        glRotatef(angle, 1.0f, 1.0f, 0.0f);
+
+        // Desenha cubo
+        drawCube();
+
+        // Atualiza tela
+        SDL_GL_SwapWindow(window);
+    }
+
+    SDL_GL_DeleteContext(glContext);
+    SDL_DestroyWindow(window);
+    SDL_Quit();
+
+    return 0;
+}
+
+
+/*int main(int argc, char* argv[]) {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         std::cerr << "Erro ao iniciar SDL: " << SDL_GetError() << std::endl;
         return 1;
     }
     SDL_Quit();
     return 0;
-}
+}*/
 
 /*#include <GL/glut.h>
 #include <math.h>
