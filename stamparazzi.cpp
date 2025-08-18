@@ -2,7 +2,8 @@
 #include <GL/glut.h>
 #include <iostream>
 
-float angle = 0.0f;
+float angle = 0.0f, x_pos = 0.0f, y_pos = 0.0f, z_pos = 0.0f;
+bool teclas_move[6]; //frente, esquerda, tras, direita, cima, baixo
 
 void drawCube() {
     glBegin(GL_QUADS);
@@ -52,6 +53,58 @@ void drawCube() {
     glEnd();
 }
 
+void pressionou(SDL_Event evento){
+	switch(evento.key.keysym.sym){
+		case SDLK_UP: case SDLK_w:
+			teclas_move[0] = true;
+			break;
+		case SDLK_LEFT: case SDLK_a:
+			teclas_move[1] = true;
+			break;
+		case SDLK_DOWN: case SDLK_s:
+			teclas_move[2] = true;
+			break;
+		case SDLK_RIGHT: case SDLK_d:
+			teclas_move[3] = true;
+			break;
+		case SDLK_LSHIFT: case SDLK_RSHIFT:
+			teclas_move[4] = true;
+			break;
+		case SDLK_LCTRL: case SDLK_RCTRL:
+			teclas_move[5] = true;
+			break;
+	}
+}
+
+void liberou(SDL_Event evento){
+	switch(evento.key.keysym.sym){
+		case SDLK_UP: case SDLK_w:
+			teclas_move[0] = false;
+			break;
+		case SDLK_LEFT: case SDLK_a:
+			teclas_move[1] = false;
+			break;
+		case SDLK_DOWN: case SDLK_s:
+			teclas_move[2] = false;
+			break;
+		case SDLK_RIGHT: case SDLK_d:
+			teclas_move[3] = false;
+			break;
+		case SDLK_LSHIFT: case SDLK_RSHIFT:
+			teclas_move[4] = false;
+			break;
+		case SDLK_LCTRL: case SDLK_RCTRL:
+			teclas_move[5] = false;
+			break;
+	}
+}
+
+void atualiza_posicao(){
+	x_pos += 0.25f * teclas_move[3] - 0.25f * teclas_move[1];
+	y_pos += 0.25f * teclas_move[4] - 0.25f * teclas_move[5];
+	z_pos += 0.25f * teclas_move[2] - 0.25f * teclas_move[0];
+}
+
 int main(int argc, char* argv[]) {
     // Inicializa SDL2
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -81,13 +134,14 @@ int main(int argc, char* argv[]) {
     // Configuração básica do OpenGL
     glEnable(GL_DEPTH_TEST);
     glMatrixMode(GL_PROJECTION);
-    gluPerspective(45.0, 800.0/600.0, 0.1, 100.0);
+    gluPerspective(45.0, 1/*800.0/600.0*/, 0.1, 100.0);
     glMatrixMode(GL_MODELVIEW);
 
+	memset(teclas_move,0,sizeof(teclas_move));
     bool rodando = true;
     SDL_Event evento;
 
-	Uint32 ultimoTempo = SDL_GetTicks();
+	//Uint32 ultimoTempo = SDL_GetTicks();
 
     while (rodando) {
         while (SDL_PollEvent(&evento)) {
@@ -96,29 +150,38 @@ int main(int argc, char* argv[]) {
             }
 
 			// Atualiza ângulo
-        	if(evento.type == SDL_KEYDOWN) {
+			if(evento.type == SDL_KEYDOWN) pressionou(evento);
+			if(evento.type == SDL_KEYUP) liberou(evento);
+        	/*if(evento.type == SDL_KEYDOWN) {
 				if(evento.key.keysym.sym == SDLK_LEFT) angle -= 5.0f;
 				else if(evento.key.keysym.sym == SDLK_RIGHT) angle += 5.0f;
-			}
+			}*/
         }
 
 		// Animação automática (rotação contínua a cada frame)
-        Uint32 agora = SDL_GetTicks();
+        /*Uint32 agora = SDL_GetTicks();
         float deltaTime = (agora - ultimoTempo) / 1000.0f; // segundos
         ultimoTempo = agora;
 
-        angle += 50.0f * deltaTime; // 50 graus por segundo
+        angle += 50.0f * deltaTime; // 50 graus por segundo*/
+
+		atualiza_posicao();
 
         // Limpa tela
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glLoadIdentity();
 
         // Move câmera
-        glTranslatef(0.0f, 0.0f, -5.0f);
-        glRotatef(angle, 1.0f, 1.0f, 0.0f);
+        //glTranslatef(0.0f, 0.0f, -5.0f);
+        //glRotatef(angle, 1.0f, 1.0f, 0.0f);
+		gluLookAt(x_pos,y_pos,z_pos,0+x_pos,0+y_pos,-1+z_pos,0,1,0);
 
         // Desenha cubo
-        drawCube();
+		glPushMatrix();
+			glTranslatef(0,-1,0);
+			glScalef(10,0.1,10);
+        	drawCube();
+		glPopMatrix();
 
         // Atualiza tela
         SDL_GL_SwapWindow(window);
