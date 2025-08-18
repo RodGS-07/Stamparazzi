@@ -3,10 +3,8 @@
 #include <iostream>
 #include <math.h>
 
-#define PI acos(-1.0L)
-
 float x_cam = 0.0f, y_cam = 0.0f, z_cam = 0.0f, cam_yaw = 0.0f, cam_pitch = 0.0f;
-bool mouse_in = true;
+bool mouse_in = false;
 
 SDL_Window* window;
 
@@ -61,19 +59,17 @@ void drawCube() {
 void prende_camera(){
 	if(cam_yaw < 0.0f) cam_yaw += 360.0f;
 	if(cam_yaw > 360.0f) cam_yaw -= 360.0f;
-	if(cam_pitch > 90.0f) cam_pitch = 90.0f;
-	if(cam_pitch < -90.0f) cam_pitch = -90.0f;
+	if(cam_pitch > 89.9f) cam_pitch = 89.9f;
+	if(cam_pitch < -89.9f) cam_pitch = -89.9f;
 }
 
-void move_camera(float dist, float dir, bool tbm){
-	float rad = (cam_yaw + dir) * PI / 180.0f;
-	x_cam -= sin(rad) * dist;
-	z_cam -= cos(rad) * dist;
-
-	if(tbm){
-		rad = (cam_pitch + dir) * PI / 180.0f;
-		y_cam += sin(rad) * dist;
-	}
+void move_camera(float dist, float dir, float val = 0.0f){
+	if(dir >= 0.0f){
+		float rad = (cam_yaw + dir) * M_PI / 180.0f;
+		x_cam -= sin(rad) * dist;
+		z_cam -= cos(rad) * dist;
+	} else 
+		y_cam += dist * val;
 }
 
 void controle_camera(float move_vel, float mouse_vel){
@@ -88,14 +84,20 @@ void controle_camera(float move_vel, float mouse_vel){
 		const Uint8* state = SDL_GetKeyboardState(NULL);
 		if(state[SDL_SCANCODE_UP] or state[SDL_SCANCODE_W])
 			if(cam_pitch != 90.0f and cam_pitch != -90.0f)
-				move_camera(move_vel,0.0f,true);
+				move_camera(move_vel,0.0f);
 		if(state[SDL_SCANCODE_DOWN] or state[SDL_SCANCODE_S])
 			if(cam_pitch != 90.0f and cam_pitch != -90.0f)
-				move_camera(move_vel,180.0f,true);
+				move_camera(move_vel,180.0f);
 		if(state[SDL_SCANCODE_LEFT] or state[SDL_SCANCODE_A])
-			move_camera(move_vel,90.0f,false);
+			move_camera(move_vel,90.0f);
 		if(state[SDL_SCANCODE_RIGHT] or state[SDL_SCANCODE_D])
-			move_camera(move_vel,270.0f,false);
+			move_camera(move_vel,270.0f);
+		if(state[SDL_SCANCODE_LSHIFT] or state[SDL_SCANCODE_RSHIFT])
+			if(cam_pitch != 90.0f and cam_pitch != -90.0f)
+				move_camera(move_vel,-1.0f,1.0f);
+		if(state[SDL_SCANCODE_LCTRL] or state[SDL_SCANCODE_RCTRL])
+			if(cam_pitch != 90.0f and cam_pitch != -90.0f)
+				move_camera(move_vel,-1.0f,-1.0f);
 	}
 	glRotatef(-cam_pitch, 1.0, 0.0, 0.0);
 	glRotatef(-cam_yaw, 0.0, 1.0, 0.0);
@@ -137,7 +139,7 @@ int main(int argc, char* argv[]) {
     gluPerspective(45.0, 800.0/600.0, 0.1, 100.0);
     glMatrixMode(GL_MODELVIEW);
 
-	SDL_ShowCursor(SDL_DISABLE);
+	SDL_ShowCursor(SDL_ENABLE);
     bool rodando = true;
     SDL_Event evento;
 
