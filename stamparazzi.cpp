@@ -1,9 +1,14 @@
 #include <SDL2/SDL.h>
 #include <GL/glut.h>
 #include <iostream>
+#include <math.h>
 
-float angle = 0.0f, x_pos = 0.0f, y_pos = 0.0f, z_pos = 0.0f;
-bool teclas_move[6]; //frente, esquerda, tras, direita, cima, baixo
+#define PI acos(-1.0L)
+
+float x_cam = 0.0f, y_cam = 0.0f, z_cam = 0.0f, cam_yaw = 0.0f, cam_pitch = 0.0f;
+bool mouse_in = true;
+
+SDL_Window* window;
 
 void drawCube() {
     glBegin(GL_QUADS);
@@ -53,56 +58,51 @@ void drawCube() {
     glEnd();
 }
 
-void pressionou(SDL_Event evento){
-	switch(evento.key.keysym.sym){
-		case SDLK_UP: case SDLK_w:
-			teclas_move[0] = true;
-			break;
-		case SDLK_LEFT: case SDLK_a:
-			teclas_move[1] = true;
-			break;
-		case SDLK_DOWN: case SDLK_s:
-			teclas_move[2] = true;
-			break;
-		case SDLK_RIGHT: case SDLK_d:
-			teclas_move[3] = true;
-			break;
-		case SDLK_LSHIFT: case SDLK_RSHIFT:
-			teclas_move[4] = true;
-			break;
-		case SDLK_LCTRL: case SDLK_RCTRL:
-			teclas_move[5] = true;
-			break;
+void prende_camera(){
+	if(cam_yaw < 0.0f) cam_yaw += 360.0f;
+	if(cam_yaw > 360.0f) cam_yaw -= 360.0f;
+	if(cam_pitch > 90.0f) cam_pitch = 90.0f;
+	if(cam_pitch < -90.0f) cam_pitch = -90.0f;
+}
+
+void move_camera(float dist, float dir, bool tbm){
+	float rad = (cam_yaw + dir) * PI / 180.0f;
+	x_cam -= sin(rad) * dist;
+	z_cam -= cos(rad) * dist;
+
+	if(tbm){
+		rad = (cam_pitch + dir) * PI / 180.0f;
+		y_cam += sin(rad) * dist;
 	}
 }
 
-void liberou(SDL_Event evento){
-	switch(evento.key.keysym.sym){
-		case SDLK_UP: case SDLK_w:
-			teclas_move[0] = false;
-			break;
-		case SDLK_LEFT: case SDLK_a:
-			teclas_move[1] = false;
-			break;
-		case SDLK_DOWN: case SDLK_s:
-			teclas_move[2] = false;
-			break;
-		case SDLK_RIGHT: case SDLK_d:
-			teclas_move[3] = false;
-			break;
-		case SDLK_LSHIFT: case SDLK_RSHIFT:
-			teclas_move[4] = false;
-			break;
-		case SDLK_LCTRL: case SDLK_RCTRL:
-			teclas_move[5] = false;
-			break;
+void controle_camera(float move_vel, float mouse_vel){
+	if(mouse_in){
+		int midx = 320, midy = 240, tempx, tempy;
+		SDL_ShowCursor(SDL_DISABLE);
+		SDL_GetMouseState(&tempx, &tempy);
+		cam_yaw += mouse_vel * (midx - tempx);
+		cam_pitch += mouse_vel * (midy - tempy);
+		prende_camera();
+		SDL_WarpMouseInWindow(window,midx,midy);
+		const Uint8* state = SDL_GetKeyboardState(NULL);
+		if(state[SDL_SCANCODE_UP] or state[SDL_SCANCODE_W])
+			if(cam_pitch != 90.0f and cam_pitch != -90.0f)
+				move_camera(move_vel,0.0f,true);
+		if(state[SDL_SCANCODE_DOWN] or state[SDL_SCANCODE_S])
+			if(cam_pitch != 90.0f and cam_pitch != -90.0f)
+				move_camera(move_vel,180.0f,true);
+		if(state[SDL_SCANCODE_LEFT] or state[SDL_SCANCODE_A])
+			move_camera(move_vel,90.0f,false);
+		if(state[SDL_SCANCODE_RIGHT] or state[SDL_SCANCODE_D])
+			move_camera(move_vel,270.0f,false);
 	}
+	glRotatef(-cam_pitch, 1.0, 0.0, 0.0);
+	glRotatef(-cam_yaw, 0.0, 1.0, 0.0);
 }
 
-void atualiza_posicao(){
-	x_pos += 0.25f * teclas_move[3] - 0.25f * teclas_move[1];
-	y_pos += 0.25f * teclas_move[4] - 0.25f * teclas_move[5];
-	z_pos += 0.25f * teclas_move[2] - 0.25f * teclas_move[0];
+void atualiza_camera_posicao(){
+	glTranslatef(-x_cam,-y_cam,-z_cam);
 }
 
 int main(int argc, char* argv[]) {
@@ -113,7 +113,7 @@ int main(int argc, char* argv[]) {
     }
 
     // Cria a janela com contexto OpenGL
-    SDL_Window* window = SDL_CreateWindow("Exemplo SDL2 + OpenGL",
+    window = SDL_CreateWindow("Exemplo SDL2 + OpenGL",
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
         800, 600, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
 
@@ -134,14 +134,12 @@ int main(int argc, char* argv[]) {
     // Configuração básica do OpenGL
     glEnable(GL_DEPTH_TEST);
     glMatrixMode(GL_PROJECTION);
-    gluPerspective(45.0, 1/*800.0/600.0*/, 0.1, 100.0);
+    gluPerspective(45.0, 800.0/600.0, 0.1, 100.0);
     glMatrixMode(GL_MODELVIEW);
 
-	memset(teclas_move,0,sizeof(teclas_move));
+	SDL_ShowCursor(SDL_DISABLE);
     bool rodando = true;
     SDL_Event evento;
-
-	//Uint32 ultimoTempo = SDL_GetTicks();
 
     while (rodando) {
         while (SDL_PollEvent(&evento)) {
@@ -149,32 +147,25 @@ int main(int argc, char* argv[]) {
                 rodando = false;
             }
 
-			// Atualiza ângulo
-			if(evento.type == SDL_KEYDOWN) pressionou(evento);
-			if(evento.type == SDL_KEYUP) liberou(evento);
-        	/*if(evento.type == SDL_KEYDOWN) {
-				if(evento.key.keysym.sym == SDLK_LEFT) angle -= 5.0f;
-				else if(evento.key.keysym.sym == SDLK_RIGHT) angle += 5.0f;
-			}*/
+			// Atualiza posição
+			if(evento.type == SDL_KEYUP) 
+				if(evento.key.keysym.sym == SDLK_ESCAPE) rodando = false;
+				else if(evento.key.keysym.sym == SDLK_p)
+					if(mouse_in) {mouse_in = false; SDL_ShowCursor(SDL_ENABLE);}
+
+			if(evento.type == SDL_MOUSEBUTTONDOWN){
+				mouse_in = true;
+				SDL_ShowCursor(SDL_DISABLE);
+			}
         }
-
-		// Animação automática (rotação contínua a cada frame)
-        /*Uint32 agora = SDL_GetTicks();
-        float deltaTime = (agora - ultimoTempo) / 1000.0f; // segundos
-        ultimoTempo = agora;
-
-        angle += 50.0f * deltaTime; // 50 graus por segundo*/
-
-		atualiza_posicao();
 
         // Limpa tela
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glLoadIdentity();
 
-        // Move câmera
-        //glTranslatef(0.0f, 0.0f, -5.0f);
-        //glRotatef(angle, 1.0f, 1.0f, 0.0f);
-		gluLookAt(x_pos,y_pos,z_pos,0+x_pos,0+y_pos,-1+z_pos,0,1,0);
+        // Controla câmera
+		controle_camera(0.2,0.2);
+		atualiza_camera_posicao();
 
         // Desenha cubo
 		glPushMatrix();
@@ -193,309 +184,3 @@ int main(int argc, char* argv[]) {
 
     return 0;
 }
-
-
-/*int main(int argc, char* argv[]) {
-    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-        std::cerr << "Erro ao iniciar SDL: " << SDL_GetError() << std::endl;
-        return 1;
-    }
-    SDL_Quit();
-    return 0;
-}*/
-
-/*#include <GL/glut.h>
-#include <math.h>
-
-#define PI acos(-1.0)
-
-int w=800, h=600;
-int frameNumber=0, dir_camera=0;
-bool up, down, left, right, zoom_in, zoom_out;
-float vermelho[3][4]={{0.2,0,0,1},{0.7,0,0,1},{1,1,1,1}},
-		verde[3][4]={{0,0.2,0,1},{0,0.7,0,1},{1,1,1,1}},
-		azul[3][4]={{0,0,0.2,1},{0,0,0.7,1},{1,1,1,1}},
-		amarelo[3][4]={{0.2,0.2,0,1},{0.7,0.7,0,1},{1,1,1,1}},
-		magenta[3][4]={{0.2,0,0.2,1},{0.7,0,0.7,1},{1,1,1,1}},
-		ciano[3][4]={{0,0.2,0.2,1},{0,0.7,0.7,1},{1,1,1,1}};
-float comp_esp = 50.0, xpos=0, ypos=3, zpos=4;
-
-struct XYZ
-{
-    float x;
-    float y;
-    float z;
-};
-
-#define NI 15
-#define NJ 6
-XYZ inp[NI+1][NJ+1];
-#define RESOLUTIONI 3*NI
-#define RESOLUTIONJ 3*NJ
-XYZ outp[RESOLUTIONI][RESOLUTIONJ];
-
-double BezierBlend(int k,double mu, int n)
-{
-   int nn,kn,nkn;
-   double blend=1;
-
-   nn = n;
-   kn = k;
-   nkn = n - k;
-
-   while (nn >= 1) {
-      blend *= nn;
-      nn--;
-      if (kn > 1) {
-         blend /= (double)kn;
-         kn--;
-      }
-      if (nkn > 1) {
-         blend /= (double)nkn;
-         nkn--;
-      }
-   }
-   if (k > 0)
-      blend *= pow(mu,(double)k);
-   if (n-k > 0)
-      blend *= pow(1-mu,(double)(n-k));
-
-   return(blend);
-}
-
-
-
-void generateControlPoint()
-{
-	   //int nMax = 2;
-	   //int nMin = -2;
-	   int i,j;
-	   //srandom(time(NULL));
-	   for (i=0;i<=NI;i++) {
-	      for (j=0;j<=NJ;j++) {
-	         inp[i][j].x = i;
-	         inp[i][j].y = j;
-	         //inp[i][j].z = random()%((nMax+1)-nMin) + nMin;
-	        inp[i][j].z = 4*sin(i);
-	      }
-	   }
-}
-
-void Surface()
-{
-   int i,j,ki,kj;
-   double mui,muj,bi,bj;
-   // Create a random surface 
-   for (i=0;i<RESOLUTIONI;i++) {
-      mui = i / (double)(RESOLUTIONI-1);
-      for (j=0;j<RESOLUTIONJ;j++) {
-         muj = j / (double)(RESOLUTIONJ-1);
-         outp[i][j].x = 0;
-         outp[i][j].y = 0;
-         outp[i][j].z = 0;
-         for (ki=0;ki<=NI;ki++) {
-            bi = BezierBlend(ki,mui,NI);
-            for (kj=0;kj<=NJ;kj++) {
-               bj = BezierBlend(kj,muj,NJ);
-               outp[i][j].x += (inp[ki][kj].x * bi * bj);
-               outp[i][j].y += (inp[ki][kj].y * bi * bj);
-               outp[i][j].z += (inp[ki][kj].z * bi * bj);
-            }
-         }
-      }
-   }
-
-}
-
-XYZ calculaNormal(XYZ u, XYZ v) {
-    XYZ normal;
-    normal.x = u.y * v.z - u.z * v.y;
-    normal.y = u.z * v.x - u.x * v.z;
-    normal.z = u.x * v.y - u.y * v.x;
-
-
-    // Normaliza
-    float length = sqrt(normal.x * normal.x + normal.y * normal.y + normal.z * normal.z);
-    normal.x /= length;
-    normal.y /= length;
-    normal.z /= length;
-
-    return normal;
-}
-
-void escolheMaterial(float array[][4]){
-	glMaterialfv(GL_FRONT_AND_BACK,GL_AMBIENT,array[0]);
-	glMaterialfv(GL_FRONT_AND_BACK,GL_DIFFUSE,array[1]);
-	glMaterialfv(GL_FRONT_AND_BACK,GL_SPECULAR,array[2]);
-	glMaterialf(GL_FRONT_AND_BACK,GL_SHININESS,comp_esp);
-}
-
-void keyboard(int key, int x, int y){
-	if(key == GLUT_KEY_UP) up=true;
-	if(key == GLUT_KEY_DOWN) down=true;
-	if(key == GLUT_KEY_LEFT) left=true;
-	if(key == GLUT_KEY_RIGHT) right=true;
-	if(key == GLUT_KEY_F1) zoom_in=true;
-	if(key == GLUT_KEY_F2) zoom_out=true;
-	if(key == GLUT_KEY_F3) xpos=0, ypos=3, zpos=4;
-}
-
-void key_release(int key, int x, int y){
-	if(key == GLUT_KEY_UP) up=false;
-	if(key == GLUT_KEY_DOWN) down=false;
-	if(key == GLUT_KEY_LEFT) left=false;
-	if(key == GLUT_KEY_RIGHT) right=false;
-	if(key == GLUT_KEY_F1) zoom_in=false;
-	if(key == GLUT_KEY_F2) zoom_out=false;
-}
-
-void mouse(int button, int state, int x, int y){
-	if(button == GLUT_LEFT_BUTTON)
-		if(state == GLUT_DOWN) dir_camera=1;
-	if(button == GLUT_RIGHT_BUTTON)
-		if(state == GLUT_DOWN) dir_camera=0;
-}
-
-void reshape(int w, int h){
-	if(!h) h=1;
-	glViewport(0,0,w,h);
-
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-
-	gluPerspective(60,1,0.1,20);
-}
-
-void display(){
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-
-	gluLookAt(xpos,ypos,zpos,0,0,0,0,1,0);
-
-	if(!dir_camera) {
-		escolheMaterial(vermelho);
-		glPushMatrix();
-			glTranslatef(1,1,1);
-			glRotatef(frameNumber,0,0,1);
-			glutSolidCube(0.5);
-		glPopMatrix();
-	} else {
-		escolheMaterial(amarelo);
-		glPushMatrix();
-			glTranslatef(1,1,1);
-			glRotatef(frameNumber,0,0,1);
-			glutSolidTorus(0.15,0.25,30,30);
-		glPopMatrix();
-	}
-
-	if(!dir_camera) {
-		escolheMaterial(verde);
-		glPushMatrix();
-			glRotatef(frameNumber,0,1,0);
-			glutSolidSphere(0.5,30,30);
-		glPopMatrix();
-	} else {
-		escolheMaterial(magenta);
-		glPushMatrix();
-			glRotatef(frameNumber,0,1,0);
-			glutSolidTeapot(0.5);
-		glPopMatrix();
-	}
-
-
-	if(!dir_camera) {
-		escolheMaterial(azul);
-		glPushMatrix();
-			glTranslatef(-2,-2,-2);
-			glRotatef(frameNumber,1,0,0);
-			glutSolidCone(1,1,30,30);
-		glPopMatrix();
-	} else {
-		escolheMaterial(ciano);
-		glPushMatrix();
-			glTranslatef(-4,-4,-4);
-			glScalef(0.2,0.2,0.2);
-			Surface();
-
-			for(int i=0; i<RESOLUTIONI-1; i++){
-				for(int j=0; j<RESOLUTIONJ-1; j++){
-					XYZ u = {outp[i+1][j].x - outp[i][j].x, outp[i+1][j].y - outp[i][j].y, outp[i+1][j].z - outp[i][j].z};
-					XYZ v = {outp[i+1][j+1].x - outp[i][j].x, outp[i+1][j+1].y - outp[i][j].y, outp[i+1][j+1].z - outp[i][j].z};
-					XYZ normal = calculaNormal(u,v);
-					glNormal3f(normal.x,normal.y,normal.z);
-					glBegin(GL_QUADS);
-						glVertex3f(outp[i][j].x,outp[i][j].y,outp[i][j].z);
-						glVertex3f(outp[i][j+1].x,outp[i][j+1].y,outp[i][j+1].z);
-						glVertex3f(outp[i+1][j+1].x,outp[i+1][j+1].y,outp[i+1][j+1].z);
-						glVertex3f(outp[i+1][j].x,outp[i+1][j].y,outp[i+1][j].z);
-					glEnd();
-				}
-			}
-		glPopMatrix();
-	}
-
-	glutSwapBuffers();
-	glFlush();
-}
-
-void init(){
-	glClearColor(0,0,0,1);
-
-	glEnable(GL_LIGHTING);
-	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_NORMALIZE);
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
-
-	float luz_ambiente[4]={0.2,0.2,0.2,1},
-			luz_difusa[4]={0.7,0.7,0.7,1},
-			luz_especular[4]={1,1,1,1},
-			luz_posicao[4]={0,5,0,1};
-	glLightfv(GL_LIGHT0,GL_AMBIENT,luz_ambiente);
-	glLightfv(GL_LIGHT0,GL_DIFFUSE,luz_difusa);
-	glLightfv(GL_LIGHT0,GL_SPECULAR,luz_especular);
-	glLightfv(GL_LIGHT0,GL_POSITION,luz_posicao);
-
-	glEnable(GL_LIGHT0);
-}
-
-void anima(int v){
-	frameNumber++;
-
-	for(int i=0; i<=NI; i++){
-		for(int j=0; j<=NJ; j++){
-			inp[i][j].z=3*sin(0.05*frameNumber+i);
-		}
-	}
-
-	if(left and xpos>-10) xpos--;
-	if(right and xpos<10) xpos++;
-	if(up and ypos<10) ypos++;
-	if(down and ypos>-10) ypos--;
-	if(zoom_in and zpos>-10) zpos--;
-	if(zoom_out and zpos<10) zpos++;
-
-	glutPostRedisplay();
-	glutTimerFunc(20,anima,0);
-}
-
-int main(int argc, char **argv){
-	glutInit(&argc,argv);
-	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
-	glutInitWindowPosition(80,80);
-	glutInitWindowSize(w,h);
-	glutCreateWindow("Teste para P2");
-
-	init();
-	generateControlPoint();
-	glutReshapeFunc(reshape);
-	glutDisplayFunc(display);
-	glutSpecialFunc(keyboard);
-	glutSpecialUpFunc(key_release);
-	glutMouseFunc(mouse);
-	glutTimerFunc(20,anima,0);
-	glutMainLoop();
-	return 0;
-}*/
