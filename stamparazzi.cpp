@@ -5,6 +5,7 @@
 
 float x_cam = 0.0f, y_cam = 0.0f, z_cam = 0.0f, cam_yaw = 0.0f, cam_pitch = 0.0f;
 bool mouse_in = false;
+bool rodando = true;
 
 SDL_Window* window;
 
@@ -101,10 +102,7 @@ void controle_camera(float move_vel, float mouse_vel){
 	}
 	glRotatef(-cam_pitch, 1.0, 0.0, 0.0);
 	glRotatef(-cam_yaw, 0.0, 1.0, 0.0);
-}
-
-void atualiza_camera_posicao(){
-	glTranslatef(-x_cam,-y_cam,-z_cam);
+    glTranslatef(-x_cam,-y_cam,-z_cam);
 }
 
 int main(int argc, char* argv[]) {
@@ -140,7 +138,6 @@ int main(int argc, char* argv[]) {
     glMatrixMode(GL_MODELVIEW);
 
 	SDL_ShowCursor(SDL_ENABLE);
-    bool rodando = true;
     SDL_Event evento;
 
     while (rodando) {
@@ -167,7 +164,6 @@ int main(int argc, char* argv[]) {
 
         // Controla câmera
 		controle_camera(0.2,0.2);
-		atualiza_camera_posicao();
 
         // Desenha cubo
 		glPushMatrix();
