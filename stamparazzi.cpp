@@ -1,5 +1,6 @@
 #include <SDL2/SDL.h>
 #include <GL/glut.h>
+#include <GL/glu.h>
 #include <iostream>
 #include <math.h>
 
@@ -7,48 +8,104 @@ float x_cam = 0.0f, y_cam = 0.0f, z_cam = 0.0f, cam_yaw = 0.0f, cam_pitch = 0.0f
 bool mouse_in = false;
 bool rodando = true;
 
+const float cores[13][3] = {
+    {1.0f,0.0f,0.0f}, //vermelho
+    {1.0f,0.5f,0.0f}, //laranja
+    {1.0f,1.0f,0.0f}, //amarelo
+    {0.0f,1.0f,0.0f}, //lima
+    {0.0f,0.5f,0.0f}, //verde
+    {0.0f,1.0f,1.0f}, //ciano
+    {0.0f,0.0f,1.0f}, //azul
+    {0.5f,0.0f,0.5f}, //roxo
+    {1.0f,0.0f,1.0f}, //rosa
+    {0.5f,0.25f,0.0f}, //marrom
+    {1.0f,1.0f,1.0f}, //branco
+    {0.5f,0.5f,0.5f}, //cinza
+    {0.0f,0.0f,0.0f} /*preto*/ };
+
 SDL_Window* window;
 
-void drawCube() {
+void muda_cor(int c){
+    glColor3f(cores[c][0],cores[c][1],cores[c][2]);
+}
+
+void drawChao() {
     glBegin(GL_QUADS);
 
     // Frente (vermelha)
-    glColor3f(1, 0, 0);
+    muda_cor(0);
     glVertex3f(-1, -1,  1);
     glVertex3f( 1, -1,  1);
     glVertex3f( 1,  1,  1);
     glVertex3f(-1,  1,  1);
 
     // Trás (verde)
-    glColor3f(0, 1, 0);
+    muda_cor(4);
     glVertex3f(-1, -1, -1);
     glVertex3f(-1,  1, -1);
     glVertex3f( 1,  1, -1);
     glVertex3f( 1, -1, -1);
 
     // Esquerda (azul)
-    glColor3f(0, 0, 1);
+    muda_cor(6);
     glVertex3f(-1, -1, -1);
     glVertex3f(-1, -1,  1);
     glVertex3f(-1,  1,  1);
     glVertex3f(-1,  1, -1);
 
     // Direita (amarelo)
-    glColor3f(1, 1, 0);
+    muda_cor(2);
     glVertex3f(1, -1, -1);
     glVertex3f(1,  1, -1);
     glVertex3f(1,  1,  1);
     glVertex3f(1, -1,  1);
 
     // Topo (ciano)
-    glColor3f(0, 1, 1);
+    muda_cor(5);
     glVertex3f(-1, 1, -1);
     glVertex3f(-1, 1,  1);
     glVertex3f( 1, 1,  1);
     glVertex3f( 1, 1, -1);
 
     // Base (magenta)
-    glColor3f(1, 0, 1);
+    muda_cor(8);
+    glVertex3f(-1, -1, -1);
+    glVertex3f( 1, -1, -1);
+    glVertex3f( 1, -1,  1);
+    glVertex3f(-1, -1,  1);
+
+    glEnd();
+}
+
+void drawCubo(int i) {
+    glBegin(GL_QUADS);
+
+    muda_cor(i);
+    glVertex3f(-1, -1,  1);
+    glVertex3f( 1, -1,  1);
+    glVertex3f( 1,  1,  1);
+    glVertex3f(-1,  1,  1);
+
+    glVertex3f(-1, -1, -1);
+    glVertex3f(-1,  1, -1);
+    glVertex3f( 1,  1, -1);
+    glVertex3f( 1, -1, -1);
+
+    glVertex3f(-1, -1, -1);
+    glVertex3f(-1, -1,  1);
+    glVertex3f(-1,  1,  1);
+    glVertex3f(-1,  1, -1);
+
+    glVertex3f(1, -1, -1);
+    glVertex3f(1,  1, -1);
+    glVertex3f(1,  1,  1);
+    glVertex3f(1, -1,  1);
+
+    glVertex3f(-1, 1, -1);
+    glVertex3f(-1, 1,  1);
+    glVertex3f( 1, 1,  1);
+    glVertex3f( 1, 1, -1);
+
     glVertex3f(-1, -1, -1);
     glVertex3f( 1, -1, -1);
     glVertex3f( 1, -1,  1);
@@ -159,18 +216,26 @@ int main(int argc, char* argv[]) {
         }
 
         // Limpa tela
+        glClearColor(1.0f,0.0f,0.5f,1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glLoadIdentity();
 
         // Controla câmera
 		controle_camera(0.2,0.2);
 
-        // Desenha cubo
+        // Desenha chão
 		glPushMatrix();
 			glTranslatef(0,-1,0);
 			glScalef(10,0.1,10);
-        	drawCube();
+        	drawChao();
 		glPopMatrix();
+
+        for(int i = 0; i < 26; i+=2){
+            glPushMatrix();
+                glTranslatef(i-10,0,2);
+                drawCubo(i/2);
+            glPopMatrix();
+        }
 
         // Atualiza tela
         SDL_GL_SwapWindow(window);
