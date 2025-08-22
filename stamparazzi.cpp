@@ -4,12 +4,59 @@
 #include <iostream>
 #include <math.h>
 
+using namespace std;
+
 int teste = 0;
 bool mouse_in = false;
+bool pause = false;
 bool rodando = true;
 
 SDL_Window* window;
 SDL_GLContext glContext;
+SDL_GameController* jogador_controller = NULL;
+SDL_Joystick* joystick;
+string modo_controle = "PC"; // "PC" (COMPUTADOR) OU "CONT" (CONTROLE)
+
+namespace NC{ //Namespace para Controles e Comandos
+    enum C {
+        FRENTE,
+        TRAS,
+        ESQUERDA,
+        DIREITA,
+        CIMA,
+        BAIXO,
+        CAM_ESQUERDA,
+        CAM_DIREITA,
+        CAM_CIMA,
+        CAM_BAIXO,
+        SAIR,
+        PAUSAR
+    }; //comandos
+    
+    void determina_modo_controle(){
+        if(SDL_NumJoysticks() && SDL_IsGameController(0)) modo_controle = "CONT";
+        else modo_controle = "PC";
+    }
+
+    void traduz_entradas(SDL_Event evento){
+
+    }
+
+    void atualiza_controller(SDL_Event evento){
+        if (evento.type == SDL_CONTROLLERDEVICEADDED) {
+            if (!jogador_controller) {
+                jogador_controller = SDL_GameControllerOpen(evento.cdevice.which);
+                cout << "Controle conectado!" << endl;
+            }
+        } else if (evento.type == SDL_CONTROLLERDEVICEREMOVED) {
+            if (jogador_controller) {
+                SDL_GameControllerClose(jogador_controller);
+                jogador_controller = NULL;
+                cout << "Controle desconectado!" << endl;
+            }
+        }
+    }
+};
 
 namespace ND{ //Namespace para Desenhos
 
@@ -156,7 +203,7 @@ namespace NE{ // NE = Namespace para Entidades
             }
 
             void controle_camera(float move_vel, float mouse_vel){
-                if(mouse_in){
+                if(!pause and modo_controle == "PC"){
                     int midx = 320, midy = 240, tempx, tempy;
                     SDL_ShowCursor(SDL_DISABLE);
                     SDL_GetMouseState(&tempx, &tempy);
@@ -179,6 +226,31 @@ namespace NE{ // NE = Namespace para Entidades
                         move_camera(move_vel,-1.0f,1.0f);
                     if(state[SDL_SCANCODE_LCTRL] or state[SDL_SCANCODE_RCTRL])
                         move_camera(move_vel,-1.0f,-1.0f);
+                } else if(!pause and modo_controle == "CONT") {
+                    int midx = 320, midy = 240, tempx, tempy;
+                    Sint16 axisRX = SDL_GameControllerGetAxis(jogador_controller, SDL_CONTROLLER_AXIS_RIGHTX);
+                    Sint16 axisRY = SDL_GameControllerGetAxis(jogador_controller, SDL_CONTROLLER_AXIS_RIGHTY);
+                    cam_yaw   += (axisRX / 32767.0f) * mouse_vel * 5.0f;  // multiplica para sensibilidade
+                    cam_pitch += (axisRY / 32767.0f) * mouse_vel * 5.0f;
+                    prende_camera();
+                    if(SDL_GameControllerGetButton(jogador_controller, SDL_CONTROLLER_BUTTON_DPAD_UP)
+                        or SDL_GameControllerGetAxis(jogador_controller, SDL_CONTROLLER_AXIS_LEFTY) > 16000)
+                        if(cam_pitch != 90.0f and cam_pitch != -90.0f)
+                            move_camera(move_vel,0.0f);
+                    if(SDL_GameControllerGetButton(jogador_controller, SDL_CONTROLLER_BUTTON_DPAD_DOWN)
+                        or SDL_GameControllerGetAxis(jogador_controller, SDL_CONTROLLER_AXIS_LEFTY) < -16000)
+                        if(cam_pitch != 90.0f and cam_pitch != -90.0f)
+                            move_camera(move_vel,180.0f);
+                    if(SDL_GameControllerGetButton(jogador_controller, SDL_CONTROLLER_BUTTON_DPAD_LEFT)
+                        or SDL_GameControllerGetAxis(jogador_controller, SDL_CONTROLLER_AXIS_LEFTX) < -16000)
+                        move_camera(move_vel,90.0f);
+                    if(SDL_GameControllerGetButton(jogador_controller, SDL_CONTROLLER_BUTTON_DPAD_RIGHT)
+                        or SDL_GameControllerGetAxis(jogador_controller, SDL_CONTROLLER_AXIS_LEFTX) > 16000)
+                        move_camera(move_vel,270.0f);
+                    if(SDL_GameControllerGetButton(jogador_controller,SDL_CONTROLLER_BUTTON_LEFTSHOULDER))
+                        move_camera(move_vel,-1.0f,1.0f);
+                    if(SDL_GameControllerGetButton(jogador_controller,SDL_CONTROLLER_BUTTON_RIGHTSHOULDER))
+                        move_camera(move_vel,-1.0f,-1.0f);
                 }
                 glRotatef(-cam_pitch, 1.0, 0.0, 0.0);
                 glRotatef(-cam_yaw, 0.0, 1.0, 0.0);
@@ -195,29 +267,44 @@ NE::Jogador jogador = NE::Jogador(0.0f,0.0f,0.0f,0.0f,0.0f);
 
 void inicializa_sdl(){
     // Inicializa SDL2
-    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-        std::cerr << "Erro ao inicializar SDL2: " << SDL_GetError() << std::endl;
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER | SDL_INIT_AUDIO) < 0) {
+        cerr << "Erro ao inicializar SDL2: " << SDL_GetError() << endl;
         teste = -1;
     }
 
     // Cria a janela com contexto OpenGL
-    window = SDL_CreateWindow("Exemplo SDL2 + OpenGL",
+    window = SDL_CreateWindow("Stamparazzi",
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
         800, 600, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
 
     if (!window) {
-        std::cerr << "Erro ao criar janela: " << SDL_GetError() << std::endl;
+        cerr << "Erro ao criar janela: " << SDL_GetError() << endl;
         SDL_Quit();
         teste = -1;
     }
 
     glContext = SDL_GL_CreateContext(window);
     if (!glContext) {
-        std::cerr << "Erro ao criar contexto OpenGL: " << SDL_GetError() << std::endl;
+        cerr << "Erro ao criar contexto OpenGL: " << SDL_GetError() << endl;
         SDL_DestroyWindow(window);
         SDL_Quit();
         teste = -1;
     }
+
+    SDL_InitSubSystem(SDL_INIT_GAMECONTROLLER);
+    SDL_GameControllerEventState(SDL_ENABLE);
+
+    cout << SDL_IsGameController(0) << endl;
+
+    joystick = SDL_JoystickOpen(0);
+
+    if (joystick == NULL) {
+        cout << "No joysticks" << endl;
+    } else {
+        cout << "Joysticks found" << endl;
+        SDL_JoystickClose(joystick);
+    }
+
 }
 
 void inicializa_opengl(){
@@ -229,6 +316,7 @@ void inicializa_opengl(){
 }
 
 void loop_jogo(){
+
     SDL_Event evento;
 
     while (rodando) {
@@ -237,20 +325,50 @@ void loop_jogo(){
                 rodando = false;
             }
 
+            NC::determina_modo_controle();
+            if(modo_controle == "PC") mouse_in = true;
+            else mouse_in = false;
+            
 			// Atualiza posição
-			if(evento.type == SDL_KEYUP) 
-				if(evento.key.keysym.sym == SDLK_ESCAPE) rodando = false;
-				else if(evento.key.keysym.sym == SDLK_p)
-					if(mouse_in) {mouse_in = false; SDL_ShowCursor(SDL_ENABLE);}
-
-			if(evento.type == SDL_MOUSEBUTTONDOWN){
-				mouse_in = true;
-				SDL_ShowCursor(SDL_DISABLE);
-			}
+            if(modo_controle == "PC"){
+                if(evento.type == SDL_KEYDOWN){
+                const Uint8* state = SDL_GetKeyboardState(NULL);
+                if(state[SDL_SCANCODE_ESCAPE]) rodando = false;
+                else if(state[SDL_SCANCODE_P])
+                    if(mouse_in) {mouse_in = false, pause = true; SDL_ShowCursor(SDL_ENABLE);}
+                }
+                if(evento.type == SDL_MOUSEBUTTONDOWN and pause){
+                    mouse_in = true, pause = false;
+                    SDL_ShowCursor(SDL_DISABLE);
+                }
+            } else if (modo_controle == "CONT"){
+                //NC::atualiza_controller(evento);
+                if (evento.type == SDL_CONTROLLERDEVICEADDED) {
+                    if (!jogador_controller) {
+                        jogador_controller = SDL_GameControllerOpen(evento.cdevice.which);
+                        cout << "Controle conectado!" << endl;
+                    }
+                } else if (evento.type == SDL_CONTROLLERDEVICEREMOVED) {
+                    if (jogador_controller) {
+                        SDL_GameControllerClose(jogador_controller);
+                        jogador_controller = NULL;
+                        cout << "Controle desconectado!" << endl;
+                    }
+                }
+                if(evento.type == SDL_CONTROLLERBUTTONDOWN) {
+                    if(SDL_GameControllerGetButton(jogador_controller,SDL_CONTROLLER_BUTTON_BACK)) 
+                        rodando = false;
+                    else if(SDL_GameControllerGetButton(jogador_controller,SDL_CONTROLLER_BUTTON_START))
+                        pause = !pause;
+                }
+            }
         }
 
         // Limpa tela
-        glClearColor(1.0f,0.0f,0.5f,1.0f);
+        if(!SDL_NumJoysticks() and !pause) glClearColor(1.0f,0.0f,0.5f,1.0f);
+        else if(!SDL_NumJoysticks() and pause) glClearColor(0.5f,0.0f,0.25f,1.0f);
+        else if(!pause) glClearColor(0.5f,0.0f,1.0f,1.0f);
+        else glClearColor(0.25f,0.0f,0.5f,1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glLoadIdentity();
 
@@ -285,6 +403,7 @@ int main(int argc, char* argv[]) {
     
     loop_jogo();
 
+    if(SDL_NumJoysticks()) SDL_JoystickClose(joystick); //SDL_GameControllerClose(jogador_controller);
     SDL_GL_DeleteContext(glContext);
     SDL_DestroyWindow(window);
     SDL_Quit();
