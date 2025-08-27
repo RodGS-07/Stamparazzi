@@ -1,6 +1,4 @@
 #include <SDL2/SDL.h>
-#include <GL/glut.h>
-#include <GL/glu.h>
 #include <iostream>
 #include <vector>
 #include <array>
@@ -35,25 +33,45 @@ class Jogador{
             SDL_RenderPresent(renderer);
         }
 
-        void move_jogador(float move_vel){
-            const Uint8* state = SDL_GetKeyboardState(NULL);
-            if(state[SDL_SCANCODE_UP] and this->y-move_vel >= 25)
-                this->y -= move_vel;
-            if(state[SDL_SCANCODE_LEFT] and this->x-move_vel >= 50){
-                this->x -= move_vel;
-                this->image_xscale = -1;
-            }
-            if(state[SDL_SCANCODE_DOWN] and this->y+move_vel <= 575)
-                this->y += move_vel;
-            if(state[SDL_SCANCODE_RIGHT] and this->x+move_vel <= 750){
-                this->x += move_vel;
-                this->image_xscale = 1;
+        void move_jogador(float move_vel, SDL_GameController* game_controller){
+            if(!game_controller){
+                const Uint8* state = SDL_GetKeyboardState(NULL);
+                if(state[SDL_SCANCODE_UP] and this->y-move_vel >= 25)
+                    this->y -= move_vel;
+                if(state[SDL_SCANCODE_LEFT] and this->x-move_vel >= 50){
+                    this->x -= move_vel;
+                    this->image_xscale = -1;
+                }
+                if(state[SDL_SCANCODE_DOWN] and this->y+move_vel <= 575)
+                    this->y += move_vel;
+                if(state[SDL_SCANCODE_RIGHT] and this->x+move_vel <= 750){
+                    this->x += move_vel;
+                    this->image_xscale = 1;
+                }
+            } else {
+                if(SDL_GameControllerGetAxis(game_controller, SDL_CONTROLLER_AXIS_LEFTY) < -16000 
+                    and this->y-move_vel >= 25)
+                    this->y -= move_vel;
+                if(SDL_GameControllerGetAxis(game_controller, SDL_CONTROLLER_AXIS_LEFTX) < -16000 
+                    and this->x-move_vel >= 50){
+                    this->x -= move_vel;
+                    this->image_xscale = -1;
+                }
+                if(SDL_GameControllerGetAxis(game_controller, SDL_CONTROLLER_AXIS_LEFTY) > 16000 
+                    and this->y+move_vel <= 575)
+                    this->y += move_vel;
+                if(SDL_GameControllerGetAxis(game_controller, SDL_CONTROLLER_AXIS_LEFTX) > 16000 
+                    and this->x+move_vel <= 750){
+                    this->x += move_vel;
+                    this->image_xscale = 1;
+                }
             }
         }
 };
 
 SDL_Window* window;
 SDL_Renderer* renderer;
+SDL_GameController* game_controller;
 bool rodando = true;
 Jogador jogador = Jogador(25.0f,25.0f);
 
@@ -61,19 +79,40 @@ void loop_jogo(){
     SDL_Event evento;
 
     while(rodando){
+        int inicio = SDL_GetTicks();
         while(SDL_PollEvent(&evento)){
+            const Uint8* state;
             switch(evento.type){
                 case SDL_QUIT:
                     rodando = false;
                     break;
                 case SDL_KEYDOWN:
-                    const Uint8* state = SDL_GetKeyboardState(NULL);
+                    state = SDL_GetKeyboardState(NULL);
                     if(state[SDL_SCANCODE_ESCAPE]) rodando = false;
+                    break;
+                case SDL_CONTROLLERDEVICEADDED:
+                    if(!game_controller){
+                        game_controller = SDL_GameControllerOpen(0);
+                        cout << "Controle conectado!" << endl;
+                    }
+                    break;
+                case SDL_CONTROLLERDEVICEREMOVED:
+                    if(game_controller){
+                        SDL_GameControllerClose(game_controller);
+                        game_controller = NULL;
+                        cout << "Controle desconectado!" << endl;
+                    }
                     break;
             }
         }
         jogador.desenha_jogador(renderer);
-        jogador.move_jogador(0.1f);
+        if(SDL_GetTicks() - inicio >= 1000){
+            jogador.move_jogador(SDL_GetTicks()-inicio,game_controller);
+            cout << "if" << endl;
+        } else {
+            jogador.move_jogador(1.0f,game_controller);
+            cout << "else" << endl;
+        }
     }
 }
 
