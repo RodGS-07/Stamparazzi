@@ -168,76 +168,248 @@ namespace ND{ //Namespace para Desenhos
         glEnd();
     }
 
-    void desenha_cubo() {
+    void desenha_cubo(float lado = 2.0f) {
         glBegin(GL_QUADS);
 
-        glVertex3f(-1, -1,  1);
-        glVertex3f( 1, -1,  1);
-        glVertex3f( 1,  1,  1);
-        glVertex3f(-1,  1,  1);
+        glVertex3f(-lado, -lado,  lado);
+        glVertex3f( lado, -lado,  lado);
+        glVertex3f( lado,  lado,  lado);
+        glVertex3f(-lado,  lado,  lado);
 
-        glVertex3f(-1, -1, -1);
-        glVertex3f(-1,  1, -1);
-        glVertex3f( 1,  1, -1);
-        glVertex3f( 1, -1, -1);
+        glVertex3f(-lado, -lado, -lado);
+        glVertex3f(-lado,  lado, -lado);
+        glVertex3f( lado,  lado, -lado);
+        glVertex3f( lado, -lado, -lado);
 
-        glVertex3f(-1, -1, -1);
-        glVertex3f(-1, -1,  1);
-        glVertex3f(-1,  1,  1);
-        glVertex3f(-1,  1, -1);
+        glVertex3f(-lado, -lado, -lado);
+        glVertex3f(-lado, -lado,  lado);
+        glVertex3f(-lado,  lado,  lado);
+        glVertex3f(-lado,  lado, -lado);
 
-        glVertex3f(1, -1, -1);
-        glVertex3f(1,  1, -1);
-        glVertex3f(1,  1,  1);
-        glVertex3f(1, -1,  1);
+        glVertex3f(lado, -lado, -lado);
+        glVertex3f(lado,  lado, -lado);
+        glVertex3f(lado,  lado,  lado);
+        glVertex3f(lado, -lado,  lado);
 
-        glVertex3f(-1, 1, -1);
-        glVertex3f(-1, 1,  1);
-        glVertex3f( 1, 1,  1);
-        glVertex3f( 1, 1, -1);
+        glVertex3f(-lado, lado, -lado);
+        glVertex3f(-lado, lado,  lado);
+        glVertex3f( lado, lado,  lado);
+        glVertex3f( lado, lado, -lado);
 
-        glVertex3f(-1, -1, -1);
-        glVertex3f( 1, -1, -1);
-        glVertex3f( 1, -1,  1);
-        glVertex3f(-1, -1,  1);
+        glVertex3f(-lado, -lado, -lado);
+        glVertex3f( lado, -lado, -lado);
+        glVertex3f( lado, -lado,  lado);
+        glVertex3f(-lado, -lado,  lado);
 
         glEnd();
     }
 
-    void desenha_piramide(float base = 2.0f, float altura = 2.0f){
+    void desenha_piramide(float base = 4.0f, float altura = 4.0f){
         float h = altura;
         float b = base / 2.0f; // metade do tamanho da base
 
         // --- Base (quadrado no plano y=0) ---
         glBegin(GL_QUADS);
-            glVertex3f(-b, 0.0f, -b);
-            glVertex3f( b, 0.0f, -b);
-            glVertex3f( b, 0.0f,  b);
-            glVertex3f(-b, 0.0f,  b);
+            glVertex3f(-b, -b, -b);
+            glVertex3f( b, -b, -b);
+            glVertex3f( b, -b,  b);
+            glVertex3f(-b, -b,  b);
         glEnd();
 
         // --- Faces laterais (4 triângulos) ---
         glBegin(GL_TRIANGLES);
             // Frente
-            glVertex3f(-b, 0.0f,  b);
-            glVertex3f( b, 0.0f,  b);
-            glVertex3f( 0.0f,  h, 0.0f);
+            glVertex3f(-b, -b,  b);
+            glVertex3f( b, -b,  b);
+            glVertex3f( 0.0f,  h-b , 0.0f);
 
             // Direita
-            glVertex3f( b, 0.0f,  b);
-            glVertex3f( b, 0.0f, -b);
-            glVertex3f( 0.0f,  h, 0.0f);
+            glVertex3f( b, -b,  b);
+            glVertex3f( b, -b, -b);
+            glVertex3f( 0.0f,  h-b , 0.0f);
 
             // Trás
-            glVertex3f( b, 0.0f, -b);
-            glVertex3f(-b, 0.0f, -b);
-            glVertex3f( 0.0f,  h, 0.0f);
+            glVertex3f( b, -b, -b);
+            glVertex3f(-b, -b, -b);
+            glVertex3f( 0.0f,  h-b , 0.0f);
 
             // Esquerda
-            glVertex3f(-b, 0.0f, -b);
-            glVertex3f(-b, 0.0f,  b);
-            glVertex3f( 0.0f,  h, 0.0f);
+            glVertex3f(-b, -b, -b);
+            glVertex3f(-b, -b,  b);
+            glVertex3f( 0.0f,  h-b , 0.0f);
         glEnd();
+    }
+
+    void desenha_esfera(float raio = 2.0f, int fatias = 30, int stacks = 30){
+        for (int i = 0; i < stacks; ++i) {
+            float phi1 = M_PI / 2 - i * (M_PI / stacks);
+            float phi2 = M_PI / 2 - (i + 1) * (M_PI / stacks);
+
+            glBegin(GL_QUADS);
+            for (int j = 0; j < fatias; ++j) {
+                float theta1 = j * (2 * M_PI / fatias);
+                float theta2 = (j + 1) * (2 * M_PI / fatias);
+
+                // Vertex 1 (bottom-left of current quad)
+                float x1 = raio * cos(phi2) * sin(theta1);
+                float y1 = raio * sin(phi2);
+                float z1 = raio * cos(phi2) * cos(theta1);
+                glVertex3f(x1, y1, z1);
+
+                // Vertex 2 (bottom-right of current quad)
+                float x2 = raio * cos(phi2) * sin(theta2);
+                float y2 = raio * sin(phi2);
+                float z2 = raio * cos(phi2) * cos(theta2);
+                glVertex3f(x2, y2, z2);
+
+                // Vertex 3 (top-right of current quad)
+                float x3 = raio * cos(phi1) * sin(theta2);
+                float y3 = raio * sin(phi1);
+                float z3 = raio * cos(phi1) * cos(theta2);
+                glVertex3f(x3, y3, z3);
+
+                // Vertex 4 (top-left of current quad)
+                float x4 = raio * cos(phi1) * sin(theta1);
+                float y4 = raio * sin(phi1);
+                float z4 = raio * cos(phi1) * cos(theta1);
+                glVertex3f(x4, y4, z4);
+            }
+            glEnd();
+        }
+    }
+
+    void desenha_cilindro(float raio = 2.0f, float altura = 4.0f, int fatias = 30, int stacks = 30, bool tampas = true){
+        float half = altura / 2.0f;
+
+        // Superfície lateral
+        for (int i = 0; i < stacks; ++i) {
+            float z1 = -half + i * (altura / stacks);
+            float z2 = -half + (i + 1) * (altura / stacks);
+
+            glBegin(GL_QUADS);
+            for (int j = 0; j < fatias; ++j) {
+                float theta1 = j * (2 * M_PI / fatias);
+                float theta2 = (j + 1) * (2 * M_PI / fatias);
+
+                float x1 = raio * cos(theta1);
+                float y1 = raio * sin(theta1);
+                float x2 = raio * cos(theta2);
+                float y2 = raio * sin(theta2);
+
+                glVertex3f(x1, y1, z1);
+                glVertex3f(x2, y2, z1);
+                glVertex3f(x2, y2, z2);
+                glVertex3f(x1, y1, z2);
+            }
+            glEnd();
+        }
+
+        if(tampas){
+            // Tampa inferior
+            glBegin(GL_TRIANGLE_FAN);
+            glVertex3f(0, 0, -half);
+            for (int j = 0; j <= fatias; ++j) {
+                float theta = j * (2 * M_PI / fatias);
+                float x = raio * cos(theta);
+                float y = raio * sin(theta);
+                glVertex3f(x, y, -half);
+            }
+            glEnd();
+
+            // Tampa superior
+            glBegin(GL_TRIANGLE_FAN);
+            glVertex3f(0, 0, half);
+            for (int j = 0; j <= fatias; ++j) {
+                float theta = j * (2 * M_PI / fatias);
+                float x = raio * cos(theta);
+                float y = raio * sin(theta);
+                glVertex3f(x, y, half);
+            }
+            glEnd();
+        }
+    }
+
+    void desenha_cone(float raio = 2.0f, float altura = 4.0f, int fatias = 30){
+        float half = altura / 2.0f;
+
+        // Superfície lateral
+        glBegin(GL_TRIANGLES);
+        for (int j = 0; j < fatias; ++j) {
+            float theta1 = j * (2 * M_PI / fatias);
+            float theta2 = (j + 1) * (2 * M_PI / fatias);
+
+            float x1 = raio * cos(theta1);
+            float y1 = raio * sin(theta1);
+            float x2 = raio * cos(theta2);
+            float y2 = raio * sin(theta2);
+
+            // Triângulo da lateral (base -> ápice)
+            glVertex3f(0, 0, half);       // ápice
+            glVertex3f(x1, y1, -half);    // base ponto 1
+            glVertex3f(x2, y2, -half);    // base ponto 2
+        }
+        glEnd();
+
+        // Base
+        glBegin(GL_TRIANGLE_FAN);
+        glVertex3f(0, 0, -half);
+        for (int j = 0; j <= fatias; ++j) {
+            float theta = j * (2 * M_PI / fatias);
+            float x = raio * cos(theta);
+            float y = raio * sin(theta);
+            glVertex3f(x, y, -half);
+        }
+        glEnd();
+    }
+
+    void desenha_torus(float R = 3.0f, float r = 1.0f, int fatias = 30, int stacks = 30){
+        for (int i = 0; i < stacks; ++i) {
+            float phi1 = i * (2 * M_PI / stacks);
+            float phi2 = (i + 1) * (2 * M_PI / stacks);
+
+            glBegin(GL_QUAD_STRIP);
+            for (int j = 0; j <= fatias; ++j) {
+                float theta = j * (2 * M_PI / fatias);
+
+                float cosTheta = cos(theta);
+                float sinTheta = sin(theta);
+
+                float x1 = (R + r * cosTheta) * cos(phi1);
+                float y1 = (R + r * cosTheta) * sin(phi1);
+                float z1 = r * sinTheta;
+
+                float x2 = (R + r * cosTheta) * cos(phi2);
+                float y2 = (R + r * cosTheta) * sin(phi2);
+                float z2 = r * sinTheta;
+
+                glVertex3f(x1, y1, z1);
+                glVertex3f(x2, y2, z2);
+            }
+            glEnd();
+        }
+    }
+
+    void desenha_superficie(int formato){
+        switch(formato){
+            case CUBO:
+                desenha_cubo();
+                break;
+            case PIRAMIDE:
+                desenha_piramide();
+                break;
+            case ESFERA:
+                desenha_esfera();
+                break;
+            case CILINDRO:
+                desenha_cilindro();
+                break;
+            case CONE:
+                desenha_cone();
+                break;
+            case TORUS:
+                desenha_torus();
+                break;
+        }
     }
 
     const int NI = 10, NJ = 10;
@@ -611,18 +783,18 @@ void loop_jogo(){
         for(int i = 0; i < 26; i+=2){
             ND::muda_cor(i/2);
             glPushMatrix();
-                glTranslatef(i-10,5,-15);
-                ND::desenha_cubo();
+                glTranslatef(-20+i*2,5,-15);
+                ND::desenha_superficie(ND::F::CUBO);
             glPopMatrix();
         }
 
-        int forma = ND::F::BEZIER;
-        ND::generateControlPoint(forma);
-        ND::muda_cor(10);
-        glPushMatrix();
-            glTranslatef(0,5,-30);
-            ND::Surface(forma);
-        glPopMatrix();
+        for(int i = 0; i < 6; i++){
+            ND::muda_cor(i);
+            glPushMatrix();
+                glTranslatef(i*10,5,-30);
+                ND::desenha_superficie(i);
+            glPopMatrix();
+        }
 
         // Atualiza tela
         SDL_GL_SwapWindow(window);
