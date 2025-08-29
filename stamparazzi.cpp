@@ -4,17 +4,40 @@
 #include <iostream>
 #include <math.h>
 
+#define MOVE_VEL 10.0f
+#define CAMERA_SENS 1.0f
+#define ANALOG_SENS 1.25f
+
 using namespace std;
 
 int teste = 0;
 bool mouse_in = false;
 bool pause = false;
 bool rodando = true;
+Uint32 inicio, fim;
+float dt;
 
 SDL_Window* window;
 SDL_GLContext glContext;
 SDL_GameController* game_controller = NULL;
 string modo_controle = "PC"; // "PC" (COMPUTADOR) OU "CONT" (CONTROLE)
+
+namespace NJ{ //Namespace para Informações do Jogo
+
+    enum STATE{
+        MENU_PRINCIPAL,
+        JOGO_PRINCIPAL,
+        PAUSE,
+        VITORIA,
+        DERROTA
+    };
+
+    float calcula_dt(){
+        fim = SDL_GetTicks();
+        float delta = (float)(fim - inicio) / 1000.0f;
+        return delta;
+    }
+};
 
 namespace NC{ //Namespace para Controles e Comandos
     enum C {
@@ -197,19 +220,19 @@ namespace NE{ // NE = Namespace para Entidades
             void move_camera(float dist, float dir, float val = 0.0f){
                 if(dir >= 0.0f){
                     float rad = (cam_yaw + dir) * M_PI / 180.0f;
-                    this->x -= sin(rad) * dist;
-                    this->z -= cos(rad) * dist;
+                    this->x -= sin(rad) * dist * dt;
+                    this->z -= cos(rad) * dist * dt;
                 } else 
-                    this->y += dist * val;
+                    this->y += dist * val * dt;
             }
 
-            void controle_camera(float move_vel, float mouse_vel){
+            void controle_camera(float move_vel, float camera_sens){
                 if(!pause and !game_controller){
                     int midx = 320, midy = 240, tempx, tempy;
                     SDL_ShowCursor(SDL_DISABLE);
                     SDL_GetMouseState(&tempx, &tempy);
-                    cam_yaw += mouse_vel * (midx - tempx);
-                    cam_pitch += mouse_vel * (midy - tempy);
+                    cam_yaw += camera_sens * (midx - tempx) * dt;
+                    cam_pitch += camera_sens * (midy - tempy) * dt;
                     prende_camera();
                     SDL_WarpMouseInWindow(window,midx,midy);
                     const Uint8* state = SDL_GetKeyboardState(NULL);
@@ -228,11 +251,10 @@ namespace NE{ // NE = Namespace para Entidades
                     if(state[SDL_SCANCODE_LCTRL] or state[SDL_SCANCODE_RCTRL])
                         move_camera(move_vel,-1.0f,-1.0f);
                 } else if(!pause and game_controller) {
-                    int midx = 320, midy = 240, tempx, tempy;
                     Sint16 axisRX = SDL_GameControllerGetAxis(game_controller, SDL_CONTROLLER_AXIS_RIGHTX);
                     Sint16 axisRY = SDL_GameControllerGetAxis(game_controller, SDL_CONTROLLER_AXIS_RIGHTY);
-                    if(fabs(axisRX) > 16000.0f) cam_yaw   -= (static_cast<float>(axisRX) / 32767.0f) * mouse_vel * 5.0f;  // multiplica para sensibilidade
-                    if(fabs(axisRY) > 16000.0f) cam_pitch -= (static_cast<float>(axisRY) / 32767.0f) * mouse_vel * 5.0f;
+                    if(fabs(axisRX) > 16000.0f) cam_yaw   -= (static_cast<float>(axisRX) / 32767.0f) * ANALOG_SENS;  // multiplica para sensibilidade
+                    if(fabs(axisRY) > 16000.0f) cam_pitch -= (static_cast<float>(axisRY) / 32767.0f) * ANALOG_SENS;
                     prende_camera();
                     if(SDL_GameControllerGetButton(game_controller, SDL_CONTROLLER_BUTTON_DPAD_UP)
                         or SDL_GameControllerGetAxis(game_controller, SDL_CONTROLLER_AXIS_LEFTY) < -16000)
@@ -322,8 +344,14 @@ void inicializa_opengl(){
 void loop_jogo(){
 
     SDL_Event evento;
+    inicio = SDL_GetTicks();
 
     while (rodando) {
+
+        fim = SDL_GetTicks();
+        dt = (fim - inicio) / 1000.0f;
+        inicio = fim;
+
         while (SDL_PollEvent(&evento)) {
             if (evento.type == SDL_QUIT) {
                 rodando = false;
@@ -361,7 +389,7 @@ void loop_jogo(){
         glLoadIdentity();
 
         // Controla câmera
-		jogador.controle_camera(0.2,0.2);
+		jogador.controle_camera(MOVE_VEL, CAMERA_SENS);
 
         // Desenha chão
 		glPushMatrix();
