@@ -32,8 +32,8 @@ namespace NC{ //Namespace para Controles e Comandos
         PAUSAR
     }; //comandos
 
-    void traduz_entradas(SDL_Event evento){
-
+    void traduz_entradas(){
+        
     }
 
     void atualiza_controller(SDL_Event evento){
@@ -229,23 +229,8 @@ namespace NE{ // NE = Namespace para Entidades
                         move_camera(move_vel,-1.0f,-1.0f);
                 } else if(!pause and game_controller) {
                     int midx = 320, midy = 240, tempx, tempy;
-                    //Sint16 axisRX = SDL_GameControllerGetAxis(game_controller, SDL_CONTROLLER_AXIS_RIGHTX);
-                    //Sint16 axisRY = SDL_GameControllerGetAxis(game_controller, SDL_CONTROLLER_AXIS_RIGHTY);
-                    //cout << axisRX << " " << axisRY << endl;
-                    SDL_Joystick* joy = SDL_GameControllerGetJoystick(game_controller);
-                    /*int axes = SDL_JoystickNumAxes(joy);
-                    for(int i = 0; i < axes; i++) {
-                        Sint16 val = SDL_JoystickGetAxis(joy, i);
-                        if(val != 0) cout << "Axis " << i << " = " << val << endl;
-                    }*/
-                    //Sint16 axisLX = SDL_JoystickGetAxis(joy,0);
-                    //Sint16 axisLY = SDL_JoystickGetAxis(joy,1);
-                    Sint16 axisRX = SDL_JoystickGetAxis(joy,2);
-                    Sint16 axisRY = SDL_JoystickGetAxis(joy,3);
-                    //SDL_JoystickClose(joy);
-                    //joy = NULL;
-
-                    //if(axisRX or axisRY) cout << axisRX << " " << axisRY << endl;
+                    Sint16 axisRX = SDL_GameControllerGetAxis(game_controller, SDL_CONTROLLER_AXIS_RIGHTX);
+                    Sint16 axisRY = SDL_GameControllerGetAxis(game_controller, SDL_CONTROLLER_AXIS_RIGHTY);
                     if(fabs(axisRX) > 16000.0f) cam_yaw   -= (static_cast<float>(axisRX) / 32767.0f) * mouse_vel * 5.0f;  // multiplica para sensibilidade
                     if(fabs(axisRY) > 16000.0f) cam_pitch -= (static_cast<float>(axisRY) / 32767.0f) * mouse_vel * 5.0f;
                     prende_camera();
@@ -263,9 +248,9 @@ namespace NE{ // NE = Namespace para Entidades
                     if(SDL_GameControllerGetButton(game_controller, SDL_CONTROLLER_BUTTON_DPAD_RIGHT)
                         or SDL_GameControllerGetAxis(game_controller, SDL_CONTROLLER_AXIS_LEFTX) > 16000)
                         move_camera(move_vel,270.0f);
-                    if(SDL_GameControllerGetButton(game_controller,SDL_CONTROLLER_BUTTON_LEFTSTICK))
+                    if(SDL_GameControllerGetButton(game_controller,SDL_CONTROLLER_BUTTON_LEFTSHOULDER))
                         move_camera(move_vel,-1.0f,1.0f);
-                    if(SDL_GameControllerGetButton(game_controller,SDL_CONTROLLER_BUTTON_RIGHTSTICK))
+                    if(SDL_GameControllerGetButton(game_controller,SDL_CONTROLLER_BUTTON_RIGHTSHOULDER))
                         move_camera(move_vel,-1.0f,-1.0f);
                 }
                 glRotatef(-cam_pitch, 1.0, 0.0, 0.0); 
@@ -310,25 +295,18 @@ void inicializa_sdl(){
     //Necessário para o meu controle
     SDL_GameControllerAddMapping(
     "030081f4790000000600000000000000,USB Network Joystick,"
-    "a:b0,b:b1,x:b2,y:b3,back:b8,start:b9,guide:b10,"
-    "leftshoulder:b4,rightshoulder:b5,leftstick:b6,rightstick:b7,"
+    "a:b2,b:b1,x:b3,y:b0,back:b8,start:b9,guide:b12,"
+    "leftshoulder:b6,rightshoulder:b7,leftstick:b4,rightstick:b5,"
+    "lefttrigger:b10,rightrigger:b11,"
     "dpup:h0.1,dpdown:h0.4,dpleft:h0.8,dpright:h0.2,"
-    "leftx:a0,lefty:a1,rightx:a2,righty:a3"
+    "leftx:a0,lefty:a1,rightx:a2,righty:a3,"
     );
 
-    for (int i = 0; i < SDL_NumJoysticks(); i++) {
-        if (SDL_IsGameController(i)) {
+    for(int i = 0; i < SDL_NumJoysticks(); i++){
+        if(SDL_IsGameController(i)){
             game_controller = SDL_GameControllerOpen(i);
-            char guid_str[64];
-            SDL_Joystick* joystick = SDL_GameControllerGetJoystick(game_controller);
-            SDL_JoystickGetGUIDString(SDL_JoystickGetGUID(joystick), guid_str, sizeof(guid_str));
-            std::cout << "GUID detectado: " << guid_str << std::endl;
-
-            if (game_controller) {
-                cout << "Controle detectado na inicialização!" << endl;
-                modo_controle = "CONT";
-                break;
-            }
+            modo_controle = "CONT";
+            break;
         }
     }
 }
@@ -353,31 +331,7 @@ void loop_jogo(){
 
             //NC::determina_modo_controle(evento);
             NC::atualiza_controller(evento);
-
-			// Atualiza posição
-            /*if(!game_controller){
-                if(evento.type == SDL_KEYDOWN){
-                    const Uint8* state = SDL_GetKeyboardState(NULL);
-                    if(state[SDL_SCANCODE_ESCAPE]) rodando = false;
-                    else if(state[SDL_SCANCODE_P] and !pause){
-                        mouse_in = false, pause = true; 
-                        SDL_ShowCursor(SDL_ENABLE);
-                    }
-                }
-                if(evento.type == SDL_MOUSEBUTTONDOWN and pause){
-                    mouse_in = true, pause = false;
-                    SDL_ShowCursor(SDL_DISABLE);
-                }
-            } else {
-                cout << "oi" << endl;
-                if(evento.type == SDL_CONTROLLERBUTTONDOWN) {
-                    cout << "press" << endl;
-                    if(evento.cbutton.button == SDL_CONTROLLER_BUTTON_BACK) 
-                        rodando = false;
-                    else if(evento.cbutton.button == SDL_CONTROLLER_BUTTON_START)
-                        pause = !pause;
-                }
-            }*/
+            
             if(evento.type == SDL_KEYDOWN){
                 if(evento.key.keysym.sym == SDLK_ESCAPE) rodando = false;
                 else if(evento.key.keysym.sym == SDLK_p){

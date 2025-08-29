@@ -141,9 +141,28 @@ int main(int argc, char* argv[]){
         SDL_Quit();
         return 1;
     }
+
+    SDL_GameControllerAddMapping(
+    "030081f4790000000600000000000000,USB Network Joystick,"
+    "a:b2,b:b1,x:b3,y:b0,back:b8,start:b9,guide:b12,"
+    "leftshoulder:b6,rightshoulder:b7,leftstick:b4,rightstick:b5,"
+    "lefttrigger:b10,rightrigger:b11,"
+    "dpup:h0.1,dpdown:h0.4,dpleft:h0.8,dpright:h0.2,"
+    "leftx:a0,lefty:a1,rightx:a2,righty:a3,"
+    );
+
+    for(int i = 0; i < SDL_NumJoysticks(); i++){
+        if(!game_controller)
+            game_controller = SDL_GameControllerOpen(i);
+            break;
+    }
     
     loop_jogo();
 
+    if(game_controller) {
+        SDL_GameControllerClose(game_controller);
+        game_controller = NULL;
+    }
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
