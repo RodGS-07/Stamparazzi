@@ -3,6 +3,9 @@
 #include <GL/glu.h>
 #include <iostream>
 #include <math.h>
+#include <vector>
+#include <memory>
+#include <algorithm>
 #include <typeinfo>
 
 #define MOVE_VEL 10.0f
@@ -33,6 +36,35 @@ struct Sphere {
     float x, y, z;
     float r;
 };
+
+// checa esfera x esfera
+bool SphereVsSphere(const Sphere &a, const Sphere &b) {
+    float dx = a.x - b.x;
+    float dy = a.y - b.y;
+    float dz = a.z - b.z;
+    float dist2 = dx*dx + dy*dy + dz*dz;
+    float rsum = a.r + b.r;
+    return dist2 <= (rsum * rsum);
+}
+
+// checa esfera x AABB (closest point)
+bool SphereVsAABB(const Sphere &s, const AABB &b) {
+    float cx = s.x;
+    float cy = s.y;
+    float cz = s.z;
+
+    // closest point on AABB to sphere center
+    float closestX = std::max(b.minX, std::min(cx, b.maxX));
+    float closestY = std::max(b.minY, std::min(cy, b.maxY));
+    float closestZ = std::max(b.minZ, std::min(cz, b.maxZ));
+
+    float dx = closestX - cx;
+    float dy = closestY - cy;
+    float dz = closestZ - cz;
+
+    float dist2 = dx*dx + dy*dy + dz*dz;
+    return dist2 <= (s.r * s.r);
+}
 
 namespace NG{ //Namespace para Informações do Game/Jogo
 
@@ -577,18 +609,81 @@ namespace ND{ //Namespace para Desenhos
     }
 };
 
-class Entidade{
-    public:
-        float x, y, z;
+namespace NE{ //Namespace para todas as propriedades comuns a todas as Entidades
+    class Entidade{
+        public:
+            float x, y, z;
 
-        Entidade(float ix, float iy, float iz){
-            this->x = ix, this->y = iy, this->z = iz;
-        };
-        Entidade(){};
+            Entidade(float ix, float iy, float iz){
+                this->x = ix, this->y = iy, this->z = iz;
+            };
+            Entidade(){};
+    };
+
+    static float distancia_entidades(Entidade e1, Entidade e2){
+        return sqrt((e1.x-e2.x)*(e1.x-e2.x)+(e1.y-e2.y)*(e1.y-e2.y)+(e1.z-e2.z)*(e1.z-e2.z));
+    }
 };
+
+namespace NP{ //Namespace para entitdades que são Polígonos
+
+    using namespace NE;
+    using namespace ND;
+
+    class Poligono : public Entidade{
+        public:
+            int superficie;
+
+            Poligono(float ix, float iy, float iz, int s)
+            : Entidade(ix, iy, iz), superficie(s) { }
+
+            virtual bool colide_sphere(const Sphere& s) const = 0;
+            virtual ~Poligono() = default;
+
+            void desenha_poligono(int cor){
+                if(cor >= 0 and cor <= 12) muda_cor(cor);
+                glPushMatrix();
+                glTranslatef(this->x,this->y,this->z);
+                desenha_superficie(this->superficie);
+                glPopMatrix();
+            }
+    };
+
+    class Cubo : public Poligono{
+        public:
+            float lado;
+
+            Cubo(float ix, float iy, float iz, float l)
+            : Poligono(ix,iy,iz,F::CUBO), lado(l) { }
+
+            bool colide_sphere(const Sphere& s) const override {
+                AABB box = { x - lado, y - lado, z - lado, x + lado, y + lado, z + lado };
+                return SphereVsAABB(s, box);
+            }
+
+    };
+
+    class Esfera : public Poligono{
+        public:
+            float raio;
+
+            Esfera(float ix, float iy, float iz, float r)
+            : Poligono(ix,iy,iz,F::ESFERA), raio(r) { }
+
+
+            bool colide_sphere(const Sphere& s) const override {
+                Sphere s2 = { x, y, z, raio };
+                return SphereVsSphere(s, s2);
+            }
+
+    };
+}
+
+vector<unique_ptr<NP::Poligono>> poligonos;
 
 namespace NJ{ // NJ = Namespace para o Jogador
 
+    using namespace NE;
     using namespace ND;
 
     class Jogador : public Entidade{
@@ -603,7 +698,7 @@ namespace NJ{ // NJ = Namespace para o Jogador
             };
             Jogador(){};
 
-            /*void desenha_mascara(int stacks = 30, int fatias = 30){
+            void desenha_mascara(int stacks = 30, int fatias = 30){
                 muda_cor(12);
 
                 for (int i = 0; i < stacks; ++i) {
@@ -641,7 +736,26 @@ namespace NJ{ // NJ = Namespace para o Jogador
                     }
                 glEnd();
                 }
-            }*/
+            }
+
+            bool tenta_mover(float dx, float dy, float dz){
+                Sphere candidate = this->mascara;
+                candidate.x += dx;
+                candidate.y += dy;
+                candidate.z += dz;
+
+                // testa contra todos os poligonos (use referências para evitar cópia)
+                for (const auto& p : poligonos) 
+                    if (p->colide_sphere(candidate)) 
+                        return false; // colisão detectada => rejeita movimento
+
+                // sem colisão => confirma movimento
+                this->x += dx;
+                this->y += dy;
+                this->z += dz;
+                this->mascara = candidate;
+                return true;
+            }
 
             void prende_camera(){
                 if(cam_yaw < 0.0f) cam_yaw += 360.0f;
@@ -653,10 +767,14 @@ namespace NJ{ // NJ = Namespace para o Jogador
             void move_camera(float dist, float dir, float val = 0.0f){
                 if(dir >= 0.0f){
                     float rad = (cam_yaw + dir) * M_PI / 180.0f;
-                    this->x -= sin(rad) * dist * dt;
-                    this->z -= cos(rad) * dist * dt;
-                } else 
-                    this->y += dist * val * dt;
+                    float dx = - sin(rad) * dist * dt;//this->x -= sin(rad) * dist * dt;
+                    float dz = - cos(rad) * dist * dt;//this->z -= cos(rad) * dist * dt;
+                    tenta_mover(dx,0.0f,dz);
+                } else {
+                    float dy = dist * val * dt;//this->y += dist * val * dt;
+                    tenta_mover(0.0f,dy,0.0f);
+                }
+                
             }
 
             void controle_camera(float move_vel, float camera_sens){
@@ -716,71 +834,15 @@ namespace NJ{ // NJ = Namespace para o Jogador
                     gluLookAt(this->x,this->y+25.0f,this->z+25.0f,
                             this->x,this->y,this->z,
                             0.0f,1.0f,0.0f);
+                    desenha_mascara();
                 }
                 this->mascara = {this->x,this->y,this->z,1.0f};
-                //desenha_mascara();
+                
             }
     };
-
-    
-
-    static float distancia_entidades(Entidade e1, Entidade e2){
-        return sqrt((e1.x-e2.x)*(e1.x-e2.x)+(e1.y-e2.y)*(e1.y-e2.y)+(e1.z-e2.z)*(e1.z-e2.z));
-    }
 };
 
 NJ::Jogador jogador = NJ::Jogador(0.0f,0.0f,0.0f,0.0f,0.0f);
-
-namespace NE{ //Namespace para outras entidades diferentes do Jogador
-
-    using namespace ND;
-
-    class Poligono : public Entidade{
-        public:
-            int superficie;
-
-            Poligono(float ix, float iy, float iz, int s){
-                Entidade(ix,iy,iz);
-                this->superficie = s;
-            };
-            Poligono(){};
-
-            virtual bool colide_com_jogador();
-            void desenha_poligono(int cor);
-    };
-
-    class Cubo : public Poligono{
-        public:
-            float lado;
-
-            Cubo(float ix, float iy, float iz, float l){
-                Poligono(ix,iy,iz,F::CUBO);
-                this->lado = l;
-            };
-            Cubo(){};
-
-            void desenha_poligono(int cor){
-                if(cor >= 0) muda_cor(cor);
-                desenha_cubo();
-            }
-    };
-
-    class Esfera : public Poligono{
-        public:
-            float raio;
-
-            Esfera(float ix, float iy, float iz, float r){
-                Poligono(ix,iy,iz,F::ESFERA);
-                this->raio = r;
-            };
-            Esfera(){};
-
-            void desenha_poligono(int cor){
-                if(cor >= 0) muda_cor(cor);
-                desenha_esfera();
-            }
-    };
-}
 
 void inicializa_sdl(){
     // Inicializa SDL2
@@ -813,7 +875,7 @@ void inicializa_sdl(){
     "030081f4790000000600000000000000,USB Network Joystick,"
     "a:b2,b:b1,x:b3,y:b0,back:b8,start:b9,guide:b12,"
     "leftshoulder:b6,rightshoulder:b7,leftstick:b4,rightstick:b5,"
-    "lefttrigger:b10,rightrigger:b11,"
+    "lefttrigger:b10,righttrigger:b11,"
     "dpup:h0.1,dpdown:h0.4,dpleft:h0.8,dpright:h0.2,"
     "leftx:a0,lefty:a1,rightx:a2,righty:a3,"
     );
@@ -835,6 +897,14 @@ void inicializa_opengl(){
     glMatrixMode(GL_MODELVIEW);
 }
 
+void cria_poligonos(int n){
+    poligonos.push_back(make_unique<NP::Cubo>(0.0f,10.0f,-20.0f,2.0f));
+    poligonos.push_back(make_unique<NP::Esfera>(10.0f,10.0f,-20.0f,2.0f));
+    /*for(int i = 0; i < n; i++){
+        poligonos.push_back();
+    }*/
+}
+
 void loop_jogo(){
 
     SDL_Event evento;
@@ -851,7 +921,6 @@ void loop_jogo(){
                 rodando = false;
             }
 
-            //NC::determina_modo_controle(evento);
             NC::atualiza_controller(evento);
             
             if(evento.type == SDL_KEYDOWN){
@@ -893,7 +962,7 @@ void loop_jogo(){
         	ND::desenha_chao();
 		glPopMatrix();
 
-        for(int i = 0; i < 26; i+=2){
+        /*for(int i = 0; i < 26; i+=2){
             ND::muda_cor(i/2);
             glPushMatrix();
                 glTranslatef(-20+i*2,5,-15);
@@ -907,7 +976,10 @@ void loop_jogo(){
                 glTranslatef(i*10,5,-30);
                 ND::desenha_superficie(i);
             glPopMatrix();
-        }
+        }*/
+
+        for (const auto& p : poligonos)
+            p->desenha_poligono(1);
 
         // Atualiza tela
         SDL_GL_SwapWindow(window);
@@ -930,7 +1002,9 @@ int main(int argc, char* argv[]) {
     inicializa_opengl();
 
 	SDL_ShowCursor(SDL_ENABLE);
-    
+
+    cria_poligonos(2);
+
     loop_jogo();
 
     finaliza_sdl();
