@@ -3,6 +3,7 @@
 #include <GL/glu.h>
 #include <iostream>
 #include <math.h>
+#include <typeinfo>
 
 #define MOVE_VEL 10.0f
 #define CAMERA_SENS 1.0f
@@ -13,6 +14,7 @@ using namespace std;
 int teste = 0;
 bool mouse_in = false;
 bool pause = false;
+bool primeira_pessoa = true;
 bool rodando = true;
 Uint32 inicio, fim;
 float dt;
@@ -22,7 +24,17 @@ SDL_GLContext glContext;
 SDL_GameController* game_controller = NULL;
 string modo_controle = "PC"; // "PC" (COMPUTADOR) OU "CONT" (CONTROLE)
 
-namespace NJ{ //Namespace para Informações do Jogo
+struct AABB {
+    float minX, minY, minZ;
+    float maxX, maxY, maxZ;
+};
+
+struct Sphere {
+    float x, y, z;
+    float r;
+};
+
+namespace NG{ //Namespace para Informações do Game/Jogo
 
     enum STATE{
         MENU_PRINCIPAL,
@@ -31,12 +43,6 @@ namespace NJ{ //Namespace para Informações do Jogo
         VITORIA,
         DERROTA
     };
-
-    float calcula_dt(){
-        fim = SDL_GetTicks();
-        float delta = (float)(fim - inicio) / 1000.0f;
-        return delta;
-    }
 };
 
 namespace NC{ //Namespace para Controles e Comandos
@@ -571,26 +577,71 @@ namespace ND{ //Namespace para Desenhos
     }
 };
 
-namespace NE{ // NE = Namespace para Entidades
-    class Entidade{
-        public:
-            float x, y, z;
+class Entidade{
+    public:
+        float x, y, z;
 
-            Entidade(float ix, float iy, float iz){
-                this->x = ix, this->y = iy, this->z = iz;
-            };
-            Entidade(){};
-    };
+        Entidade(float ix, float iy, float iz){
+            this->x = ix, this->y = iy, this->z = iz;
+        };
+        Entidade(){};
+};
+
+namespace NJ{ // NJ = Namespace para o Jogador
+
+    using namespace ND;
 
     class Jogador : public Entidade{
         public:
             float cam_yaw, cam_pitch;
+            Sphere mascara;
 
             Jogador(float ix, float iy, float iz, float cy, float cp){
                 Entidade(ix,iy,iz);
                 this->cam_yaw = cy, this->cam_pitch = cp;
+                this->mascara = {this->x,this->y,this->z,1.0f};
             };
             Jogador(){};
+
+            /*void desenha_mascara(int stacks = 30, int fatias = 30){
+                muda_cor(12);
+
+                for (int i = 0; i < stacks; ++i) {
+                    float phi1 = M_PI / 2 - i * (M_PI / stacks);
+                    float phi2 = M_PI / 2 - (i + 1) * (M_PI / stacks);
+
+                    glBegin(GL_LINE_LOOP);
+                    for (int j = 0; j < fatias; ++j) {
+                        float theta1 = j * (2 * M_PI / fatias);
+                        float theta2 = (j + 1) * (2 * M_PI / fatias);
+
+                        // Vertex 1 (bottom-left of current quad)
+                        float x1 = this->mascara.r * cos(phi2) * sin(theta1) + this->x;
+                        float y1 = this->mascara.r * sin(phi2) + this->y;
+                        float z1 = this->mascara.r * cos(phi2) * cos(theta1) + this->z;
+                        glVertex3f(x1, y1, z1);
+
+                        // Vertex 2 (bottom-right of current quad)
+                        float x2 = this->mascara.r * cos(phi2) * sin(theta2) + this->x;
+                        float y2 = this->mascara.r * sin(phi2) + this->y;
+                        float z2 = this->mascara.r * cos(phi2) * cos(theta2) + this->z;
+                        glVertex3f(x2, y2, z2);
+
+                        // Vertex 3 (top-right of current quad)
+                        float x3 = this->mascara.r * cos(phi1) * sin(theta2) + this->x;
+                        float y3 = this->mascara.r * sin(phi1) + this->y;
+                        float z3 = this->mascara.r * cos(phi1) * cos(theta2) + this->z;
+                        glVertex3f(x3, y3, z3);
+
+                        // Vertex 4 (top-left of current quad)
+                        float x4 = this->mascara.r * cos(phi1) * sin(theta1) + this->x;
+                        float y4 = this->mascara.r * sin(phi1) + this->y;
+                        float z4 = this->mascara.r * cos(phi1) * cos(theta1) + this->z;
+                        glVertex3f(x4, y4, z4);
+                    }
+                glEnd();
+                }
+            }*/
 
             void prende_camera(){
                 if(cam_yaw < 0.0f) cam_yaw += 360.0f;
@@ -657,18 +708,79 @@ namespace NE{ // NE = Namespace para Entidades
                     if(SDL_GameControllerGetButton(game_controller,SDL_CONTROLLER_BUTTON_RIGHTSHOULDER))
                         move_camera(move_vel,-1.0f,-1.0f);
                 }
-                glRotatef(-cam_pitch, 1.0, 0.0, 0.0); 
-                glRotatef(-cam_yaw, 0.0, 1.0, 0.0);
-                glTranslatef(-(this->x),-(this->y),-(this->z));
+                if(primeira_pessoa) {
+                    glRotatef(-cam_pitch, 1.0, 0.0, 0.0); 
+                    glRotatef(-cam_yaw, 0.0, 1.0, 0.0);
+                    glTranslatef(-(this->x),-(this->y),-(this->z));
+                } else {
+                    gluLookAt(this->x,this->y+25.0f,this->z+25.0f,
+                            this->x,this->y,this->z,
+                            0.0f,1.0f,0.0f);
+                }
+                this->mascara = {this->x,this->y,this->z,1.0f};
+                //desenha_mascara();
             }
     };
+
+    
 
     static float distancia_entidades(Entidade e1, Entidade e2){
         return sqrt((e1.x-e2.x)*(e1.x-e2.x)+(e1.y-e2.y)*(e1.y-e2.y)+(e1.z-e2.z)*(e1.z-e2.z));
     }
 };
 
-NE::Jogador jogador = NE::Jogador(0.0f,0.0f,0.0f,0.0f,0.0f);
+NJ::Jogador jogador = NJ::Jogador(0.0f,0.0f,0.0f,0.0f,0.0f);
+
+namespace NE{ //Namespace para outras entidades diferentes do Jogador
+
+    using namespace ND;
+
+    class Poligono : public Entidade{
+        public:
+            int superficie;
+
+            Poligono(float ix, float iy, float iz, int s){
+                Entidade(ix,iy,iz);
+                this->superficie = s;
+            };
+            Poligono(){};
+
+            virtual bool colide_com_jogador();
+            void desenha_poligono(int cor);
+    };
+
+    class Cubo : public Poligono{
+        public:
+            float lado;
+
+            Cubo(float ix, float iy, float iz, float l){
+                Poligono(ix,iy,iz,F::CUBO);
+                this->lado = l;
+            };
+            Cubo(){};
+
+            void desenha_poligono(int cor){
+                if(cor >= 0) muda_cor(cor);
+                desenha_cubo();
+            }
+    };
+
+    class Esfera : public Poligono{
+        public:
+            float raio;
+
+            Esfera(float ix, float iy, float iz, float r){
+                Poligono(ix,iy,iz,F::ESFERA);
+                this->raio = r;
+            };
+            Esfera(){};
+
+            void desenha_poligono(int cor){
+                if(cor >= 0) muda_cor(cor);
+                desenha_esfera();
+            }
+    };
+}
 
 void inicializa_sdl(){
     // Inicializa SDL2
@@ -747,7 +859,8 @@ void loop_jogo(){
                 else if(evento.key.keysym.sym == SDLK_p){
                     pause = !pause;
                     SDL_ShowCursor(pause ? SDL_ENABLE : SDL_DISABLE);
-                }
+                }else if(evento.key.keysym.sym == SDLK_t)
+                    primeira_pessoa = !primeira_pessoa;
             }
             if(evento.type == SDL_MOUSEBUTTONDOWN && pause){
                 pause = false;
@@ -776,7 +889,7 @@ void loop_jogo(){
         // Desenha chão
 		glPushMatrix();
 			glTranslatef(0,-1,0);
-			glScalef(100,0.1,100);
+			glScalef(100,-0.1,100);
         	ND::desenha_chao();
 		glPopMatrix();
 
