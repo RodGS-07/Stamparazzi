@@ -37,6 +37,13 @@ struct Sphere {
     float r;
 };
 
+struct XYZ{//representa pontos e vetores
+    GLfloat x, y, z;
+    XYZ(GLfloat x = 0, GLfloat y = 0, GLfloat z = 0){
+        this->x = x; this->y = y; this->z = z;
+    }
+};
+
 // checa esfera x esfera
 bool SphereVsSphere(const Sphere &a, const Sphere &b) {
     float dx = a.x - b.x;
@@ -120,6 +127,40 @@ namespace NC{ //Namespace para Controles e Comandos
     }
 };
 
+namespace NL{ //Namespace para operações de álgebra linear envolvendo vetores
+
+    GLfloat operator!(const XYZ& v){//Norma
+        return (sqrt(v.x*v.x+v.y*v.y+v.z*v.z));
+    }
+    XYZ operator-(const XYZ& o,const XYZ& d){//Diferença de Vetores(ou pontos)
+        return (XYZ(d.x-o.x,d.y-o.y,d.z-o.z));
+    }
+    XYZ operator+(const XYZ& o,const XYZ& d){//Soma de Vetores(ou pontos)
+        return (XYZ(d.x+o.x,d.y+o.y,d.z+o.z));
+    }
+    GLfloat Escalar(const XYZ& u,const XYZ& v){//Produto Escalar entre dois vetores
+        return u.x*v.x+u.y*v.y+u.z*v.z;
+    }
+    XYZ operator*(const XYZ& u,const XYZ& v){//Produto Vetorial
+        return (XYZ(u.y*v.z-u.z*v.y,u.z*v.x-u.x*v.z,u.x*v.y-u.y*v.x));
+    }
+    XYZ operator*(const XYZ& u, GLfloat lu){//Produto de um vetor por um escalar
+        return XYZ(u.x*lu,u.y*lu,u.z*lu);
+    }
+    XYZ operator/(const XYZ& u, GLfloat lu){//Divisao de um vetor por um escalar
+        return XYZ(u.x/lu,u.y/lu,u.z/lu);
+    }
+    XYZ Normal(XYZ Pa, XYZ Pb, XYZ Pc){//Normal entre dois vetores, com um ponto em comum
+        XYZ n = (Pb - Pa)*(Pc - Pa);
+        return (n/(!n));
+    }
+    GLfloat Arccos(XYZ Pa, XYZ Pb){//Arco cosseno entre dois vetores
+        GLfloat e = Escalar(Pa,Pb);
+        return acos(e/(!Pa*!Pb));
+    }
+
+}
+
 namespace ND{ //Namespace para Desenhos
 
     enum F{
@@ -130,13 +171,6 @@ namespace ND{ //Namespace para Desenhos
         CONE,
         TORUS,
         BEZIER
-    };
-
-    struct XYZ
-    {
-        float x;
-        float y;
-        float z;
     };
 
     const float cores[13][3] = {
@@ -450,6 +484,21 @@ namespace ND{ //Namespace para Desenhos
         }
     }
 
+    void marcax(float x, float y, float z){
+        muda_cor(0);
+        glLineWidth(5.0f);
+        glBegin(GL_LINES);
+        glVertex3f(x-2.0f,y-2.0f,z-2.0f);
+        glVertex3f(x+2.0f,y+2.0f,z-2.0f);
+        glEnd();
+
+        glBegin(GL_LINES);
+        glVertex3f(x-2.0f,y+2.0f,z-2.0f);
+        glVertex3f(x+2.0f,y-2.0f,z-2.0f);
+        glEnd();
+        glLineWidth(1.0f);
+    }
+
     const int NI = 10, NJ = 10;
     const int RESOLUTIONI = 3*NI, RESOLUTIONJ = 3*NJ;
     XYZ inp[NI+1][NJ+1];
@@ -611,21 +660,57 @@ namespace ND{ //Namespace para Desenhos
 
 namespace NE{ //Namespace para todas as propriedades comuns a todas as Entidades
     class Entidade{
-        public:
+        protected:
             float x, y, z;
 
+        public:
             Entidade(float ix, float iy, float iz){
                 this->x = ix, this->y = iy, this->z = iz;
             };
-            Entidade(){};
+            Entidade() : x(0.0f), y(0.0f), z(0.0f) {};
+
+            float getX() const { return x; }
+            float getY() const { return y; }
+            float getZ() const { return z; }
+            void setX(float ix) { x = ix; }
+            void setY(float iy) { y = iy; }
+            void setZ(float iz) { z = iz; }
     };
 
-    static float distancia_entidades(Entidade e1, Entidade e2){
-        return sqrt((e1.x-e2.x)*(e1.x-e2.x)+(e1.y-e2.y)*(e1.y-e2.y)+(e1.z-e2.z)*(e1.z-e2.z));
+    static float distancia_entidades(const Entidade& e1, const Entidade& e2){
+        float dx = e1.getX()-e2.getX();
+        float dy = e1.getY()-e2.getY();
+        float dz = e1.getZ()-e2.getZ();
+        return sqrt(dx*dx + dy*dy + dz*dz);
     }
 };
 
-namespace NP{ //Namespace para entitdades que são Polígonos
+namespace NA{ //Namespace para Entidades que são adesivos
+
+    using namespace NE;
+    using namespace ND;
+
+    class Adesivo : public Entidade{
+        public:
+            XYZ normal;
+
+            Adesivo(float ix, float iy, float iz, XYZ n)
+            : Entidade(ix, iy, iz), normal(n) { }
+
+            void desenha_adesivo(){
+                muda_cor(10);
+                glPushMatrix();
+                glTranslatef(this->x,this->y,this->z);
+                glScalef(0.25f,0.25f,0.25f);
+                desenha_cilindro();
+                glPopMatrix();
+            }
+    };
+};
+
+NA::Adesivo a = NA::Adesivo(-5.0f,5.0f,10.0f,{0,0,1});
+
+namespace NP{ //Namespace para entidades que são Polígonos
 
     using namespace NE;
     using namespace ND;
@@ -683,19 +768,20 @@ vector<unique_ptr<NP::Poligono>> poligonos;
 
 namespace NJ{ // NJ = Namespace para o Jogador
 
+    using namespace NL;
     using namespace NE;
     using namespace ND;
+    using namespace NA;
 
     class Jogador : public Entidade{
         public:
             float cam_yaw, cam_pitch;
             Sphere mascara;
 
-            Jogador(float ix, float iy, float iz, float cy, float cp){
-                Entidade(ix,iy,iz);
-                this->cam_yaw = cy, this->cam_pitch = cp;
-                this->mascara = {this->x,this->y,this->z,1.0f};
-            };
+            Jogador(float ix, float iy, float iz, float cy, float cp)
+            : Entidade(ix,iy,iz), cam_yaw(cy), cam_pitch(cp),
+                mascara({this->x,this->y,this->z,1.0f}) { }
+            
             Jogador(){};
 
             void desenha_mascara(int stacks = 30, int fatias = 30){
@@ -738,6 +824,35 @@ namespace NJ{ // NJ = Namespace para o Jogador
                 }
             }
 
+            void desenha_mira(){
+                float radYaw   = cam_yaw   * M_PI / 180.0f;
+                float radPitch = cam_pitch * M_PI / 180.0f;
+                float dirX = -sin(radYaw) * cos(radPitch);
+                float dirY =  sin(radPitch);
+                float dirZ = -cos(radYaw) * cos(radPitch);
+
+                muda_cor(0);
+                //glLineWidth(5.0f);
+                glBegin(GL_LINES);
+                glVertex3f(this->x,this->y,this->z);
+                glVertex3f(this->x+dirX*1000.0f,this->y+dirY*1000.0f,this->z+dirZ*1000.0f);
+                glEnd();
+                //glLineWidth(1.0f);
+            }
+
+            bool detecta_adesivo(const Adesivo& a){
+                float radYaw   = cam_yaw   * M_PI / 180.0f;
+                float radPitch = cam_pitch * M_PI / 180.0f;
+                float dirX = -sin(radYaw) * cos(radPitch);
+                float dirY =  sin(radPitch);
+                float dirZ = -cos(radYaw) * cos(radPitch);
+                XYZ vi = {this->x,this->y,this->z},
+                    vf = {this->x+dirX,this->y+dirY,this->z+dirZ},
+                    va = {a.getX(),a.getY(),a.getZ()};
+                float grau = Arccos((vf-vi),(va-vi)) * 180.0f / M_PI;
+                return grau <= 20.0f and distancia_entidades(*this,a) <= 30.0f;
+            }
+
             bool tenta_mover(float dx, float dy, float dz){
                 Sphere candidate = this->mascara;
                 candidate.x += dx;
@@ -767,11 +882,11 @@ namespace NJ{ // NJ = Namespace para o Jogador
             void move_camera(float dist, float dir, float val = 0.0f){
                 if(dir >= 0.0f){
                     float rad = (cam_yaw + dir) * M_PI / 180.0f;
-                    float dx = - sin(rad) * dist * dt;//this->x -= sin(rad) * dist * dt;
-                    float dz = - cos(rad) * dist * dt;//this->z -= cos(rad) * dist * dt;
+                    float dx = - sin(rad) * dist * dt;
+                    float dz = - cos(rad) * dist * dt;
                     tenta_mover(dx,0.0f,dz);
                 } else {
-                    float dy = dist * val * dt;//this->y += dist * val * dt;
+                    float dy = dist * val * dt;
                     tenta_mover(0.0f,dy,0.0f);
                 }
                 
@@ -826,18 +941,7 @@ namespace NJ{ // NJ = Namespace para o Jogador
                     if(SDL_GameControllerGetButton(game_controller,SDL_CONTROLLER_BUTTON_RIGHTSHOULDER))
                         move_camera(move_vel,-1.0f,-1.0f);
                 }
-                if(primeira_pessoa) {
-                    glRotatef(-cam_pitch, 1.0, 0.0, 0.0); 
-                    glRotatef(-cam_yaw, 0.0, 1.0, 0.0);
-                    glTranslatef(-(this->x),-(this->y),-(this->z));
-                } else {
-                    gluLookAt(this->x,this->y+25.0f,this->z+25.0f,
-                            this->x,this->y,this->z,
-                            0.0f,1.0f,0.0f);
-                    desenha_mascara();
-                }
                 this->mascara = {this->x,this->y,this->z,1.0f};
-                
             }
     };
 };
@@ -952,8 +1056,17 @@ void loop_jogo(){
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glLoadIdentity();
 
-        // Controla câmera
-		jogador.controle_camera(MOVE_VEL, CAMERA_SENS);
+        if(primeira_pessoa) {
+            glRotatef(-jogador.cam_pitch, 1.0, 0.0, 0.0); 
+            glRotatef(-jogador.cam_yaw, 0.0, 1.0, 0.0);
+            glTranslatef(-(jogador.getX()),-(jogador.getY()),-(jogador.getZ()));        
+        } else {
+            gluLookAt(jogador.getX(),jogador.getY()+5.0f,jogador.getZ()+25.0f,
+                jogador.getX(),jogador.getY(),jogador.getZ(),
+                0.0f,1.0f,0.0f);
+            jogador.desenha_mascara();
+        }
+        jogador.desenha_mira();
 
         // Desenha chão
 		glPushMatrix();
@@ -980,6 +1093,16 @@ void loop_jogo(){
 
         for (const auto& p : poligonos)
             p->desenha_poligono(1);
+
+        a.desenha_adesivo();
+
+        // Controla câmera
+        jogador.controle_camera(MOVE_VEL, CAMERA_SENS);
+        if(jogador.detecta_adesivo(a)){
+            //glDisable(GL_DEPTH_TEST);   // ignora profundidade
+            ND::marcax(a.getX(),a.getY(),a.getZ());
+            //glEnable(GL_DEPTH_TEST);    // reativa para os próximos frames
+        }
 
         // Atualiza tela
         SDL_GL_SwapWindow(window);
