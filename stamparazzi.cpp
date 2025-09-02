@@ -18,9 +18,12 @@ int teste = 0;
 bool mouse_in = false;
 bool pause = false;
 bool primeira_pessoa = true;
+bool flash_ativo = false;
+float flash_alpha = 0.0f;
 bool rodando = true;
 Uint32 inicio, fim;
 float dt;
+const Uint8* state;
 
 SDL_Window* window;
 SDL_GLContext glContext;
@@ -44,6 +47,12 @@ struct XYZ{//representa pontos e vetores
     }
 };
 
+bool AABBvsAABB(const AABB& a, const AABB& b) {
+    return (a.minX <= b.maxX && a.maxX >= b.minX) &&  // sobreposição em X
+           (a.minY <= b.maxY && a.maxY >= b.minY) &&  // sobreposição em Y
+           (a.minZ <= b.maxZ && a.maxZ >= b.minZ);    // sobreposição em Z
+}
+
 // checa esfera x esfera
 bool SphereVsSphere(const Sphere &a, const Sphere &b) {
     float dx = a.x - b.x;
@@ -61,9 +70,9 @@ bool SphereVsAABB(const Sphere &s, const AABB &b) {
     float cz = s.z;
 
     // closest point on AABB to sphere center
-    float closestX = std::max(b.minX, std::min(cx, b.maxX));
-    float closestY = std::max(b.minY, std::min(cy, b.maxY));
-    float closestZ = std::max(b.minZ, std::min(cz, b.maxZ));
+    float closestX = max(b.minX, min(cx, b.maxX));
+    float closestY = max(b.minY, min(cy, b.maxY));
+    float closestZ = max(b.minZ, min(cz, b.maxZ));
 
     float dx = closestX - cx;
     float dy = closestY - cy;
@@ -853,6 +862,47 @@ namespace NJ{ // NJ = Namespace para o Jogador
                 return grau <= 20.0f and distancia_entidades(*this,a) <= 30.0f;
             }
 
+            void tirou_foto(const Adesivo& a){
+                if (flash_ativo and detecta_adesivo(a)) {
+                    glDisable(GL_DEPTH_TEST);
+                    glMatrixMode(GL_PROJECTION);
+                    glPushMatrix();
+                    glLoadIdentity();
+                    glOrtho(0, 800, 600, 0, -1, 1);
+
+                    glMatrixMode(GL_MODELVIEW);
+                    glPushMatrix();
+                    glLoadIdentity();
+
+                    glEnable(GL_BLEND);
+                    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+                    glColor4f(1.0f, 1.0f, 1.0f, flash_alpha);
+
+                    glBegin(GL_QUADS);
+                        glVertex2f(0, 0);
+                        glVertex2f(800, 0);
+                        glVertex2f(800, 600);
+                        glVertex2f(0, 600);
+                    glEnd();
+
+                    glDisable(GL_BLEND);
+
+                    glPopMatrix();
+                    glMatrixMode(GL_PROJECTION);
+                    glPopMatrix();
+                    glMatrixMode(GL_MODELVIEW);
+                    glEnable(GL_DEPTH_TEST);
+                }
+
+                if (flash_ativo) {
+                    flash_alpha -= 2.0f * dt; // fade rápido (ajuste velocidade)
+                    if (flash_alpha <= 0.0f) {
+                        flash_alpha = 0.0f;
+                        flash_ativo = false;
+                    }
+                }
+            }
+
             bool tenta_mover(float dx, float dy, float dz){
                 Sphere candidate = this->mascara;
                 candidate.x += dx;
@@ -901,7 +951,7 @@ namespace NJ{ // NJ = Namespace para o Jogador
                     cam_pitch += camera_sens * (midy - tempy) * dt;
                     prende_camera();
                     SDL_WarpMouseInWindow(window,midx,midy);
-                    const Uint8* state = SDL_GetKeyboardState(NULL);
+                    state = SDL_GetKeyboardState(NULL);
                     if(state[SDL_SCANCODE_UP] or state[SDL_SCANCODE_W])
                         if(cam_pitch != 90.0f and cam_pitch != -90.0f)
                             move_camera(move_vel,0.0f);
@@ -976,12 +1026,12 @@ void inicializa_sdl(){
 
     //Necessário para o meu controle
     SDL_GameControllerAddMapping(
-    "030081f4790000000600000000000000,USB Network Joystick,"
-    "a:b2,b:b1,x:b3,y:b0,back:b8,start:b9,guide:b12,"
-    "leftshoulder:b6,rightshoulder:b7,leftstick:b4,rightstick:b5,"
-    "lefttrigger:b10,righttrigger:b11,"
-    "dpup:h0.1,dpdown:h0.4,dpleft:h0.8,dpright:h0.2,"
-    "leftx:a0,lefty:a1,rightx:a2,righty:a3,"
+        "030081f4790000000600000000000000,USB Network Joystick,"
+        "a:b2,b:b1,x:b3,y:b0,back:b8,start:b9,guide:b12,"
+        "leftshoulder:b6,rightshoulder:b7,leftstick:b10,rightstick:b11,"
+        "lefttrigger:b4,righttrigger:b5,"
+        "dpup:h0.1,dpdown:h0.4,dpleft:h0.8,dpright:h0.2,"
+        "leftx:a0,lefty:a1,rightx:a2,righty:a3,"
     );
 
     for(int i = 0; i < SDL_NumJoysticks(); i++){
@@ -1027,25 +1077,51 @@ void loop_jogo(){
 
             NC::atualiza_controller(evento);
             
-            if(evento.type == SDL_KEYDOWN){
-                if(evento.key.keysym.sym == SDLK_ESCAPE) rodando = false;
-                else if(evento.key.keysym.sym == SDLK_p){
-                    pause = !pause;
-                    SDL_ShowCursor(pause ? SDL_ENABLE : SDL_DISABLE);
-                }else if(evento.key.keysym.sym == SDLK_t)
-                    primeira_pessoa = !primeira_pessoa;
+            if(!game_controller){
+                if(evento.type == SDL_KEYDOWN){
+                    if(evento.key.keysym.sym == SDLK_p){
+                        pause = !pause;
+                        SDL_ShowCursor(pause ? SDL_ENABLE : SDL_DISABLE);
+                    } else if(evento.key.keysym.sym == SDLK_ESCAPE)
+                        if(pause) rodando = false;
+                        else primeira_pessoa = !primeira_pessoa;
+                }
+                if(evento.type == SDL_MOUSEBUTTONDOWN and pause){
+                    pause = false;
+                    SDL_ShowCursor(SDL_DISABLE);
+                } else if(evento.type == SDL_MOUSEBUTTONDOWN and !pause){
+                    if(evento.button.button == SDL_BUTTON_LEFT){
+                        flash_alpha = 1.0f;
+                        flash_ativo = true;
+                    }
+                }
+            } else {
+                if(evento.type == SDL_CONTROLLERBUTTONDOWN) {
+                    if(evento.cbutton.button == SDL_CONTROLLER_BUTTON_START)
+                        pause = !pause;
+                    else if(evento.cbutton.button == SDL_CONTROLLER_BUTTON_BACK)
+                        if(pause) rodando = false;
+                        else primeira_pessoa = !primeira_pessoa;
+                }
+                if(SDL_GameControllerGetAxis(game_controller,SDL_CONTROLLER_AXIS_TRIGGERRIGHT) > 16000){
+                    flash_alpha = 1.0f;
+                    flash_ativo = true;
+                }
             }
-            if(evento.type == SDL_MOUSEBUTTONDOWN && pause){
-                pause = false;
-                SDL_ShowCursor(SDL_DISABLE);
-            }
+        }
 
-            if(evento.type == SDL_CONTROLLERBUTTONDOWN) {
-                if(evento.cbutton.button == SDL_CONTROLLER_BUTTON_BACK)
-                    rodando = false;
-                else if(evento.cbutton.button == SDL_CONTROLLER_BUTTON_START)
-                    pause = !pause;
+        // -------------------- detectar trigger do controle (por frame, com rising edge) --------------------
+        if (game_controller) {
+            Sint16 rt = SDL_GameControllerGetAxis(game_controller, SDL_CONTROLLER_AXIS_TRIGGERRIGHT);
+            bool rtPressed = (rt > 16000); // threshold; se seu controlador usar signed axis com repouso negativo, ajuste abaixo
+
+            static bool prevRTPressed = false; // preserva estado entre frames
+            if (rtPressed && !prevRTPressed) {
+                flash_alpha = 1.0f;
+                flash_ativo = true;
+                // não chamar jogador.tirou_foto aqui — desenhe no render loop
             }
+            prevRTPressed = rtPressed;
         }
 
         // Limpa tela
@@ -1075,7 +1151,7 @@ void loop_jogo(){
         	ND::desenha_chao();
 		glPopMatrix();
 
-        /*for(int i = 0; i < 26; i+=2){
+        for(int i = 0; i < 26; i+=2){
             ND::muda_cor(i/2);
             glPushMatrix();
                 glTranslatef(-20+i*2,5,-15);
@@ -1089,7 +1165,7 @@ void loop_jogo(){
                 glTranslatef(i*10,5,-30);
                 ND::desenha_superficie(i);
             glPopMatrix();
-        }*/
+        }
 
         for (const auto& p : poligonos)
             p->desenha_poligono(1);
@@ -1099,10 +1175,20 @@ void loop_jogo(){
         // Controla câmera
         jogador.controle_camera(MOVE_VEL, CAMERA_SENS);
         if(jogador.detecta_adesivo(a)){
-            //glDisable(GL_DEPTH_TEST);   // ignora profundidade
+            glDisable(GL_DEPTH_TEST);   // ignora profundidade
             ND::marcax(a.getX(),a.getY(),a.getZ());
-            //glEnable(GL_DEPTH_TEST);    // reativa para os próximos frames
+            glEnable(GL_DEPTH_TEST);    // reativa para os próximos frames
         }
+
+        jogador.tirou_foto(a);
+
+        /*if (flash_ativo) {
+            flash_alpha -= 2.0f * dt; // fade rápido (ajuste velocidade)
+            if (flash_alpha <= 0.0f) {
+                flash_alpha = 0.0f;
+                flash_ativo = false;
+            }
+        }*/
 
         // Atualiza tela
         SDL_GL_SwapWindow(window);
