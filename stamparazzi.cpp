@@ -28,59 +28,9 @@ const Uint8* state;
 SDL_Window* window;
 SDL_GLContext glContext;
 SDL_GameController* game_controller = NULL;
-string modo_controle = "PC"; // "PC" (COMPUTADOR) OU "CONT" (CONTROLE)
+//string modo_controle = "PC"; // "PC" (COMPUTADOR) OU "CONT" (CONTROLE)
 
-struct AABB {
-    float minX, minY, minZ;
-    float maxX, maxY, maxZ;
-};
 
-struct Sphere {
-    float x, y, z;
-    float r;
-};
-
-struct XYZ{//representa pontos e vetores
-    GLfloat x, y, z;
-    XYZ(GLfloat x = 0, GLfloat y = 0, GLfloat z = 0){
-        this->x = x; this->y = y; this->z = z;
-    }
-};
-
-bool AABBvsAABB(const AABB& a, const AABB& b) {
-    return (a.minX <= b.maxX && a.maxX >= b.minX) &&  // sobreposição em X
-           (a.minY <= b.maxY && a.maxY >= b.minY) &&  // sobreposição em Y
-           (a.minZ <= b.maxZ && a.maxZ >= b.minZ);    // sobreposição em Z
-}
-
-// checa esfera x esfera
-bool SphereVsSphere(const Sphere &a, const Sphere &b) {
-    float dx = a.x - b.x;
-    float dy = a.y - b.y;
-    float dz = a.z - b.z;
-    float dist2 = dx*dx + dy*dy + dz*dz;
-    float rsum = a.r + b.r;
-    return dist2 <= (rsum * rsum);
-}
-
-// checa esfera x AABB (closest point)
-bool SphereVsAABB(const Sphere &s, const AABB &b) {
-    float cx = s.x;
-    float cy = s.y;
-    float cz = s.z;
-
-    // closest point on AABB to sphere center
-    float closestX = max(b.minX, min(cx, b.maxX));
-    float closestY = max(b.minY, min(cy, b.maxY));
-    float closestZ = max(b.minZ, min(cz, b.maxZ));
-
-    float dx = closestX - cx;
-    float dy = closestY - cy;
-    float dz = closestZ - cz;
-
-    float dist2 = dx*dx + dy*dy + dz*dz;
-    return dist2 <= (s.r * s.r);
-}
 
 namespace NG{ //Namespace para Informações do Game/Jogo
 
@@ -123,14 +73,14 @@ namespace NC{ //Namespace para Controles e Comandos
                     }
                 }
                 cout << "Controle conectado!" << endl;
-                modo_controle = "CONT"; return;
+                //modo_controle = "CONT"; return;
             }
         } else if (evento.type == SDL_CONTROLLERDEVICEREMOVED) {
             if (game_controller) {
                 SDL_GameControllerClose(game_controller);
                 game_controller = NULL;
                 cout << "Controle desconectado!" << endl;
-                modo_controle = "PC"; return;
+                //modo_controle = "PC"; return;
             }
         }
     }
@@ -138,11 +88,20 @@ namespace NC{ //Namespace para Controles e Comandos
 
 namespace NL{ //Namespace para operações de álgebra linear envolvendo vetores
 
+    struct XYZ{//representa pontos e vetores
+        float x, y, z;
+        XYZ() 
+        : x(0.0f), y(0.0f), z(0.0f) { }
+
+        XYZ(float ix, float iy, float iz)
+        : x(ix), y(iy), z(iz) { }
+    };
+
     GLfloat operator!(const XYZ& v){//Norma
         return (sqrt(v.x*v.x+v.y*v.y+v.z*v.z));
     }
     XYZ operator-(const XYZ& o,const XYZ& d){//Diferença de Vetores(ou pontos)
-        return (XYZ(d.x-o.x,d.y-o.y,d.z-o.z));
+        return (XYZ(o.x-d.x,o.y-d.y,o.z-d.z));
     }
     XYZ operator+(const XYZ& o,const XYZ& d){//Soma de Vetores(ou pontos)
         return (XYZ(d.x+o.x,d.y+o.y,d.z+o.z));
@@ -170,7 +129,223 @@ namespace NL{ //Namespace para operações de álgebra linear envolvendo vetores
 
 }
 
+namespace NB{ //Namespace para Bounding Boxes e Colisões
+
+    using namespace NL;
+
+    struct AABB {
+        XYZ min, max;
+    };
+
+    struct Sphere {
+        XYZ c;
+        float r;
+    };
+
+    bool AABBvsAABB(const AABB& a, const AABB& b) {
+        return (a.min.x <= b.max.x && a.max.x >= b.min.x) &&  // sobreposição em X
+            (a.min.y <= b.max.y && a.max.y >= b.min.y) &&  // sobreposição em Y
+            (a.min.z <= b.max.z && a.max.z >= b.min.z);    // sobreposição em Z
+    }
+
+    // checa esfera x esfera
+    bool SphereVsSphere(const Sphere &a, const Sphere &b) {
+        float dx = a.c.x - b.c.x;
+        float dy = a.c.y - b.c.y;
+        float dz = a.c.z - b.c.z;
+        float dist2 = dx*dx + dy*dy + dz*dz;
+        float rsum = a.r + b.r;
+        return dist2 <= (rsum * rsum);
+    }
+
+    // checa esfera x AABB (closest point)
+    bool SphereVsAABB(const Sphere &s, const AABB &b) {
+        float cx = s.c.x;
+        float cy = s.c.y;
+        float cz = s.c.z;
+
+        // closest point on AABB to sphere center
+        float closestX = max(b.min.x, min(cx, b.max.x));
+        float closestY = max(b.min.y, min(cy, b.max.y));
+        float closestZ = max(b.min.z, min(cz, b.max.z));
+
+        float dx = closestX - cx;
+        float dy = closestY - cy;
+        float dz = closestZ - cz;
+
+        float dist2 = dx*dx + dy*dy + dz*dz;
+        return dist2 <= (s.r * s.r);
+    }
+
+    inline float Length2(const XYZ&a){ return Escalar(a,a); }
+    inline float Clamp(float v,float mn,float mx){ return v<mn?mn:(v>mx?mx:v); }
+
+    XYZ ClosestPointOnSegment(const XYZ& A,const XYZ& B,const XYZ& P){
+        XYZ AB = B - A;
+        float t = Escalar(P - A, AB) / Length2(AB);
+        t = Clamp(t,0.0f,1.0f);
+        return A + AB*t;
+    }
+
+    struct Capsule {
+        XYZ A,B; // extremos do segmento central
+        float r;  // raio
+    };
+
+    // distância entre dois segmentos (Ericson, ch.5.1.9)
+    float SegmentSegmentDist2(const XYZ& A0,const XYZ& A1,
+                            const XYZ& B0,const XYZ& B1,
+                            float& s,float& t){
+        XYZ u = A1 - A0;
+        XYZ v = B1 - B0;
+        XYZ w = A0 - B0;
+        float a = Escalar(u,u);
+        float b = Escalar(u,v);
+        float c = Escalar(v,v);
+        float d = Escalar(u,w);
+        float e = Escalar(v,w);
+        float D = a*c - b*b;
+        s = D < 1e-6f ? 0.0f : Clamp((b*e - c*d)/D,0.0f,1.0f);
+        t = (b*s + e)/c;
+        if(t<0){t=0;s=Clamp(-d/a,0.0f,1.0f);}
+        else if(t>1){t=1;s=Clamp((b-d)/a,0.0f,1.0f);}
+        XYZ dP = (A0 + u*s) - (B0 + v*t);
+        return Length2(dP);
+    }
+
+    bool CapsuleVsCapsule(const Capsule& c1,const Capsule& c2){
+        float s,t;
+        float dist2 = SegmentSegmentDist2(c1.A,c1.B,c2.A,c2.B,s,t);
+        float rsum = c1.r + c2.r;
+        return dist2 <= rsum*rsum;
+    }
+
+    struct Cylinder {
+        XYZ base;   // centro da base
+        XYZ axis;   // vetor normalizado do eixo
+        float h;     // altura
+        float R;     // raio
+    };
+
+    bool SphereVsCylinder(const Sphere& s,const Cylinder& cyl){
+        // projeção do centro da esfera no eixo
+        float t = Escalar(s.c - cyl.base, cyl.axis);
+        t = Clamp(t,0.0f,cyl.h);
+        XYZ Q = cyl.base + cyl.axis*t;
+        XYZ d = s.c - Q;
+        float dist2 = Length2(d);
+        return dist2 <= (s.r + cyl.R)*(s.r + cyl.R);
+    }
+
+    struct ConeBound {
+        XYZ apex;   // vértice
+        XYZ axis;   // direção (unitário, do ápice à base)
+        float h;     // altura
+        float R;     // raio da base
+    };
+
+    bool PointInConeBound(const XYZ& P,const ConeBound& cone){
+        XYZ v = P - cone.apex;
+        float t = Escalar(v,cone.axis);
+        if(t<0 || t>cone.h) return false;
+        float r = (t/cone.h)*cone.R; // raio local
+        XYZ proj = cone.apex + cone.axis*t;
+        float dist2 = Length2(P - proj);
+        return dist2 <= r*r;
+    }
+
+    // -----------------------------------------------------------
+    // Closest point on triangle (Ericson) + Sphere vs Triangle
+    // -----------------------------------------------------------
+    XYZ ClosestPointOnTriangle(const XYZ& A, const XYZ& B, const XYZ& C, const XYZ& P) {
+        XYZ AB = B - A;
+        XYZ AC = C - A;
+        XYZ AP = P - A;
+
+        float d1 = Escalar(AB, AP);
+        float d2 = Escalar(AC, AP);
+        if (d1 <= 0.0f && d2 <= 0.0f) return A; // barycentric (1,0,0)
+
+        XYZ BP = P - B;
+        float d3 = Escalar(AB, BP);
+        float d4 = Escalar(AC, BP);
+        if (d3 >= 0.0f && d4 <= d3) return B; // barycentric (0,1,0)
+
+        float vc = d1 * d4 - d3 * d2;
+        if (vc <= 0.0f && d1 >= 0.0f && d3 <= 0.0f) {
+            float v = d1 / (d1 - d3);
+            return A + AB * v; // on AB
+        }
+
+        XYZ CP = P - C;
+        float d5 = Escalar(AB, CP);
+        float d6 = Escalar(AC, CP);
+        if (d6 >= 0.0f && d5 <= d6) return C; // barycentric (0,0,1)
+
+        float vb = d5 * d2 - d1 * d6;
+        if (vb <= 0.0f && d2 >= 0.0f && d6 <= 0.0f) {
+            float w = d2 / (d2 - d6);
+            return A + AC * w; // on AC
+        }
+
+        float va = d3 * d6 - d5 * d4;
+        if (va <= 0.0f && (d4 - d3) >= 0.0f && (d5 - d6) >= 0.0f) {
+            float w = (d4 - d3) / ((d4 - d3) + (d5 - d6));
+            return B + (C - B) * w; // on BC
+        }
+
+        // inside face region
+        float denom = 1.0f / (va + vb + vc);
+        float v = vb * denom;
+        float w = vc * denom;
+        return A + AB * v + AC * w;
+    }
+
+    bool SphereVsTriangle(const Sphere& s, const XYZ& A, const XYZ& B, const XYZ& C) {
+        XYZ cp = ClosestPointOnTriangle(A,B,C,s.c);
+        XYZ d = cp - s.c;
+        return Length2(d) <= (s.r * s.r);
+    }
+
+    // -----------------------------------------------------------
+    // Sphere vs Cone bounded (approx / robust test)
+    // cone.axis must be normalized, cone.apex at apex, h = height, R = base radius
+    // -----------------------------------------------------------
+    bool SphereVsCone(const Sphere& s, const ConeBound& cone) {
+        // vector from apex to sphere center
+        XYZ v = s.c - cone.apex;
+        float t = Escalar(v, cone.axis); // projection along axis
+
+        // case 1: sphere center before apex (check apex point)
+        if (t <= 0.0f) {
+            // distance to apex point
+            XYZ d = s.c - cone.apex;
+            return Length2(d) <= (s.r * s.r);
+        }
+
+        // case 2: beyond base plane -> check disk of base (center at apex + axis*h)
+        if (t >= cone.h) {
+            XYZ baseCenter = cone.apex + cone.axis * cone.h;
+            XYZ d = s.c - baseCenter;
+            float dist2 = Length2(d);
+            float rsum = s.r + cone.R;
+            return dist2 <= (rsum * rsum);
+        }
+
+        // case 3: inside slab [0,h] -> check radial distance vs cone local radius
+        XYZ proj = cone.apex + cone.axis * t;
+        XYZ perp = s.c - proj;
+        float distPerp2 = Length2(perp);
+
+        float localR = (t / cone.h) * cone.R; // linear interpolation from apex(0) to base(R)
+        float rsum = localR + s.r;
+        return distPerp2 <= (rsum * rsum);
+    }
+}
+
 namespace ND{ //Namespace para Desenhos
+
+    using namespace NL;
 
     enum F{
         CUBO,
@@ -668,22 +843,25 @@ namespace ND{ //Namespace para Desenhos
 };
 
 namespace NE{ //Namespace para todas as propriedades comuns a todas as Entidades
+
+    using namespace NL;
+
     class Entidade{
         protected:
-            float x, y, z;
+            XYZ pos;
 
         public:
             Entidade(float ix, float iy, float iz){
-                this->x = ix, this->y = iy, this->z = iz;
+                this->pos.x = ix, this->pos.y = iy, this->pos.z = iz;
             };
-            Entidade() : x(0.0f), y(0.0f), z(0.0f) {};
+            Entidade() : pos({0.0f,0.0f,0.0f}) {};
 
-            float getX() const { return x; }
-            float getY() const { return y; }
-            float getZ() const { return z; }
-            void setX(float ix) { x = ix; }
-            void setY(float iy) { y = iy; }
-            void setZ(float iz) { z = iz; }
+            float getX() const { return pos.x; }
+            float getY() const { return pos.y; }
+            float getZ() const { return pos.z; }
+            void setX(float ix) { pos.x = ix; }
+            void setY(float iy) { pos.y = iy; }
+            void setZ(float iz) { pos.z = iz; }
     };
 
     static float distancia_entidades(const Entidade& e1, const Entidade& e2){
@@ -709,7 +887,7 @@ namespace NA{ //Namespace para Entidades que são adesivos
             void desenha_adesivo(){
                 muda_cor(10);
                 glPushMatrix();
-                glTranslatef(this->x,this->y,this->z);
+                glTranslatef(this->pos.x,this->pos.y,this->pos.z);
                 glScalef(0.25f,0.25f,0.25f);
                 desenha_cilindro();
                 glPopMatrix();
@@ -721,6 +899,7 @@ NA::Adesivo a = NA::Adesivo(-5.0f,5.0f,10.0f,{0,0,1});
 
 namespace NP{ //Namespace para entidades que são Polígonos
 
+    using namespace NB;
     using namespace NE;
     using namespace ND;
 
@@ -731,16 +910,9 @@ namespace NP{ //Namespace para entidades que são Polígonos
             Poligono(float ix, float iy, float iz, int s)
             : Entidade(ix, iy, iz), superficie(s) { }
 
-            virtual bool colide_sphere(const Sphere& s) const = 0;
+            virtual bool colide_jogador(const Sphere& s) const = 0;
+            virtual void desenha_poligono(int cor) = 0;
             virtual ~Poligono() = default;
-
-            void desenha_poligono(int cor){
-                if(cor >= 0 and cor <= 12) muda_cor(cor);
-                glPushMatrix();
-                glTranslatef(this->x,this->y,this->z);
-                desenha_superficie(this->superficie);
-                glPopMatrix();
-            }
     };
 
     class Cubo : public Poligono{
@@ -750,11 +922,61 @@ namespace NP{ //Namespace para entidades que são Polígonos
             Cubo(float ix, float iy, float iz, float l)
             : Poligono(ix,iy,iz,F::CUBO), lado(l) { }
 
-            bool colide_sphere(const Sphere& s) const override {
-                AABB box = { x - lado, y - lado, z - lado, x + lado, y + lado, z + lado };
+            bool colide_jogador(const Sphere& s) const override {
+                AABB box = {{pos.x - lado, pos.y - lado, pos.z - lado}, {pos.x + lado, pos.y + lado, pos.z + lado}};
                 return SphereVsAABB(s, box);
             }
 
+            void desenha_poligono(int cor) override {
+                if(cor >= 0 and cor <= 12) muda_cor(cor);
+                glPushMatrix();
+                glTranslatef(this->pos.x, this->pos.y, this->pos.z);
+                // aqui `lado` é tratado como meio-extent (compatível com sua desenha_cubo)
+                ND::desenha_cubo(this->lado);
+                glPopMatrix();
+            }
+
+    };
+
+    class Piramide : public Poligono{
+        public:
+            float base, altura;
+
+            Piramide(float ix, float iy, float iz, float b, float h)
+            : Poligono(ix,iy,iz,F::PIRAMIDE), base(b), altura(h) {}
+
+            bool colide_jogador(const Sphere& s) const override {
+                float b = base / 2.0f;
+
+                // base quad vertices (conforme ND::desenha_piramide)
+                XYZ A = { pos.x - b, pos.y - b, pos.z - b };
+                XYZ B = { pos.x + b, pos.y - b, pos.z - b };
+                XYZ C = { pos.x + b, pos.y - b, pos.z + b };
+                XYZ D = { pos.x - b, pos.y - b, pos.z + b };
+
+                // apex (conforme ND::desenha_piramide: y = h - b)
+                XYZ Apex = { pos.x, pos.y + (altura - b), pos.z };
+
+                // base split into two triangles (A,B,C) and (A,C,D)
+                if (SphereVsTriangle(s, A, B, C)) return true;
+                if (SphereVsTriangle(s, A, C, D)) return true;
+
+                // four lateral triangles
+                if (SphereVsTriangle(s, A, B, Apex)) return true;
+                if (SphereVsTriangle(s, B, C, Apex)) return true;
+                if (SphereVsTriangle(s, C, D, Apex)) return true;
+                if (SphereVsTriangle(s, D, A, Apex)) return true;
+
+                return false;
+            }
+
+            void desenha_poligono(int cor) override {
+                if(cor >= 0 and cor <= 12) muda_cor(cor);
+                glPushMatrix();
+                glTranslatef(this->pos.x, this->pos.y, this->pos.z);
+                ND::desenha_piramide(this->base, this->altura);
+                glPopMatrix();
+            }
     };
 
     class Esfera : public Poligono{
@@ -765,11 +987,78 @@ namespace NP{ //Namespace para entidades que são Polígonos
             : Poligono(ix,iy,iz,F::ESFERA), raio(r) { }
 
 
-            bool colide_sphere(const Sphere& s) const override {
-                Sphere s2 = { x, y, z, raio };
+            bool colide_jogador(const Sphere& s) const override {
+                Sphere s2 = {{pos.x, pos.y, pos.z}, raio };
                 return SphereVsSphere(s, s2);
             }
 
+            void desenha_poligono(int cor) override {
+                if(cor >= 0 and cor <= 12) muda_cor(cor);
+                glPushMatrix();
+                glTranslatef(this->pos.x, this->pos.y, this->pos.z);
+                ND::desenha_esfera(this->raio, 30, 30);
+                glPopMatrix();
+            }
+
+    };
+
+    class Cilindro : public Poligono{
+        public:
+            float raio, altura;
+            XYZ centro_base, axis;
+
+            Cilindro(float ix, float iy, float iz, float r, float h)
+            : Poligono(ix,iy,iz,F::CILINDRO), raio(r), altura(h) 
+             { centro_base = { this->pos.x, this->pos.y, this->pos.z - altura/2.0f };
+                axis = { 0.0f, 0.0f, 1.0f }; }
+
+            bool colide_jogador(const Sphere& s) const override {
+                Cylinder cyl;
+                cyl.base = centro_base;    // use o centro_base calculado no construtor
+                // garante axis unitário (aqui já é eixo Z, mas normalizar é seguro)
+                float len = sqrt(axis.x*axis.x + axis.y*axis.y + axis.z*axis.z);
+                cyl.axis = { axis.x / (len ? len : 1.0f), axis.y / (len ? len : 1.0f), axis.z / (len ? len : 1.0f) };
+                cyl.h = altura;
+                cyl.R = raio;
+                return SphereVsCylinder(s, cyl);
+            }
+
+            void desenha_poligono(int cor) override {
+                if(cor >= 0 and cor <= 12) muda_cor(cor);
+                glPushMatrix();
+                glTranslatef(this->pos.x, this->pos.y, this->pos.z);
+                ND::desenha_cilindro(this->raio, this->altura, 30, 30, true);
+                glPopMatrix();
+            }
+    };
+
+    class Cone : public Poligono{
+        public:
+            float raio, altura;
+            XYZ apex, axis;
+
+            Cone(float ix, float iy, float iz, float r, float h)
+            : Poligono(ix,iy,iz,F::CONE), raio(r), altura(h) 
+            { apex = { this->pos.x, this->pos.y, this->pos.z + altura/2.0f };
+                axis = { 0.0f, 0.0f, -1.0f }; }
+
+            bool colide_jogador(const Sphere& s) const override {
+                ConeBound cone;
+                cone.apex = {pos.x, pos.y, pos.z + altura/2};  // ápice no topo
+                cone.axis = {0,0,-1};  // apontando para baixo
+                cone.h = altura;
+                cone.R = raio;
+                // Testa se o centro da esfera está dentro do cone expandido pelo raio da esfera
+                return SphereVsCone(s,cone); //PointInConeBound(s.c, cone);
+            }
+
+            void desenha_poligono(int cor) override {
+                if(cor >= 0 and cor <= 12) muda_cor(cor);
+                glPushMatrix();
+                glTranslatef(this->pos.x, this->pos.y, this->pos.z);
+                ND::desenha_cone(this->raio, this->altura, 30);
+                glPopMatrix();
+            }
     };
 }
 
@@ -778,6 +1067,7 @@ vector<unique_ptr<NP::Poligono>> poligonos;
 namespace NJ{ // NJ = Namespace para o Jogador
 
     using namespace NL;
+    using namespace NB;
     using namespace NE;
     using namespace ND;
     using namespace NA;
@@ -789,7 +1079,7 @@ namespace NJ{ // NJ = Namespace para o Jogador
 
             Jogador(float ix, float iy, float iz, float cy, float cp)
             : Entidade(ix,iy,iz), cam_yaw(cy), cam_pitch(cp),
-                mascara({this->x,this->y,this->z,1.0f}) { }
+                mascara({{this->pos.x,this->pos.y,this->pos.z},1.0f}) { }
             
             Jogador(){};
 
@@ -806,27 +1096,27 @@ namespace NJ{ // NJ = Namespace para o Jogador
                         float theta2 = (j + 1) * (2 * M_PI / fatias);
 
                         // Vertex 1 (bottom-left of current quad)
-                        float x1 = this->mascara.r * cos(phi2) * sin(theta1) + this->x;
-                        float y1 = this->mascara.r * sin(phi2) + this->y;
-                        float z1 = this->mascara.r * cos(phi2) * cos(theta1) + this->z;
+                        float x1 = this->mascara.r * cos(phi2) * sin(theta1) + this->pos.x;
+                        float y1 = this->mascara.r * sin(phi2) + this->pos.y;
+                        float z1 = this->mascara.r * cos(phi2) * cos(theta1) + this->pos.z;
                         glVertex3f(x1, y1, z1);
 
                         // Vertex 2 (bottom-right of current quad)
-                        float x2 = this->mascara.r * cos(phi2) * sin(theta2) + this->x;
-                        float y2 = this->mascara.r * sin(phi2) + this->y;
-                        float z2 = this->mascara.r * cos(phi2) * cos(theta2) + this->z;
+                        float x2 = this->mascara.r * cos(phi2) * sin(theta2) + this->pos.x;
+                        float y2 = this->mascara.r * sin(phi2) + this->pos.y;
+                        float z2 = this->mascara.r * cos(phi2) * cos(theta2) + this->pos.z;
                         glVertex3f(x2, y2, z2);
 
                         // Vertex 3 (top-right of current quad)
-                        float x3 = this->mascara.r * cos(phi1) * sin(theta2) + this->x;
-                        float y3 = this->mascara.r * sin(phi1) + this->y;
-                        float z3 = this->mascara.r * cos(phi1) * cos(theta2) + this->z;
+                        float x3 = this->mascara.r * cos(phi1) * sin(theta2) + this->pos.x;
+                        float y3 = this->mascara.r * sin(phi1) + this->pos.y;
+                        float z3 = this->mascara.r * cos(phi1) * cos(theta2) + this->pos.z;
                         glVertex3f(x3, y3, z3);
 
                         // Vertex 4 (top-left of current quad)
-                        float x4 = this->mascara.r * cos(phi1) * sin(theta1) + this->x;
-                        float y4 = this->mascara.r * sin(phi1) + this->y;
-                        float z4 = this->mascara.r * cos(phi1) * cos(theta1) + this->z;
+                        float x4 = this->mascara.r * cos(phi1) * sin(theta1) + this->pos.x;
+                        float y4 = this->mascara.r * sin(phi1) + this->pos.y;
+                        float z4 = this->mascara.r * cos(phi1) * cos(theta1) + this->pos.z;
                         glVertex3f(x4, y4, z4);
                     }
                 glEnd();
@@ -843,8 +1133,8 @@ namespace NJ{ // NJ = Namespace para o Jogador
                 muda_cor(0);
                 //glLineWidth(5.0f);
                 glBegin(GL_LINES);
-                glVertex3f(this->x,this->y,this->z);
-                glVertex3f(this->x+dirX*1000.0f,this->y+dirY*1000.0f,this->z+dirZ*1000.0f);
+                glVertex3f(this->pos.x,this->pos.y,this->pos.z);
+                glVertex3f(this->pos.x+dirX*1000.0f,this->pos.y+dirY*1000.0f,this->pos.z+dirZ*1000.0f);
                 glEnd();
                 //glLineWidth(1.0f);
             }
@@ -855,8 +1145,8 @@ namespace NJ{ // NJ = Namespace para o Jogador
                 float dirX = -sin(radYaw) * cos(radPitch);
                 float dirY =  sin(radPitch);
                 float dirZ = -cos(radYaw) * cos(radPitch);
-                XYZ vi = {this->x,this->y,this->z},
-                    vf = {this->x+dirX,this->y+dirY,this->z+dirZ},
+                XYZ vi = {this->pos.x,this->pos.y,this->pos.z},
+                    vf = {this->pos.x+dirX,this->pos.y+dirY,this->pos.z+dirZ},
                     va = {a.getX(),a.getY(),a.getZ()};
                 float grau = Arccos((vf-vi),(va-vi)) * 180.0f / M_PI;
                 return grau <= 20.0f and distancia_entidades(*this,a) <= 30.0f;
@@ -905,19 +1195,19 @@ namespace NJ{ // NJ = Namespace para o Jogador
 
             bool tenta_mover(float dx, float dy, float dz){
                 Sphere candidate = this->mascara;
-                candidate.x += dx;
-                candidate.y += dy;
-                candidate.z += dz;
+                candidate.c.x += dx;
+                candidate.c.y += dy;
+                candidate.c.z += dz;
 
                 // testa contra todos os poligonos (use referências para evitar cópia)
                 for (const auto& p : poligonos) 
-                    if (p->colide_sphere(candidate)) 
+                    if (p->colide_jogador(candidate)) 
                         return false; // colisão detectada => rejeita movimento
 
                 // sem colisão => confirma movimento
-                this->x += dx;
-                this->y += dy;
-                this->z += dz;
+                this->pos.x += dx;
+                this->pos.y += dy;
+                this->pos.z += dz;
                 this->mascara = candidate;
                 return true;
             }
@@ -991,7 +1281,7 @@ namespace NJ{ // NJ = Namespace para o Jogador
                     if(SDL_GameControllerGetButton(game_controller,SDL_CONTROLLER_BUTTON_RIGHTSHOULDER))
                         move_camera(move_vel,-1.0f,-1.0f);
                 }
-                this->mascara = {this->x,this->y,this->z,1.0f};
+                this->mascara = {{this->pos.x,this->pos.y,this->pos.z},1.0f};
             }
     };
 };
@@ -1037,7 +1327,7 @@ void inicializa_sdl(){
     for(int i = 0; i < SDL_NumJoysticks(); i++){
         if(SDL_IsGameController(i)){
             game_controller = SDL_GameControllerOpen(i);
-            modo_controle = "CONT";
+            //modo_controle = "CONT";
             break;
         }
     }
@@ -1053,7 +1343,10 @@ void inicializa_opengl(){
 
 void cria_poligonos(int n){
     poligonos.push_back(make_unique<NP::Cubo>(0.0f,10.0f,-20.0f,2.0f));
-    poligonos.push_back(make_unique<NP::Esfera>(10.0f,10.0f,-20.0f,2.0f));
+    poligonos.push_back(make_unique<NP::Piramide>(10.0f,10.0f,-20.0f,4.0f,4.0f));
+    poligonos.push_back(make_unique<NP::Esfera>(20.0f,10.0f,-20.0f,2.0f));
+    poligonos.push_back(make_unique<NP::Cilindro>(30.0f,10.0f,-20.0f,2.0f,4.0f));
+    poligonos.push_back(make_unique<NP::Cone>(40.0f,10.0f,-20.0f,2.0f,4.0f));
     /*for(int i = 0; i < n; i++){
         poligonos.push_back();
     }*/
@@ -1182,14 +1475,6 @@ void loop_jogo(){
 
         jogador.tirou_foto(a);
 
-        /*if (flash_ativo) {
-            flash_alpha -= 2.0f * dt; // fade rápido (ajuste velocidade)
-            if (flash_alpha <= 0.0f) {
-                flash_alpha = 0.0f;
-                flash_ativo = false;
-            }
-        }*/
-
         // Atualiza tela
         SDL_GL_SwapWindow(window);
     }
@@ -1212,7 +1497,7 @@ int main(int argc, char* argv[]) {
 
 	SDL_ShowCursor(SDL_ENABLE);
 
-    cria_poligonos(2);
+    cria_poligonos(5);
 
     loop_jogo();
 
