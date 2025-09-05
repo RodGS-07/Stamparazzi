@@ -947,9 +947,11 @@ namespace NP{ //Namespace para entidades que são Polígonos
 
             bool colide_jogador(const Sphere& s) const override {
                 float b = base / 2.0f;
-
+                float h = altura / 2.0f;
+                AABB box = {{pos.x - b, pos.y - h, pos.z - b}, {pos.x + b, pos.y + h, pos.z + b}};
+                return SphereVsAABB(s, box);
                 // base quad vertices (conforme ND::desenha_piramide)
-                XYZ A = { pos.x - b, pos.y - b, pos.z - b };
+                /*XYZ A = { pos.x - b, pos.y - b, pos.z - b };
                 XYZ B = { pos.x + b, pos.y - b, pos.z - b };
                 XYZ C = { pos.x + b, pos.y - b, pos.z + b };
                 XYZ D = { pos.x - b, pos.y - b, pos.z + b };
@@ -967,7 +969,7 @@ namespace NP{ //Namespace para entidades que são Polígonos
                 if (SphereVsTriangle(s, C, D, Apex)) return true;
                 if (SphereVsTriangle(s, D, A, Apex)) return true;
 
-                return false;
+                return false;*/
             }
 
             void desenha_poligono(int cor) override {
@@ -988,8 +990,10 @@ namespace NP{ //Namespace para entidades que são Polígonos
 
 
             bool colide_jogador(const Sphere& s) const override {
-                Sphere s2 = {{pos.x, pos.y, pos.z}, raio };
-                return SphereVsSphere(s, s2);
+                AABB box = {{pos.x - raio, pos.y - raio, pos.z - raio}, {pos.x + raio, pos.y + raio, pos.z + raio}};
+                return SphereVsAABB(s, box);
+                //Sphere s2 = {{pos.x, pos.y, pos.z}, raio };
+                //return SphereVsSphere(s, s2);
             }
 
             void desenha_poligono(int cor) override {
@@ -1013,14 +1017,19 @@ namespace NP{ //Namespace para entidades que são Polígonos
                 axis = { 0.0f, 0.0f, 1.0f }; }
 
             bool colide_jogador(const Sphere& s) const override {
-                Cylinder cyl;
+                AABB box = {
+                    { pos.x - raio, pos.y - raio, pos.z - altura/2.0f },
+                    { pos.x + raio, pos.y + raio, pos.z + altura/2.0f }
+                };
+                return SphereVsAABB(s, box);
+                /*Cylinder cyl;
                 cyl.base = centro_base;    // use o centro_base calculado no construtor
                 // garante axis unitário (aqui já é eixo Z, mas normalizar é seguro)
                 float len = sqrt(axis.x*axis.x + axis.y*axis.y + axis.z*axis.z);
                 cyl.axis = { axis.x / (len ? len : 1.0f), axis.y / (len ? len : 1.0f), axis.z / (len ? len : 1.0f) };
                 cyl.h = altura;
                 cyl.R = raio;
-                return SphereVsCylinder(s, cyl);
+                return SphereVsCylinder(s, cyl);*/
             }
 
             void desenha_poligono(int cor) override {
@@ -1043,13 +1052,18 @@ namespace NP{ //Namespace para entidades que são Polígonos
                 axis = { 0.0f, 0.0f, -1.0f }; }
 
             bool colide_jogador(const Sphere& s) const override {
-                ConeBound cone;
+                AABB box = {
+                    { pos.x - raio, pos.y - raio, pos.z - altura/2.0f },
+                    { pos.x + raio, pos.y + raio, pos.z + altura/2.0f }
+                };
+                return SphereVsAABB(s, box);
+                /*ConeBound cone;
                 cone.apex = {pos.x, pos.y, pos.z + altura/2};  // ápice no topo
                 cone.axis = {0,0,-1};  // apontando para baixo
                 cone.h = altura;
                 cone.R = raio;
                 // Testa se o centro da esfera está dentro do cone expandido pelo raio da esfera
-                return SphereVsCone(s,cone); //PointInConeBound(s.c, cone);
+                return SphereVsCone(s,cone); //PointInConeBound(s.c, cone);*/
             }
 
             void desenha_poligono(int cor) override {
