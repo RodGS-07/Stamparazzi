@@ -910,7 +910,8 @@ namespace NP{ //Namespace para entidades que são Polígonos
             Poligono(float ix, float iy, float iz, int s)
             : Entidade(ix, iy, iz), superficie(s) { }
 
-            virtual bool colide_jogador(const Sphere& s) const = 0;
+            //virtual bool colide_jogador(const Sphere& s) const = 0;
+            virtual bool colide_jogador(const AABB& s) const = 0;
             virtual void desenha_poligono(int cor) = 0;
             virtual ~Poligono() = default;
     };
@@ -922,9 +923,9 @@ namespace NP{ //Namespace para entidades que são Polígonos
             Cubo(float ix, float iy, float iz, float l)
             : Poligono(ix,iy,iz,F::CUBO), lado(l) { }
 
-            bool colide_jogador(const Sphere& s) const override {
+            bool colide_jogador(const AABB& s) const override {
                 AABB box = {{pos.x - lado, pos.y - lado, pos.z - lado}, {pos.x + lado, pos.y + lado, pos.z + lado}};
-                return SphereVsAABB(s, box);
+                return AABBvsAABB(s, box);//SphereVsAABB(s,box);
             }
 
             void desenha_poligono(int cor) override {
@@ -945,11 +946,11 @@ namespace NP{ //Namespace para entidades que são Polígonos
             Piramide(float ix, float iy, float iz, float b, float h)
             : Poligono(ix,iy,iz,F::PIRAMIDE), base(b), altura(h) {}
 
-            bool colide_jogador(const Sphere& s) const override {
+            bool colide_jogador(const AABB& s) const override {
                 float b = base / 2.0f;
                 float h = altura / 2.0f;
                 AABB box = {{pos.x - b, pos.y - h, pos.z - b}, {pos.x + b, pos.y + h, pos.z + b}};
-                return SphereVsAABB(s, box);
+                return AABBvsAABB(s,box);//SphereVsAABB(s, box);
                 // base quad vertices (conforme ND::desenha_piramide)
                 /*XYZ A = { pos.x - b, pos.y - b, pos.z - b };
                 XYZ B = { pos.x + b, pos.y - b, pos.z - b };
@@ -989,9 +990,9 @@ namespace NP{ //Namespace para entidades que são Polígonos
             : Poligono(ix,iy,iz,F::ESFERA), raio(r) { }
 
 
-            bool colide_jogador(const Sphere& s) const override {
+            bool colide_jogador(const AABB& s) const override {
                 AABB box = {{pos.x - raio, pos.y - raio, pos.z - raio}, {pos.x + raio, pos.y + raio, pos.z + raio}};
-                return SphereVsAABB(s, box);
+                return AABBvsAABB(s,box);//SphereVsAABB(s, box);
                 //Sphere s2 = {{pos.x, pos.y, pos.z}, raio };
                 //return SphereVsSphere(s, s2);
             }
@@ -1016,12 +1017,12 @@ namespace NP{ //Namespace para entidades que são Polígonos
              { centro_base = { this->pos.x, this->pos.y, this->pos.z - altura/2.0f };
                 axis = { 0.0f, 0.0f, 1.0f }; }
 
-            bool colide_jogador(const Sphere& s) const override {
+            bool colide_jogador(const AABB& s) const override {
                 AABB box = {
                     { pos.x - raio, pos.y - raio, pos.z - altura/2.0f },
                     { pos.x + raio, pos.y + raio, pos.z + altura/2.0f }
                 };
-                return SphereVsAABB(s, box);
+                return AABBvsAABB(s,box);//SphereVsAABB(s, box);
                 /*Cylinder cyl;
                 cyl.base = centro_base;    // use o centro_base calculado no construtor
                 // garante axis unitário (aqui já é eixo Z, mas normalizar é seguro)
@@ -1051,12 +1052,12 @@ namespace NP{ //Namespace para entidades que são Polígonos
             { apex = { this->pos.x, this->pos.y, this->pos.z + altura/2.0f };
                 axis = { 0.0f, 0.0f, -1.0f }; }
 
-            bool colide_jogador(const Sphere& s) const override {
+            bool colide_jogador(const AABB& s) const override {
                 AABB box = {
                     { pos.x - raio, pos.y - raio, pos.z - altura/2.0f },
                     { pos.x + raio, pos.y + raio, pos.z + altura/2.0f }
                 };
-                return SphereVsAABB(s, box);
+                return AABBvsAABB(s,box);//SphereVsAABB(s, box);
                 /*ConeBound cone;
                 cone.apex = {pos.x, pos.y, pos.z + altura/2};  // ápice no topo
                 cone.axis = {0,0,-1};  // apontando para baixo
@@ -1089,18 +1090,60 @@ namespace NJ{ // NJ = Namespace para o Jogador
     class Jogador : public Entidade{
         public:
             float cam_yaw, cam_pitch;
-            Sphere mascara;
+            AABB mascara; //Sphere mascara;
 
             Jogador(float ix, float iy, float iz, float cy, float cp)
             : Entidade(ix,iy,iz), cam_yaw(cy), cam_pitch(cp),
-                mascara({{this->pos.x,this->pos.y,this->pos.z},1.0f}) { }
+                mascara({{this->pos.x-1.0f,this->pos.y-1.0f,this->pos.z-1.0f},
+                        {this->pos.x+1.0f,this->pos.y+1.0f,this->pos.z+1.0f}}) { }
             
             Jogador(){};
 
             void desenha_mascara(int stacks = 30, int fatias = 30){
                 muda_cor(12);
 
-                for (int i = 0; i < stacks; ++i) {
+                glBegin(GL_LINE_LOOP);
+                glVertex3f(mascara.min.x,mascara.min.y,mascara.min.z);
+                glVertex3f(mascara.min.x,mascara.max.y,mascara.min.z);
+                glVertex3f(mascara.max.x,mascara.max.y,mascara.min.z);
+                glVertex3f(mascara.max.x,mascara.min.y,mascara.min.z);
+                glEnd();
+
+                glBegin(GL_LINE_LOOP);
+                glVertex3f(mascara.min.x,mascara.min.y,mascara.max.z);
+                glVertex3f(mascara.min.x,mascara.max.y,mascara.max.z);
+                glVertex3f(mascara.max.x,mascara.max.y,mascara.max.z);
+                glVertex3f(mascara.max.x,mascara.min.y,mascara.max.z);
+                glEnd();
+
+                glBegin(GL_LINE_LOOP);
+                glVertex3f(mascara.min.x,mascara.min.y,mascara.min.z);
+                glVertex3f(mascara.min.x,mascara.min.y,mascara.max.z);
+                glVertex3f(mascara.max.x,mascara.min.y,mascara.max.z);
+                glVertex3f(mascara.max.x,mascara.min.y,mascara.min.z);
+                glEnd();
+
+                glBegin(GL_LINE_LOOP);
+                glVertex3f(mascara.min.x,mascara.max.y,mascara.min.z);
+                glVertex3f(mascara.min.x,mascara.max.y,mascara.max.z);
+                glVertex3f(mascara.max.x,mascara.max.y,mascara.max.z);
+                glVertex3f(mascara.max.x,mascara.max.y,mascara.min.z);
+                glEnd();
+
+                glBegin(GL_LINE_LOOP);
+                glVertex3f(mascara.min.x,mascara.min.y,mascara.min.z);
+                glVertex3f(mascara.min.x,mascara.max.y,mascara.min.z);
+                glVertex3f(mascara.min.x,mascara.max.y,mascara.max.z);
+                glVertex3f(mascara.min.x,mascara.min.y,mascara.max.z);
+                glEnd();
+
+                glBegin(GL_LINE_LOOP);
+                glVertex3f(mascara.max.x,mascara.min.y,mascara.min.z);
+                glVertex3f(mascara.max.x,mascara.max.y,mascara.min.z);
+                glVertex3f(mascara.max.x,mascara.max.y,mascara.max.z);
+                glVertex3f(mascara.max.x,mascara.min.y,mascara.max.z);
+                glEnd();
+                /*for (int i = 0; i < stacks; ++i) {
                     float phi1 = M_PI / 2 - i * (M_PI / stacks);
                     float phi2 = M_PI / 2 - (i + 1) * (M_PI / stacks);
 
@@ -1134,7 +1177,7 @@ namespace NJ{ // NJ = Namespace para o Jogador
                         glVertex3f(x4, y4, z4);
                     }
                 glEnd();
-                }
+                }*/
             }
 
             void desenha_mira(){
@@ -1208,10 +1251,13 @@ namespace NJ{ // NJ = Namespace para o Jogador
             }
 
             bool tenta_mover(float dx, float dy, float dz){
-                Sphere candidate = this->mascara;
-                candidate.c.x += dx;
-                candidate.c.y += dy;
-                candidate.c.z += dz;
+                AABB candidate = this->mascara; //Sphere candidate = this->mascara;
+                candidate.min.x += dx; candidate.max.x += dx;
+                candidate.min.y += dy; candidate.max.y += dy;
+                candidate.min.z += dz; candidate.max.z += dz;
+                //candidate.c.x += dx;
+                //candidate.c.y += dy;
+                //candidate.c.z += dz;
 
                 // testa contra todos os poligonos (use referências para evitar cópia)
                 for (const auto& p : poligonos) 
@@ -1295,7 +1341,9 @@ namespace NJ{ // NJ = Namespace para o Jogador
                     if(SDL_GameControllerGetButton(game_controller,SDL_CONTROLLER_BUTTON_RIGHTSHOULDER))
                         move_camera(move_vel,-1.0f,-1.0f);
                 }
-                this->mascara = {{this->pos.x,this->pos.y,this->pos.z},1.0f};
+                this->mascara = {{this->pos.x-1.0f,this->pos.y-1.0f,this->pos.z-1.0f},
+                        {this->pos.x+1.0f,this->pos.y+1.0f,this->pos.z+1.0f}};
+                //this->mascara = {{this->pos.x,this->pos.y,this->pos.z},1.0f};
             }
     };
 };
