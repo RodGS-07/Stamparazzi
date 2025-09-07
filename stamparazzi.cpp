@@ -28,9 +28,6 @@ const Uint8* state;
 SDL_Window* window;
 SDL_GLContext glContext;
 SDL_GameController* game_controller = NULL;
-//string modo_controle = "PC"; // "PC" (COMPUTADOR) OU "CONT" (CONTROLE)
-
-
 
 namespace NG{ //Namespace para Informações do Game/Jogo
 
@@ -72,15 +69,11 @@ namespace NC{ //Namespace para Controles e Comandos
                         break;
                     }
                 }
-                cout << "Controle conectado!" << endl;
-                //modo_controle = "CONT"; return;
             }
         } else if (evento.type == SDL_CONTROLLERDEVICEREMOVED) {
             if (game_controller) {
                 SDL_GameControllerClose(game_controller);
                 game_controller = NULL;
-                cout << "Controle desconectado!" << endl;
-                //modo_controle = "PC"; return;
             }
         }
     }
@@ -1389,7 +1382,6 @@ void inicializa_sdl(){
     for(int i = 0; i < SDL_NumJoysticks(); i++){
         if(SDL_IsGameController(i)){
             game_controller = SDL_GameControllerOpen(i);
-            //modo_controle = "CONT";
             break;
         }
     }
