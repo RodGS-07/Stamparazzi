@@ -3,6 +3,7 @@
 #include <vector>
 #include <array>
 #include <memory>
+#include <algorithm>
 #include <math.h>
 
 #define MOVE_VEL 0.25f
@@ -30,6 +31,14 @@ namespace NG{ //Namespace para informações do Jogo/Game
 namespace NB{ //Namespace para Bounding Boxes e colisões
     struct AABB {
         float x_min, y_min, x_max, y_max;
+    };
+
+    struct ABC {
+        float ax, ay, bx, by, cx, cy;
+    };
+
+    struct Circle {
+        float x, y, r;
     };
 
     bool AABBvsAABB(const AABB& a, const AABB& b) {
@@ -93,7 +102,7 @@ namespace NP{ //Namespace para Poligonos
             : Poligono(ix,iy,1), lado(l), mascara({ix-l,iy-l,ix+l,iy+l}) { }
 
             bool colide_jogador(const AABB& s) const override {
-                //AABB box = {x - lado, y - lado, x + lado, y + lado};
+                AABB box = {x - lado, y - lado, x + lado, y + lado};
                 return AABBvsAABB(s, this->mascara);//SphereVsAABB(s,box);
             }
 
@@ -103,9 +112,72 @@ namespace NP{ //Namespace para Poligonos
                 SDL_RenderFillRect(renderer, &cubo);
             }
     };
+
+    class Triangulo : public Poligono{
+        public:
+            float base, altura;
+            AABB mascara;
+
+            Triangulo(float ix, float iy, float b, float h)
+            : Poligono(ix,iy,2), base(b), altura(h) {
+                // vértices (exemplo: base horizontal, ápice no alto)
+                float ax = ix - b/2, ay = iy + h/2;  // canto esquerdo
+                float bx = ix + b/2, by = iy + h/2;  // canto direito
+                float cx = ix,       cy = iy - h/2;  // ápice
+
+                mascara = {
+                    min({ax,bx,cx}),
+                    min({ay,by,cy}),
+                    max({ax,bx,cx}),
+                    max({ay,by,cy})
+                };
+            }
+
+            bool colide_jogador(const AABB& s) const override {
+                //AABB box = {x - lado, y - lado, x + lado, y + lado};
+                return AABBvsAABB(s, this->mascara);//SphereVsAABB(s,box);
+            }
+
+            void desenha_poligono(int cor) override {
+                //SDL_SetRenderDrawColor(renderer, 255*0.0f, 255*1.0f, 255*0.0f, SDL_ALPHA_OPAQUE); // verde
+                SDL_Color verde = {0, 255, 0, SDL_ALPHA_OPAQUE};
+                SDL_Vertex v1 = {x - base/2, y + altura/2, verde};
+                SDL_Vertex v2 = {x + base/2, y + altura/2, verde};
+                SDL_Vertex v3 = {x,          y - altura/2, verde};
+                vector<SDL_Vertex> vertices = {v1, v2, v3};
+                SDL_RenderGeometry(renderer,nullptr,vertices.data(),3,nullptr,3);
+            }
+    };
+
+    class Circulo : public Poligono{
+        public:
+            float raio;
+            AABB mascara;
+
+            Circulo(float ix, float iy, float r)
+            : Poligono(ix,iy,3), raio(r), mascara({ix-r,iy-r,ix+r,iy+r}) { }
+
+            bool colide_jogador(const AABB& s) const override {
+                //AABB box = {x - lado, y - lado, x + lado, y + lado};
+                return AABBvsAABB(s, this->mascara);//SphereVsAABB(s,box);
+            }
+
+            void desenha_poligono(int cor) override {
+                SDL_SetRenderDrawColor(renderer, 255*0.0f, 255*0.0f, 255*1.0f, SDL_ALPHA_OPAQUE); // verde
+                // desenha um círculo simples como "pizza slice"
+                for(int w=0; w < raio*2; w++){
+                    for(int h=0; h < raio*2; h++){
+                        int dx = raio - w; // distância x ao centro
+                        int dy = raio - h; // distância y ao centro
+                        if((dx*dx + dy*dy) <= (raio*raio)){
+                            SDL_RenderDrawPoint(renderer, x + dx, y + dy);
+                        }
+                    }
+                }
+            }
+    };
 };
 
-//NP::Cubo c1 = NP::Cubo(400.0f,300.0f,25.0f);
 vector<unique_ptr<NP::Poligono>> poligonos;
 
 namespace NJ{ //Namespace para o Jogador
@@ -139,67 +211,60 @@ namespace NJ{ //Namespace para o Jogador
                 SDL_RenderDrawRect(renderer, &hitbox);
             }
 
+            bool colisaoComQualquer(const AABB& candidato){
+                for(const auto& p : poligonos){
+                    if(p->colide_jogador(candidato)) 
+                        return true; // colidiu com algum
+                }
+                return false; // livre
+            }
+
             void move_jogador(float move_vel, SDL_GameController* game_controller){
                 float dx = 0, dy = 0;
 
                 // teclado
                 if(!game_controller){
                     const Uint8* state = SDL_GetKeyboardState(NULL);
-                    if(state[SDL_SCANCODE_UP]   && this->y - move_vel >= 25)
-                        dy -= move_vel * dt;
-                    if(state[SDL_SCANCODE_DOWN] && this->y + move_vel <= 575)
-                        dy += move_vel * dt;
-                    if(state[SDL_SCANCODE_LEFT] && this->x - move_vel >= 50){
-                        dx -= move_vel * dt;
-                        image_xscale = -1;
-                    }
-                    if(state[SDL_SCANCODE_RIGHT]&& this->x + move_vel <= 750){
-                        dx += move_vel * dt;
-                        image_xscale = 1;
-                    }
+                    if(state[SDL_SCANCODE_UP]   && this->y - move_vel >= 25) dy -= move_vel * dt;
+                    if(state[SDL_SCANCODE_DOWN] && this->y + move_vel <= 575) dy += move_vel * dt;
+                    if(state[SDL_SCANCODE_LEFT] && this->x - move_vel >= 50){ dx -= move_vel * dt; image_xscale = -1; }
+                    if(state[SDL_SCANCODE_RIGHT]&& this->x + move_vel <= 750){ dx += move_vel * dt; image_xscale = 1; }
                 }
                 // controle
                 else {
-                    if(SDL_GameControllerGetAxis(game_controller, SDL_CONTROLLER_AXIS_LEFTY) < -16000 
-                        && this->y - move_vel >= 25) dy -= move_vel * dt;
-                    if(SDL_GameControllerGetAxis(game_controller, SDL_CONTROLLER_AXIS_LEFTY) > 16000 
-                        && this->y + move_vel <= 575) dy += move_vel * dt;
-                    if(SDL_GameControllerGetAxis(game_controller, SDL_CONTROLLER_AXIS_LEFTX) < -16000 
-                        && this->x - move_vel >= 50){ dx -= move_vel * dt; image_xscale = -1; }
-                    if(SDL_GameControllerGetAxis(game_controller, SDL_CONTROLLER_AXIS_LEFTX) > 16000 
-                        && this->x + move_vel <= 750){ dx += move_vel * dt; image_xscale = 1; }
+                    if(SDL_GameControllerGetAxis(game_controller, SDL_CONTROLLER_AXIS_LEFTY) < -16000 && this->y - move_vel >= 25) dy -= move_vel * dt;
+                    if(SDL_GameControllerGetAxis(game_controller, SDL_CONTROLLER_AXIS_LEFTY) > 16000 && this->y + move_vel <= 575) dy += move_vel * dt;
+                    if(SDL_GameControllerGetAxis(game_controller, SDL_CONTROLLER_AXIS_LEFTX) < -16000 && this->x - move_vel >= 50){ dx -= move_vel * dt; image_xscale = -1; }
+                    if(SDL_GameControllerGetAxis(game_controller, SDL_CONTROLLER_AXIS_LEFTX) > 16000 && this->x + move_vel <= 750){ dx += move_vel * dt; image_xscale = 1; }
                 }
 
-                // tenta mover no eixo X e Y ao mesmo tempo
-                for(const auto& p : poligonos){
-                    AABB candidato = { x - cx + dx, y - cy + dy, x + cx + dx, y + cy + dy };
-
-                    if(!p->colide_jogador(candidato)){
-                        // movimento válido nos dois eixos
-                        x += dx; y += dy;
-                        mascara = candidato;
-                        return;
-                    }
-
-                    // tenta só no eixo X
-                    candidato = { x - cx + dx, y - cy, x + cx + dx, y + cy };
-                    if(!p->colide_jogador(candidato)){
-                        x += dx;
-                        mascara = candidato;
-                        return;
-                    }
-
-                    // tenta só no eixo Y
-                    candidato = { x - cx, y - cy + dy, x + cx, y + cy + dy };
-                    if(!p->colide_jogador(candidato)){
-                        y += dy;
-                        mascara = candidato;
-                        return;
-                    }
-
-                    // caso contrário: bloqueado nos dois eixos → não move
+                // tenta mover nos dois eixos
+                AABB candidato = {x - cx + dx, y - cy + dy, x + cx + dx, y + cy + dy};
+                if(!colisaoComQualquer(candidato)){
+                    x += dx; y += dy;
+                    mascara = candidato;
+                    return;
                 }
+
+                // tenta só no eixo X
+                candidato = {x - cx + dx, y - cy, x + cx + dx, y + cy};
+                if(!colisaoComQualquer(candidato)){
+                    x += dx;
+                    mascara = candidato;
+                    return;
+                }
+
+                // tenta só no eixo Y
+                candidato = {x - cx, y - cy + dy, x + cx, y + cy + dy};
+                if(!colisaoComQualquer(candidato)){
+                    y += dy;
+                    mascara = candidato;
+                    return;
+                }
+
+                // caso contrário: bloqueado nos dois eixos
             }
+
     };
 };
 
@@ -249,7 +314,9 @@ void inicializa_sdl(){
 void loop_jogo(){
 
     SDL_Event evento;
-    poligonos.push_back(make_unique<NP::Cubo>(400.0f,300.0f,25.0f));
+    poligonos.push_back(make_unique<NP::Cubo>(200.0f,300.0f,25.0f));
+    poligonos.push_back(make_unique<NP::Triangulo>(400.0f,300.0f,50.0f,50.0f));
+    poligonos.push_back(make_unique<NP::Circulo>(600.0f,300.0f,25.0f));
 
     inicio = SDL_GetTicks();
 
