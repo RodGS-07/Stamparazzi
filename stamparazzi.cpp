@@ -8,6 +8,9 @@
 #include <algorithm>
 #include <typeinfo>
 
+#define XBOUNDS 100.0f
+#define YBOUNDS 100.0f
+#define ZBOUNDS 100.0f
 #define MOVE_VEL 10.0f
 #define CAMERA_SENS 1.0f
 #define ANALOG_SENS 1.25f
@@ -1308,6 +1311,7 @@ namespace NP{ //Namespace para entidades que são Polígonos
 }
 
 vector<unique_ptr<NP::Poligono>> poligonos;
+NP::Cubo room = NP::Cubo(0.0f,0.0f,0.0f,100.0f);
 
 namespace NJ{ // NJ = Namespace para o Jogador
 
@@ -1489,7 +1493,15 @@ namespace NJ{ // NJ = Namespace para o Jogador
                 //candidate.c.y += dy;
                 //candidate.c.z += dz;
 
-                // testa contra todos os poligonos (use referências para evitar cópia)
+                // testa contra os limites da sala/room
+                AABB a = candidate, 
+                    b = {{-XBOUNDS, -YBOUNDS, -ZBOUNDS},
+                        {XBOUNDS, YBOUNDS, ZBOUNDS}};
+                if((a.min.x <= b.min.x || a.max.x >= b.max.x) ||
+                    (a.min.y <= b.min.y || a.max.y >= b.max.y) ||
+                    (a.min.z <= b.min.z || a.max.z >= b.max.z)) return false;
+
+                // testa contra todos os poligonos (use referências para evitar cópia)    
                 for (const auto& p : poligonos) 
                     if (p->colide_jogador(candidate)) 
                         return false; // colisão detectada => rejeita movimento
@@ -1628,7 +1640,7 @@ void inicializa_opengl(){
     // Configuração básica do OpenGL
     glEnable(GL_DEPTH_TEST);
     glMatrixMode(GL_PROJECTION);
-    gluPerspective(45.0, 800.0/600.0, 0.1, 100.0);
+    gluPerspective(45.0, 800.0/600.0, 0.1, 250.0);
     glMatrixMode(GL_MODELVIEW);
 }
 
@@ -1750,6 +1762,9 @@ void loop_jogo(){
                 ND::desenha_superficie(i);
             glPopMatrix();
         }
+
+        // Desenha máscara da room
+        room.desenha_mascara();
 
         for (const auto& p : poligonos){
             p->desenha_poligono(1);
