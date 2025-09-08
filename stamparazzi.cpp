@@ -906,6 +906,7 @@ namespace NP{ //Namespace para entidades que são Polígonos
             //virtual bool colide_jogador(const Sphere& s) const = 0;
             virtual bool colide_jogador(const AABB& s) const = 0;
             virtual void desenha_poligono(int cor) = 0;
+            virtual void desenha_mascara() = 0;
             virtual ~Poligono() = default;
     };
 
@@ -928,6 +929,53 @@ namespace NP{ //Namespace para entidades que são Polígonos
                 // aqui `lado` é tratado como meio-extent (compatível com sua desenha_cubo)
                 ND::desenha_cubo(this->lado);
                 glPopMatrix();
+            }
+
+            void desenha_mascara(){
+                muda_cor(12);
+                AABB mascara = {{pos.x - lado, pos.y - lado, pos.z - lado}, {pos.x + lado, pos.y + lado, pos.z + lado}};
+
+                glBegin(GL_LINE_LOOP);
+                glVertex3f(mascara.min.x,mascara.min.y,mascara.min.z);
+                glVertex3f(mascara.min.x,mascara.max.y,mascara.min.z);
+                glVertex3f(mascara.max.x,mascara.max.y,mascara.min.z);
+                glVertex3f(mascara.max.x,mascara.min.y,mascara.min.z);
+                glEnd();
+
+                glBegin(GL_LINE_LOOP);
+                glVertex3f(mascara.min.x,mascara.min.y,mascara.max.z);
+                glVertex3f(mascara.min.x,mascara.max.y,mascara.max.z);
+                glVertex3f(mascara.max.x,mascara.max.y,mascara.max.z);
+                glVertex3f(mascara.max.x,mascara.min.y,mascara.max.z);
+                glEnd();
+
+                glBegin(GL_LINE_LOOP);
+                glVertex3f(mascara.min.x,mascara.min.y,mascara.min.z);
+                glVertex3f(mascara.min.x,mascara.min.y,mascara.max.z);
+                glVertex3f(mascara.max.x,mascara.min.y,mascara.max.z);
+                glVertex3f(mascara.max.x,mascara.min.y,mascara.min.z);
+                glEnd();
+
+                glBegin(GL_LINE_LOOP);
+                glVertex3f(mascara.min.x,mascara.max.y,mascara.min.z);
+                glVertex3f(mascara.min.x,mascara.max.y,mascara.max.z);
+                glVertex3f(mascara.max.x,mascara.max.y,mascara.max.z);
+                glVertex3f(mascara.max.x,mascara.max.y,mascara.min.z);
+                glEnd();
+
+                glBegin(GL_LINE_LOOP);
+                glVertex3f(mascara.min.x,mascara.min.y,mascara.min.z);
+                glVertex3f(mascara.min.x,mascara.max.y,mascara.min.z);
+                glVertex3f(mascara.min.x,mascara.max.y,mascara.max.z);
+                glVertex3f(mascara.min.x,mascara.min.y,mascara.max.z);
+                glEnd();
+
+                glBegin(GL_LINE_LOOP);
+                glVertex3f(mascara.max.x,mascara.min.y,mascara.min.z);
+                glVertex3f(mascara.max.x,mascara.max.y,mascara.min.z);
+                glVertex3f(mascara.max.x,mascara.max.y,mascara.max.z);
+                glVertex3f(mascara.max.x,mascara.min.y,mascara.max.z);
+                glEnd();
             }
 
     };
@@ -973,6 +1021,54 @@ namespace NP{ //Namespace para entidades que são Polígonos
                 ND::desenha_piramide(this->base, this->altura);
                 glPopMatrix();
             }
+
+            void desenha_mascara(){
+                muda_cor(12);
+                float b = base / 2.0f, h = altura / 2.0f;
+                AABB mascara = {{pos.x - b, pos.y - h, pos.z - b}, {pos.x + b, pos.y + h, pos.z + b}};
+                
+                glBegin(GL_LINE_LOOP);
+                glVertex3f(mascara.min.x,mascara.min.y,mascara.min.z);
+                glVertex3f(mascara.min.x,mascara.max.y,mascara.min.z);
+                glVertex3f(mascara.max.x,mascara.max.y,mascara.min.z);
+                glVertex3f(mascara.max.x,mascara.min.y,mascara.min.z);
+                glEnd();
+
+                glBegin(GL_LINE_LOOP);
+                glVertex3f(mascara.min.x,mascara.min.y,mascara.max.z);
+                glVertex3f(mascara.min.x,mascara.max.y,mascara.max.z);
+                glVertex3f(mascara.max.x,mascara.max.y,mascara.max.z);
+                glVertex3f(mascara.max.x,mascara.min.y,mascara.max.z);
+                glEnd();
+
+                glBegin(GL_LINE_LOOP);
+                glVertex3f(mascara.min.x,mascara.min.y,mascara.min.z);
+                glVertex3f(mascara.min.x,mascara.min.y,mascara.max.z);
+                glVertex3f(mascara.max.x,mascara.min.y,mascara.max.z);
+                glVertex3f(mascara.max.x,mascara.min.y,mascara.min.z);
+                glEnd();
+
+                glBegin(GL_LINE_LOOP);
+                glVertex3f(mascara.min.x,mascara.max.y,mascara.min.z);
+                glVertex3f(mascara.min.x,mascara.max.y,mascara.max.z);
+                glVertex3f(mascara.max.x,mascara.max.y,mascara.max.z);
+                glVertex3f(mascara.max.x,mascara.max.y,mascara.min.z);
+                glEnd();
+
+                glBegin(GL_LINE_LOOP);
+                glVertex3f(mascara.min.x,mascara.min.y,mascara.min.z);
+                glVertex3f(mascara.min.x,mascara.max.y,mascara.min.z);
+                glVertex3f(mascara.min.x,mascara.max.y,mascara.max.z);
+                glVertex3f(mascara.min.x,mascara.min.y,mascara.max.z);
+                glEnd();
+
+                glBegin(GL_LINE_LOOP);
+                glVertex3f(mascara.max.x,mascara.min.y,mascara.min.z);
+                glVertex3f(mascara.max.x,mascara.max.y,mascara.min.z);
+                glVertex3f(mascara.max.x,mascara.max.y,mascara.max.z);
+                glVertex3f(mascara.max.x,mascara.min.y,mascara.max.z);
+                glEnd();
+            }
     };
 
     class Esfera : public Poligono{
@@ -996,6 +1092,53 @@ namespace NP{ //Namespace para entidades que são Polígonos
                 glTranslatef(this->pos.x, this->pos.y, this->pos.z);
                 ND::desenha_esfera(this->raio, 30, 30);
                 glPopMatrix();
+            }
+
+            void desenha_mascara(){
+                muda_cor(12);
+                AABB mascara = {{pos.x - raio, pos.y - raio, pos.z - raio}, {pos.x + raio, pos.y + raio, pos.z + raio}};
+                
+                glBegin(GL_LINE_LOOP);
+                glVertex3f(mascara.min.x,mascara.min.y,mascara.min.z);
+                glVertex3f(mascara.min.x,mascara.max.y,mascara.min.z);
+                glVertex3f(mascara.max.x,mascara.max.y,mascara.min.z);
+                glVertex3f(mascara.max.x,mascara.min.y,mascara.min.z);
+                glEnd();
+
+                glBegin(GL_LINE_LOOP);
+                glVertex3f(mascara.min.x,mascara.min.y,mascara.max.z);
+                glVertex3f(mascara.min.x,mascara.max.y,mascara.max.z);
+                glVertex3f(mascara.max.x,mascara.max.y,mascara.max.z);
+                glVertex3f(mascara.max.x,mascara.min.y,mascara.max.z);
+                glEnd();
+
+                glBegin(GL_LINE_LOOP);
+                glVertex3f(mascara.min.x,mascara.min.y,mascara.min.z);
+                glVertex3f(mascara.min.x,mascara.min.y,mascara.max.z);
+                glVertex3f(mascara.max.x,mascara.min.y,mascara.max.z);
+                glVertex3f(mascara.max.x,mascara.min.y,mascara.min.z);
+                glEnd();
+
+                glBegin(GL_LINE_LOOP);
+                glVertex3f(mascara.min.x,mascara.max.y,mascara.min.z);
+                glVertex3f(mascara.min.x,mascara.max.y,mascara.max.z);
+                glVertex3f(mascara.max.x,mascara.max.y,mascara.max.z);
+                glVertex3f(mascara.max.x,mascara.max.y,mascara.min.z);
+                glEnd();
+
+                glBegin(GL_LINE_LOOP);
+                glVertex3f(mascara.min.x,mascara.min.y,mascara.min.z);
+                glVertex3f(mascara.min.x,mascara.max.y,mascara.min.z);
+                glVertex3f(mascara.min.x,mascara.max.y,mascara.max.z);
+                glVertex3f(mascara.min.x,mascara.min.y,mascara.max.z);
+                glEnd();
+
+                glBegin(GL_LINE_LOOP);
+                glVertex3f(mascara.max.x,mascara.min.y,mascara.min.z);
+                glVertex3f(mascara.max.x,mascara.max.y,mascara.min.z);
+                glVertex3f(mascara.max.x,mascara.max.y,mascara.max.z);
+                glVertex3f(mascara.max.x,mascara.min.y,mascara.max.z);
+                glEnd();
             }
 
     };
@@ -1033,6 +1176,53 @@ namespace NP{ //Namespace para entidades que são Polígonos
                 ND::desenha_cilindro(this->raio, this->altura, 30, 30, true);
                 glPopMatrix();
             }
+
+            void desenha_mascara(){
+                muda_cor(12);
+                AABB mascara = {{pos.x - raio, pos.y - raio, pos.z - altura/2.0f}, {pos.x + raio, pos.y + raio, pos.z + altura/2.0f}};
+                
+                glBegin(GL_LINE_LOOP);
+                glVertex3f(mascara.min.x,mascara.min.y,mascara.min.z);
+                glVertex3f(mascara.min.x,mascara.max.y,mascara.min.z);
+                glVertex3f(mascara.max.x,mascara.max.y,mascara.min.z);
+                glVertex3f(mascara.max.x,mascara.min.y,mascara.min.z);
+                glEnd();
+
+                glBegin(GL_LINE_LOOP);
+                glVertex3f(mascara.min.x,mascara.min.y,mascara.max.z);
+                glVertex3f(mascara.min.x,mascara.max.y,mascara.max.z);
+                glVertex3f(mascara.max.x,mascara.max.y,mascara.max.z);
+                glVertex3f(mascara.max.x,mascara.min.y,mascara.max.z);
+                glEnd();
+
+                glBegin(GL_LINE_LOOP);
+                glVertex3f(mascara.min.x,mascara.min.y,mascara.min.z);
+                glVertex3f(mascara.min.x,mascara.min.y,mascara.max.z);
+                glVertex3f(mascara.max.x,mascara.min.y,mascara.max.z);
+                glVertex3f(mascara.max.x,mascara.min.y,mascara.min.z);
+                glEnd();
+
+                glBegin(GL_LINE_LOOP);
+                glVertex3f(mascara.min.x,mascara.max.y,mascara.min.z);
+                glVertex3f(mascara.min.x,mascara.max.y,mascara.max.z);
+                glVertex3f(mascara.max.x,mascara.max.y,mascara.max.z);
+                glVertex3f(mascara.max.x,mascara.max.y,mascara.min.z);
+                glEnd();
+
+                glBegin(GL_LINE_LOOP);
+                glVertex3f(mascara.min.x,mascara.min.y,mascara.min.z);
+                glVertex3f(mascara.min.x,mascara.max.y,mascara.min.z);
+                glVertex3f(mascara.min.x,mascara.max.y,mascara.max.z);
+                glVertex3f(mascara.min.x,mascara.min.y,mascara.max.z);
+                glEnd();
+
+                glBegin(GL_LINE_LOOP);
+                glVertex3f(mascara.max.x,mascara.min.y,mascara.min.z);
+                glVertex3f(mascara.max.x,mascara.max.y,mascara.min.z);
+                glVertex3f(mascara.max.x,mascara.max.y,mascara.max.z);
+                glVertex3f(mascara.max.x,mascara.min.y,mascara.max.z);
+                glEnd();
+            }
     };
 
     class Cone : public Poligono{
@@ -1066,6 +1256,53 @@ namespace NP{ //Namespace para entidades que são Polígonos
                 glTranslatef(this->pos.x, this->pos.y, this->pos.z);
                 ND::desenha_cone(this->raio, this->altura, 30);
                 glPopMatrix();
+            }
+
+            void desenha_mascara(){
+                muda_cor(12);
+                AABB mascara = {{pos.x - raio, pos.y - raio, pos.z - altura/2.0f}, {pos.x + raio, pos.y + raio, pos.z + altura/2.0f}};
+                
+                glBegin(GL_LINE_LOOP);
+                glVertex3f(mascara.min.x,mascara.min.y,mascara.min.z);
+                glVertex3f(mascara.min.x,mascara.max.y,mascara.min.z);
+                glVertex3f(mascara.max.x,mascara.max.y,mascara.min.z);
+                glVertex3f(mascara.max.x,mascara.min.y,mascara.min.z);
+                glEnd();
+
+                glBegin(GL_LINE_LOOP);
+                glVertex3f(mascara.min.x,mascara.min.y,mascara.max.z);
+                glVertex3f(mascara.min.x,mascara.max.y,mascara.max.z);
+                glVertex3f(mascara.max.x,mascara.max.y,mascara.max.z);
+                glVertex3f(mascara.max.x,mascara.min.y,mascara.max.z);
+                glEnd();
+
+                glBegin(GL_LINE_LOOP);
+                glVertex3f(mascara.min.x,mascara.min.y,mascara.min.z);
+                glVertex3f(mascara.min.x,mascara.min.y,mascara.max.z);
+                glVertex3f(mascara.max.x,mascara.min.y,mascara.max.z);
+                glVertex3f(mascara.max.x,mascara.min.y,mascara.min.z);
+                glEnd();
+
+                glBegin(GL_LINE_LOOP);
+                glVertex3f(mascara.min.x,mascara.max.y,mascara.min.z);
+                glVertex3f(mascara.min.x,mascara.max.y,mascara.max.z);
+                glVertex3f(mascara.max.x,mascara.max.y,mascara.max.z);
+                glVertex3f(mascara.max.x,mascara.max.y,mascara.min.z);
+                glEnd();
+
+                glBegin(GL_LINE_LOOP);
+                glVertex3f(mascara.min.x,mascara.min.y,mascara.min.z);
+                glVertex3f(mascara.min.x,mascara.max.y,mascara.min.z);
+                glVertex3f(mascara.min.x,mascara.max.y,mascara.max.z);
+                glVertex3f(mascara.min.x,mascara.min.y,mascara.max.z);
+                glEnd();
+
+                glBegin(GL_LINE_LOOP);
+                glVertex3f(mascara.max.x,mascara.min.y,mascara.min.z);
+                glVertex3f(mascara.max.x,mascara.max.y,mascara.min.z);
+                glVertex3f(mascara.max.x,mascara.max.y,mascara.max.z);
+                glVertex3f(mascara.max.x,mascara.min.y,mascara.max.z);
+                glEnd();
             }
     };
 }
@@ -1341,7 +1578,7 @@ namespace NJ{ // NJ = Namespace para o Jogador
     };
 };
 
-NJ::Jogador jogador = NJ::Jogador(0.0f,0.0f,0.0f,0.0f,0.0f);
+NJ::Jogador jogador = NJ::Jogador(0.0f,1.0f,0.0f,0.0f,0.0f);
 
 void inicializa_sdl(){
     // Inicializa SDL2
@@ -1514,8 +1751,10 @@ void loop_jogo(){
             glPopMatrix();
         }
 
-        for (const auto& p : poligonos)
+        for (const auto& p : poligonos){
             p->desenha_poligono(1);
+            p->desenha_mascara();
+        }
 
         a.desenha_adesivo();
 
