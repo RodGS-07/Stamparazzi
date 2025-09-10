@@ -337,7 +337,8 @@ namespace NB{ //Namespace para Bounding Boxes e Colisões
         float rsum = localR + s.r;
         return distPerp2 <= (rsum * rsum);
     }
-}
+};
+NB::AABB candidate;
 
 namespace ND{ //Namespace para Desenhos
 
@@ -908,6 +909,7 @@ namespace NP{ //Namespace para entidades que são Polígonos
 
             //virtual bool colide_jogador(const Sphere& s) const = 0;
             virtual bool colide_jogador(const AABB& s) const = 0;
+            virtual void mata_jogador() = 0;
             virtual void desenha_poligono(int cor) = 0;
             virtual void desenha_mascara() = 0;
             virtual ~Poligono() = default;
@@ -923,6 +925,10 @@ namespace NP{ //Namespace para entidades que são Polígonos
             bool colide_jogador(const AABB& s) const override {
                 AABB box = {{pos.x - lado, pos.y - lado, pos.z - lado}, {pos.x + lado, pos.y + lado, pos.z + lado}};
                 return AABBvsAABB(s, box);//SphereVsAABB(s,box);
+            }
+
+            void mata_jogador() override {
+                return;
             }
 
             void desenha_poligono(int cor) override {
@@ -1017,6 +1023,10 @@ namespace NP{ //Namespace para entidades que são Polígonos
                 return false;*/
             }
 
+            void mata_jogador() override {
+                //jogador.morto = true;
+            }
+
             void desenha_poligono(int cor) override {
                 if(cor >= 0 and cor <= 12) muda_cor(cor);
                 glPushMatrix();
@@ -1087,6 +1097,11 @@ namespace NP{ //Namespace para entidades que são Polígonos
                 return AABBvsAABB(s,box);//SphereVsAABB(s, box);
                 //Sphere s2 = {{pos.x, pos.y, pos.z}, raio };
                 //return SphereVsSphere(s, s2);
+            }
+
+            void mata_jogador() override {
+                AABB box = {{pos.x - raio, pos.y - raio, pos.z - raio}, {pos.x + raio, pos.y + raio, pos.z + raio}};
+                //if(candidate.max.y <= box.min.y) jogador.morto = true;
             }
 
             void desenha_poligono(int cor) override {
@@ -1172,6 +1187,10 @@ namespace NP{ //Namespace para entidades que são Polígonos
                 return SphereVsCylinder(s, cyl);*/
             }
 
+            void mata_jogador() override {
+                
+            }
+
             void desenha_poligono(int cor) override {
                 if(cor >= 0 and cor <= 12) muda_cor(cor);
                 glPushMatrix();
@@ -1253,6 +1272,10 @@ namespace NP{ //Namespace para entidades que são Polígonos
                 return SphereVsCone(s,cone); //PointInConeBound(s.c, cone);*/
             }
 
+            void mata_jogador() override {
+                
+            }
+
             void desenha_poligono(int cor) override {
                 if(cor >= 0 and cor <= 12) muda_cor(cor);
                 glPushMatrix();
@@ -1320,22 +1343,45 @@ namespace NJ{ // NJ = Namespace para o Jogador
     using namespace NE;
     using namespace ND;
     using namespace NA;
+    using namespace NP;
 
     class Jogador : public Entidade{
         public:
             float cam_yaw, cam_pitch;
-            AABB mascara; //Sphere mascara;
+            bool morto;
+            //AABB mascara; //Sphere mascara;
 
             Jogador(float ix, float iy, float iz, float cy, float cp)
-            : Entidade(ix,iy,iz), cam_yaw(cy), cam_pitch(cp),
+            : Entidade(ix,iy,iz), cam_yaw(cy), cam_pitch(cp), morto(false)/*,
                 mascara({{this->pos.x-1.0f,this->pos.y-1.0f,this->pos.z-1.0f},
-                        {this->pos.x+1.0f,this->pos.y+1.0f,this->pos.z+1.0f}}) { }
+                        {this->pos.x+1.0f,this->pos.y+1.0f,this->pos.z+1.0f}})*/ { }
             
             Jogador(){};
+
+            /*void atualiza_mascara() {
+                this->mascara = {
+                    { this->pos.x - 1.0f, this->pos.y - 1.0f, this->pos.z - 1.0f },
+                    { this->pos.x + 1.0f, this->pos.y + 1.0f, this->pos.z + 1.0f }
+                };
+            }*/
+
+            AABB getMascara() const {
+                return {
+                    { this->pos.x - 1.0f, this->pos.y - 1.0f, this->pos.z - 1.0f },
+                    { this->pos.x + 1.0f, this->pos.y + 1.0f, this->pos.z + 1.0f }
+                };
+            }
+
+            void nasce_jogador(float ix, float iy, float iz){
+                this->pos = {ix, iy, iz};
+                //atualiza_mascara();
+                morto = false;
+            }
 
             void desenha_mascara(int stacks = 30, int fatias = 30){
                 muda_cor(12);
 
+                AABB mascara = this->getMascara();
                 glBegin(GL_LINE_LOOP);
                 glVertex3f(mascara.min.x,mascara.min.y,mascara.min.z);
                 glVertex3f(mascara.min.x,mascara.max.y,mascara.min.z);
@@ -1485,10 +1531,14 @@ namespace NJ{ // NJ = Namespace para o Jogador
             }
 
             bool tenta_mover(float dx, float dy, float dz){
-                AABB candidate = this->mascara; //Sphere candidate = this->mascara;
-                candidate.min.x += dx; candidate.max.x += dx;
-                candidate.min.y += dy; candidate.max.y += dy;
-                candidate.min.z += dz; candidate.max.z += dz;
+                candidate = {
+                    { pos.x - 1.0f + dx, pos.y - 1.0f + dy, pos.z - 1.0f + dz },
+                    { pos.x + 1.0f + dx, pos.y + 1.0f + dy, pos.z + 1.0f + dz }
+                };
+                //this->mascara; //Sphere candidate = this->mascara;
+                //candidate.min.x += dx; candidate.max.x += dx;
+                //candidate.min.y += dy; candidate.max.y += dy;
+                //candidate.min.z += dz; candidate.max.z += dz;
                 //candidate.c.x += dx;
                 //candidate.c.y += dy;
                 //candidate.c.z += dz;
@@ -1502,15 +1552,17 @@ namespace NJ{ // NJ = Namespace para o Jogador
                     (a.min.z <= b.min.z || a.max.z >= b.max.z)) return false;
 
                 // testa contra todos os poligonos (use referências para evitar cópia)    
-                for (const auto& p : poligonos) 
-                    if (p->colide_jogador(candidate)) 
+                for (const auto& p : poligonos)
+                    if (p->colide_jogador(candidate))
                         return false; // colisão detectada => rejeita movimento
-
+                    
                 // sem colisão => confirma movimento
                 this->pos.x += dx;
                 this->pos.y += dy;
                 this->pos.z += dz;
-                this->mascara = candidate;
+                //touch = candidate;
+                //atualiza_mascara();
+                //this->mascara = candidate;
                 return true;
             }
 
@@ -1583,8 +1635,9 @@ namespace NJ{ // NJ = Namespace para o Jogador
                     if(SDL_GameControllerGetButton(game_controller,SDL_CONTROLLER_BUTTON_RIGHTSHOULDER))
                         move_camera(move_vel,-1.0f,-1.0f);
                 }
-                this->mascara = {{this->pos.x-1.0f,this->pos.y-1.0f,this->pos.z-1.0f},
-                        {this->pos.x+1.0f,this->pos.y+1.0f,this->pos.z+1.0f}};
+                //atualiza_mascara();
+                //this->mascara = {{this->pos.x-1.0f,this->pos.y-1.0f,this->pos.z-1.0f},
+                //        {this->pos.x+1.0f,this->pos.y+1.0f,this->pos.z+1.0f}};
                 //this->mascara = {{this->pos.x,this->pos.y,this->pos.z},1.0f};
             }
     };
@@ -1766,6 +1819,7 @@ void loop_jogo(){
         // Desenha máscara da room
         room.desenha_mascara();
 
+        // Desenha polígonos e máscaras
         for (const auto& p : poligonos){
             p->desenha_poligono(1);
             p->desenha_mascara();
@@ -1775,6 +1829,22 @@ void loop_jogo(){
 
         // Controla câmera
         jogador.controle_camera(MOVE_VEL, CAMERA_SENS);
+
+        // Verifica morte do jogador
+        //NB::AABB box = jogador.getMascara();
+        for (const auto& p : poligonos){
+            //jogador.atualiza_mascara();
+            //printf("%.2f %.2f %.2f\t%.2f %.2f %.2f\n",box.min.x,box.min.y,box.min.z,box.max.x,box.max.y,box.max.z);
+            if(p->colide_jogador(candidate)){
+                if(p->superficie==ND::F::PIRAMIDE)
+                    jogador.morto = true;
+                else if(p->superficie==ND::F::ESFERA and jogador.getMascara().max.y < p->getY())
+                    jogador.morto = true;
+            }
+        }
+
+        if(jogador.morto) jogador.nasce_jogador(0.0f,1.0f,0.0f);
+
         if(jogador.detecta_adesivo(a)){
             glDisable(GL_DEPTH_TEST);   // ignora profundidade
             ND::marcax(a.getX(),a.getY(),a.getZ());
