@@ -173,6 +173,28 @@ namespace NB{ //Namespace para Bounding Boxes e Colisões
         return dist2 <= (s.r * s.r);
     }
 
+    bool SegmentVsAABB(const XYZ& p0, const XYZ& p1, const AABB& box) {
+        XYZ dir = p1 - p0;
+        float tmin = 0.0f;
+        float tmax = 1.0f;
+
+        for (int i = 0; i < 3; i++) {
+            float invD = 1.0f / (i==0 ? dir.x : (i==1 ? dir.y : dir.z));
+            float t0 = ((i==0 ? box.min.x : (i==1 ? box.min.y : box.min.z)) - 
+                        (i==0 ? p0.x : (i==1 ? p0.y : p0.z))) * invD;
+            float t1 = ((i==0 ? box.max.x : (i==1 ? box.max.y : box.max.z)) - 
+                        (i==0 ? p0.x : (i==1 ? p0.y : p0.z))) * invD;
+            if (invD < 0.0f) swap(t0, t1);
+
+            tmin = max(tmin, t0);
+            tmax = min(tmax, t1);
+
+            if (tmax < tmin) return false;
+        }
+
+        return true;
+    }
+
     inline float Length2(const XYZ&a){ return Escalar(a,a); }
     inline float Clamp(float v,float mn,float mx){ return v<mn?mn:(v>mx?mx:v); }
 
@@ -909,7 +931,7 @@ namespace NP{ //Namespace para entidades que são Polígonos
 
             //virtual bool colide_jogador(const Sphere& s) const = 0;
             virtual bool colide_jogador(const AABB& s) const = 0;
-            virtual void mata_jogador() = 0;
+            virtual void aplica_efeito(bool& val) = 0;
             virtual void desenha_poligono(int cor) = 0;
             virtual void desenha_mascara() = 0;
             virtual ~Poligono() = default;
@@ -927,7 +949,7 @@ namespace NP{ //Namespace para entidades que são Polígonos
                 return AABBvsAABB(s, box);//SphereVsAABB(s,box);
             }
 
-            void mata_jogador() override {
+            void aplica_efeito(bool& val) override {
                 return;
             }
 
@@ -1023,8 +1045,8 @@ namespace NP{ //Namespace para entidades que são Polígonos
                 return false;*/
             }
 
-            void mata_jogador() override {
-                //jogador.morto = true;
+            void aplica_efeito(bool& val) override {
+                val = true;
             }
 
             void desenha_poligono(int cor) override {
@@ -1099,9 +1121,10 @@ namespace NP{ //Namespace para entidades que são Polígonos
                 //return SphereVsSphere(s, s2);
             }
 
-            void mata_jogador() override {
+            void aplica_efeito(bool& val) override {
                 AABB box = {{pos.x - raio, pos.y - raio, pos.z - raio}, {pos.x + raio, pos.y + raio, pos.z + raio}};
-                //if(candidate.max.y <= box.min.y) jogador.morto = true;
+                //if(!pause) cout << candidate.max.y << " " << box.min.y << endl;
+                if(candidate.max.y <= pos.y) val = true;
             }
 
             void desenha_poligono(int cor) override {
@@ -1187,8 +1210,9 @@ namespace NP{ //Namespace para entidades que são Polígonos
                 return SphereVsCylinder(s, cyl);*/
             }
 
-            void mata_jogador() override {
-                
+            void aplica_efeito(bool& val) override {
+                AABB box = {{pos.x - raio, pos.y - raio, pos.z - raio}, {pos.x + raio, pos.y + raio, pos.z + raio}};
+                if(candidate.max.y <= pos.y) val = true;
             }
 
             void desenha_poligono(int cor) override {
@@ -1272,8 +1296,17 @@ namespace NP{ //Namespace para entidades que são Polígonos
                 return SphereVsCone(s,cone); //PointInConeBound(s.c, cone);*/
             }
 
-            void mata_jogador() override {
-                
+            void aplica_efeito(bool& val) override {
+                AABB box = candidate;
+
+                // origem = ápice do cone
+                XYZ origem = apex;
+                // fim = ponto ao longo da direção do cone
+                XYZ fim = apex - axis * altura * 30.0f; // 2x altura, laser longo
+
+                if (SegmentVsAABB(origem, fim, box)) {
+                    val = true;
+                }
             }
 
             void desenha_poligono(int cor) override {
@@ -1282,6 +1315,17 @@ namespace NP{ //Namespace para entidades que são Polígonos
                 glTranslatef(this->pos.x, this->pos.y, this->pos.z);
                 ND::desenha_cone(this->raio, this->altura, 30);
                 glPopMatrix();
+
+                muda_cor(0);
+                glLineWidth(2.0f);
+                glBegin(GL_LINES);
+                    glVertex3f(apex.x, apex.y, apex.z);
+                    glVertex3f(apex.x - axis.x*altura*30,
+                            apex.y - axis.y*altura*30,
+                            apex.z - axis.z*altura*30);
+                glEnd();
+                glLineWidth(1.0f);
+                muda_cor(cor);
             }
 
             void desenha_mascara(){
@@ -1374,6 +1418,7 @@ namespace NJ{ // NJ = Namespace para o Jogador
 
             void nasce_jogador(float ix, float iy, float iz){
                 this->pos = {ix, iy, iz};
+                this->cam_yaw = this->cam_pitch = 0.0f;
                 //atualiza_mascara();
                 morto = false;
             }
@@ -1467,7 +1512,7 @@ namespace NJ{ // NJ = Namespace para o Jogador
                 float dirY =  sin(radPitch);
                 float dirZ = -cos(radYaw) * cos(radPitch);
 
-                muda_cor(0);
+                muda_cor(6);
                 //glLineWidth(5.0f);
                 glBegin(GL_LINES);
                 glVertex3f(this->pos.x,this->pos.y,this->pos.z);
@@ -1833,14 +1878,20 @@ void loop_jogo(){
         // Verifica morte do jogador
         //NB::AABB box = jogador.getMascara();
         for (const auto& p : poligonos){
+            if(p->colide_jogador(candidate) and p->superficie!=ND::F::CONE)
+                p->aplica_efeito(jogador.morto);
+            else if(p->superficie==ND::F::CONE)
+                p->aplica_efeito(jogador.morto);
             //jogador.atualiza_mascara();
             //printf("%.2f %.2f %.2f\t%.2f %.2f %.2f\n",box.min.x,box.min.y,box.min.z,box.max.x,box.max.y,box.max.z);
-            if(p->colide_jogador(candidate)){
+            /*if(p->colide_jogador(candidate)){
                 if(p->superficie==ND::F::PIRAMIDE)
                     jogador.morto = true;
-                else if(p->superficie==ND::F::ESFERA and jogador.getMascara().max.y < p->getY())
+                else if((p->superficie==ND::F::ESFERA or p->superficie==ND::F::CILINDRO) and jogador.getMascara().max.y < p->getY())
                     jogador.morto = true;
-            }
+                else if((p->superficie==ND::F::CONE) and p->axis=={0.0f,0.0f,-1.0f})
+                    jogador.morto = true;
+            }*/
         }
 
         if(jogador.morto) jogador.nasce_jogador(0.0f,1.0f,0.0f);
