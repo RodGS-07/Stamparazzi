@@ -1,0 +1,43 @@
+// Código para operações de álgebra linear envolvendo vetores
+#include "Linear.h"
+#include <GL/glut.h>
+#include <cmath>
+
+struct XYZ{//representa pontos e vetores
+    float x, y, z;
+    XYZ() 
+    : x(0.0f), y(0.0f), z(0.0f) { }
+
+    XYZ(float ix, float iy, float iz)
+    : x(ix), y(iy), z(iz) { }
+};
+
+GLfloat operator!(const XYZ& v){//Norma
+    return (sqrt(v.x*v.x+v.y*v.y+v.z*v.z));
+}
+XYZ operator-(const XYZ& o,const XYZ& d){//Diferença de Vetores(ou pontos)
+    return (XYZ(o.x-d.x,o.y-d.y,o.z-d.z));
+}
+XYZ operator+(const XYZ& o,const XYZ& d){//Soma de Vetores(ou pontos)
+    return (XYZ(d.x+o.x,d.y+o.y,d.z+o.z));
+}
+GLfloat Escalar(const XYZ& u,const XYZ& v){//Produto Escalar entre dois vetores
+    return u.x*v.x+u.y*v.y+u.z*v.z;
+}
+XYZ operator*(const XYZ& u,const XYZ& v){//Produto Vetorial
+    return (XYZ(u.y*v.z-u.z*v.y,u.z*v.x-u.x*v.z,u.x*v.y-u.y*v.x));
+}
+XYZ operator*(const XYZ& u, GLfloat lu){//Produto de um vetor por um escalar
+    return XYZ(u.x*lu,u.y*lu,u.z*lu);
+}
+XYZ operator/(const XYZ& u, GLfloat lu){//Divisao de um vetor por um escalar
+    return XYZ(u.x/lu,u.y/lu,u.z/lu);
+}
+XYZ Normal(XYZ Pa, XYZ Pb, XYZ Pc){//Normal entre dois vetores, com um ponto em comum
+    XYZ n = (Pb - Pa)*(Pc - Pa);
+    return (n/(!n));
+}
+GLfloat Arccos(XYZ Pa, XYZ Pb){//Arco cosseno entre dois vetores
+    GLfloat e = Escalar(Pa,Pb);
+    return acos(e/(!Pa*!Pb));
+}

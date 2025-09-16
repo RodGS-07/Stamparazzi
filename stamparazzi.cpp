@@ -138,6 +138,12 @@ namespace NB{ //Namespace para Bounding Boxes e Colisões
         float r;
     };
 
+    struct Portal{
+        XYZ c;
+        float raio_menor, raio_maior;
+        Portal* par;
+    };
+
     bool AABBvsAABB(const AABB& a, const AABB& b) {
         return (a.min.x <= b.max.x && a.max.x >= b.min.x) &&  // sobreposição em X
             (a.min.y <= b.max.y && a.max.y >= b.min.y) &&  // sobreposição em Y
@@ -360,6 +366,7 @@ namespace NB{ //Namespace para Bounding Boxes e Colisões
         return distPerp2 <= (rsum * rsum);
     }
 };
+
 NB::AABB candidate;
 
 namespace ND{ //Namespace para Desenhos
@@ -931,7 +938,7 @@ namespace NP{ //Namespace para entidades que são Polígonos
 
             //virtual bool colide_jogador(const Sphere& s) const = 0;
             virtual bool colide_jogador(const AABB& s) const = 0;
-            virtual void aplica_efeito(bool& val) = 0;
+            virtual void aplica_efeito(float& x, float& y, float& z,bool& val) = 0;
             virtual void desenha_poligono(int cor) = 0;
             virtual void desenha_mascara() = 0;
             virtual ~Poligono() = default;
@@ -949,7 +956,7 @@ namespace NP{ //Namespace para entidades que são Polígonos
                 return AABBvsAABB(s, box);//SphereVsAABB(s,box);
             }
 
-            void aplica_efeito(bool& val) override {
+            void aplica_efeito(float& x, float& y, float& z,bool& val) override {
                 return;
             }
 
@@ -1045,7 +1052,7 @@ namespace NP{ //Namespace para entidades que são Polígonos
                 return false;*/
             }
 
-            void aplica_efeito(bool& val) override {
+            void aplica_efeito(float& x, float& y, float& z,bool& val) override {
                 val = true;
             }
 
@@ -1121,7 +1128,7 @@ namespace NP{ //Namespace para entidades que são Polígonos
                 //return SphereVsSphere(s, s2);
             }
 
-            void aplica_efeito(bool& val) override {
+            void aplica_efeito(float& x, float& y, float& z,bool& val) override {
                 AABB box = {{pos.x - raio, pos.y - raio, pos.z - raio}, {pos.x + raio, pos.y + raio, pos.z + raio}};
                 //if(!pause) cout << candidate.max.y << " " << box.min.y << endl;
                 if(candidate.max.y <= pos.y) val = true;
@@ -1210,7 +1217,7 @@ namespace NP{ //Namespace para entidades que são Polígonos
                 return SphereVsCylinder(s, cyl);*/
             }
 
-            void aplica_efeito(bool& val) override {
+            void aplica_efeito(float& x, float& y, float& z,bool& val) override {
                 AABB box = {{pos.x - raio, pos.y - raio, pos.z - raio}, {pos.x + raio, pos.y + raio, pos.z + raio}};
                 if(candidate.max.y <= pos.y) val = true;
             }
@@ -1296,7 +1303,7 @@ namespace NP{ //Namespace para entidades que são Polígonos
                 return SphereVsCone(s,cone); //PointInConeBound(s.c, cone);*/
             }
 
-            void aplica_efeito(bool& val) override {
+            void aplica_efeito(float& x, float& y, float& z,bool& val) override {
                 AABB box = candidate;
 
                 // origem = ápice do cone
@@ -1374,6 +1381,97 @@ namespace NP{ //Namespace para entidades que são Polígonos
                 glVertex3f(mascara.max.x,mascara.min.y,mascara.max.z);
                 glEnd();
             }
+    };
+
+    class Torus : public Poligono{
+        public:
+            Portal p;
+            Torus* conjugado;
+
+            Torus(float ix, float iy, float iz, float re, float ra)
+            : Poligono(ix,iy,iz,F::TORUS) {
+                p.c = {ix,iy,iz};
+                p.raio_menor = re;
+                p.raio_maior = ra;
+                p.par = nullptr;
+                conjugado = nullptr;
+            }
+
+            bool colide_jogador(const AABB& s) const override{
+                AABB box = {
+                    {p.c.x - p.raio_maior, p.c.y - p.raio_maior, p.c.z - p.raio_menor},
+                    {p.c.x + p.raio_maior, p.c.y + p.raio_maior, p.c.z + p.raio_menor}
+                };
+                return AABBvsAABB(s, box);
+            }
+
+            void aplica_efeito(float& x, float& y, float& z,bool& val) override {
+                if(conjugado){
+                    // teleporta o jogador para o conjugado
+                    candidate.min.x += (conjugado->p.c.x - p.c.x);
+                    candidate.max.x += (conjugado->p.c.x - p.c.x);
+                    candidate.min.y += (conjugado->p.c.y - p.c.y);
+                    candidate.max.y += (conjugado->p.c.y - p.c.y);
+                    candidate.min.z += (conjugado->p.c.z - p.c.z);
+                    candidate.max.z += (conjugado->p.c.z - p.c.z);
+                }
+            }
+
+            void desenha_poligono(int cor) override {
+                if(cor >= 0 and cor <= 12) muda_cor(cor);
+                glPushMatrix();
+                glTranslatef(p.c.x, p.c.y, p.c.z);
+                ND::desenha_torus(p.raio_maior, p.raio_menor, 40, 40);
+                glPopMatrix();
+            }
+
+            void desenha_mascara() {
+                muda_cor(12);
+                AABB mascara = {{pos.x - p.raio_maior, pos.y - p.raio_maior, pos.z - p.raio_maior}, {pos.x + p.raio_maior, pos.y + p.raio_maior, pos.z + p.raio_maior}};
+            
+                glBegin(GL_LINE_LOOP);
+                glVertex3f(mascara.min.x,mascara.min.y,mascara.min.z);
+                glVertex3f(mascara.min.x,mascara.max.y,mascara.min.z);
+                glVertex3f(mascara.max.x,mascara.max.y,mascara.min.z);
+                glVertex3f(mascara.max.x,mascara.min.y,mascara.min.z);
+                glEnd();
+
+                glBegin(GL_LINE_LOOP);
+                glVertex3f(mascara.min.x,mascara.min.y,mascara.max.z);
+                glVertex3f(mascara.min.x,mascara.max.y,mascara.max.z);
+                glVertex3f(mascara.max.x,mascara.max.y,mascara.max.z);
+                glVertex3f(mascara.max.x,mascara.min.y,mascara.max.z);
+                glEnd();
+
+                glBegin(GL_LINE_LOOP);
+                glVertex3f(mascara.min.x,mascara.min.y,mascara.min.z);
+                glVertex3f(mascara.min.x,mascara.min.y,mascara.max.z);
+                glVertex3f(mascara.max.x,mascara.min.y,mascara.max.z);
+                glVertex3f(mascara.max.x,mascara.min.y,mascara.min.z);
+                glEnd();
+
+                glBegin(GL_LINE_LOOP);
+                glVertex3f(mascara.min.x,mascara.max.y,mascara.min.z);
+                glVertex3f(mascara.min.x,mascara.max.y,mascara.max.z);
+                glVertex3f(mascara.max.x,mascara.max.y,mascara.max.z);
+                glVertex3f(mascara.max.x,mascara.max.y,mascara.min.z);
+                glEnd();
+
+                glBegin(GL_LINE_LOOP);
+                glVertex3f(mascara.min.x,mascara.min.y,mascara.min.z);
+                glVertex3f(mascara.min.x,mascara.max.y,mascara.min.z);
+                glVertex3f(mascara.min.x,mascara.max.y,mascara.max.z);
+                glVertex3f(mascara.min.x,mascara.min.y,mascara.max.z);
+                glEnd();
+
+                glBegin(GL_LINE_LOOP);
+                glVertex3f(mascara.max.x,mascara.min.y,mascara.min.z);
+                glVertex3f(mascara.max.x,mascara.max.y,mascara.min.z);
+                glVertex3f(mascara.max.x,mascara.max.y,mascara.max.z);
+                glVertex3f(mascara.max.x,mascara.min.y,mascara.max.z);
+                glEnd();
+            }
+
     };
 }
 
@@ -1748,6 +1846,15 @@ void cria_poligonos(int n){
     poligonos.push_back(make_unique<NP::Esfera>(20.0f,10.0f,-20.0f,2.0f));
     poligonos.push_back(make_unique<NP::Cilindro>(30.0f,10.0f,-20.0f,2.0f,4.0f));
     poligonos.push_back(make_unique<NP::Cone>(40.0f,10.0f,-20.0f,2.0f,4.0f));
+
+    auto t1 = make_unique<NP::Torus>(-20,0,0,1.0f,3.0f);
+    auto t2 = make_unique<NP::Torus>(20,0,0,1.0f,3.0f);
+
+    t1->conjugado = t2.get();
+    t2->conjugado = t1.get();
+
+    poligonos.push_back(move(t1));
+    poligonos.push_back(move(t2));
     /*for(int i = 0; i < n; i++){
         poligonos.push_back();
     }*/
@@ -1879,9 +1986,9 @@ void loop_jogo(){
         //NB::AABB box = jogador.getMascara();
         for (const auto& p : poligonos){
             if(p->colide_jogador(candidate) and p->superficie!=ND::F::CONE)
-                p->aplica_efeito(jogador.morto);
+                p->aplica_efeito(jogador.getX(),jogador.getY(),jogador.getZ(),jogador.morto);
             else if(p->superficie==ND::F::CONE)
-                p->aplica_efeito(jogador.morto);
+                p->aplica_efeito(jogador.getX(),jogador.getY(),jogador.getZ(),jogador.morto);
             //jogador.atualiza_mascara();
             //printf("%.2f %.2f %.2f\t%.2f %.2f %.2f\n",box.min.x,box.min.y,box.min.z,box.max.x,box.max.y,box.max.z);
             /*if(p->colide_jogador(candidate)){
@@ -1926,7 +2033,7 @@ int main(int argc, char* argv[]) {
 
 	SDL_ShowCursor(SDL_ENABLE);
 
-    cria_poligonos(5);
+    cria_poligonos(7);
 
     loop_jogo();
 
