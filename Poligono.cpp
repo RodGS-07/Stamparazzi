@@ -90,10 +90,10 @@ bool Piramide::colide_jogador(const AABB& s) const {
     float b = base / 2.0f;
     float h = altura / 2.0f;
     AABB box = {{this->getX() - b, this->getY() - h, this->getZ() - b}, {this->getX() + b, this->getY() + h, this->getZ() + b}};
-    if(!AABBvsAABB(s,box)) {
-    cout << s.min.x << " " << s.min.y << " " << s.min.z << " " << s.max.x << " " << s.max.y << " " << s.max.z << endl;
-    cout << box.min.x << " " << box.min.y << " " << box.min.z << " " << box.max.x << " " << box.max.y << " " << box.max.z << endl;
-    }
+    //if(!AABBvsAABB(s,box)) {
+    //cout << s.min.x << " " << s.min.y << " " << s.min.z << " " << s.max.x << " " << s.max.y << " " << s.max.z << endl;
+    //cout << box.min.x << " " << box.min.y << " " << box.min.z << " " << box.max.x << " " << box.max.y << " " << box.max.z << endl;
+    //}
     return AABBvsAABB(s,box);//SphereVsAABB(s, box);
     // base quad vertices (conforme ND::desenha_piramide)
     /*XYZ A = { this->getX() - b, this->getY() - b, this->getZ() - b };
@@ -458,14 +458,23 @@ bool Torus::colide_jogador(const AABB& s) const{
 void Torus::aplica_efeito(Jogador& jogador) {
     //cout << (conjugado==NULL) << endl;
     if(conjugado){
-        float dx = conjugado->p.c.x - p.c.x;
-        float dy = conjugado->p.c.y - p.c.y;
-        float dz = conjugado->p.c.z - p.c.z;
+        float dir = jogador.getCamYaw();
+        float dx = conjugado->getX();
+        float dy = conjugado->getY();
+        float dz = conjugado->getZ() - 5.0f * ((dir<=90.0f || dir>=270.0f) ? 1.0f : -1.0f);
+        //float dx = conjugado->p.c.x;// - p.c.x;
+        //float dy = conjugado->p.c.y;// - p.c.y;
+        //float dz = conjugado->p.c.z;// - p.c.z;
 
         // atualiza posição real do jogador
-        jogador.setX(jogador.getX() + dx);
-        jogador.setY(jogador.getY() + dy);
-        jogador.setZ(jogador.getZ() + dz);
+        jogador.setX(dx);
+        jogador.setY(dy);
+        jogador.setZ(dz);
+        jogador.setMascara({{jogador.getX() - 1.0f, jogador.getY() - 1.0f, jogador.getZ() - 1.0f},
+                            {jogador.getX() + 1.0f, jogador.getY() + 1.0f, jogador.getZ() + 1.0f}});
+        // jogador.setX(jogador.getX() + dx);
+        // jogador.setY(jogador.getY() + dy);
+        // jogador.setZ(jogador.getZ() + dz);
 
         // atualiza a máscara com o mesmo deslocamento
         /*AABB mask = jogador.getMascara();

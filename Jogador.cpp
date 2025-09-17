@@ -233,8 +233,7 @@ bool Jogador::tenta_mover(float dx, float dy, float dz, const vector<unique_ptr<
     // testa contra todos os poligonos (use referências para evitar cópia)    
     for (const auto& p : poligonos)
         if (p->colide_jogador(candidate)){
-            //this->mascara = candidate;
-            //cout << 
+            if(p->getSuperficie()!=F::CONE) p->aplica_efeito(*this);
             return false; // colisão detectada => rejeita movimento
         }
         
@@ -319,6 +318,7 @@ void Jogador::controle_camera(float move_vel, float camera_sens, float dt, bool 
         if(SDL_GameControllerGetButton(game_controller,SDL_CONTROLLER_BUTTON_LEFTSHOULDER))
             move_camera(move_vel,-1.0f,dt,poligonos,-1.0f);
     }
+    cout << cam_yaw << " " << cam_pitch << endl;
     //atualiza_mascara();
     //this->mascara = {{this->getX()-1.0f,this->getY()-1.0f,this->getZ()-1.0f},
     //        {this->getX()+1.0f,this->getY()+1.0f,this->getZ()+1.0f}};

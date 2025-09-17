@@ -290,6 +290,10 @@ void loop_jogo(){
         // Controla câmera
         jogador.controle_camera(MOVE_VEL, CAMERA_SENS,dt,pause,window,game_controller,state,poligonos);
 
+        for(const auto& p : poligonos){
+            if(p->getSuperficie()==F::CONE)
+                p->aplica_efeito(jogador);
+        }
         //AABB mascara = jogador.getMascara();
         //cout << "Depois: " << mascara.min.x << " " << mascara.min.y << " " << mascara.min.z << " " << mascara.max.x << " " << mascara.max.y << " " << mascara.max.z << endl;
 
@@ -306,7 +310,7 @@ void loop_jogo(){
             }
         }*/
         
-        for (const auto& p : poligonos){
+        /*for (const auto& p : poligonos){
             //if(p->getSuperficie()==F::TORUS) cout << p->colide_jogador(jogador.getMascara()) << endl;
             if(p->colide_jogador(jogador.getMascara()) and p->getSuperficie()!=F::CONE){
                 //cout << (p->getSuperficie()==F::TORUS) << endl;
@@ -314,7 +318,7 @@ void loop_jogo(){
             }
             else if(p->getSuperficie()==F::CONE)
                 p->aplica_efeito(jogador);
-        }
+        }*/
 
         // Verifica morte do jogador
         if(!jogador.estaVivo()) jogador.nasce_jogador(0.0f,1.0f,0.0f);
