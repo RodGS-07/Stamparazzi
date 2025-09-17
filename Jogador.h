@@ -10,37 +10,42 @@
 #include <SDL2/SDL.h>
 
 class Jogador : public Entidade{
-    public:
+    private:
         float cam_yaw, cam_pitch;
         bool morto;
         //AABB mascara; //Sphere mascara;
 
+    public:
         Jogador(float ix, float iy, float iz, float cy, float cp)
         : Entidade(ix,iy,iz), cam_yaw(cy), cam_pitch(cp), morto(false)/*,
-            mascara({{this->pos.x-1.0f,this->pos.y-1.0f,this->pos.z-1.0f},
-                    {this->pos.x+1.0f,this->pos.y+1.0f,this->pos.z+1.0f}})*/ { }
+            mascara({{this->getX()-1.0f,this->getY()-1.0f,this->getZ()-1.0f},
+                    {this->getX()+1.0f,this->getY()+1.0f,this->getZ()+1.0f}})*/ { }
         
         Jogador(){};
 
         /*void atualiza_mascara() {
             this->mascara = {
-                { this->pos.x - 1.0f, this->pos.y - 1.0f, this->pos.z - 1.0f },
-                { this->pos.x + 1.0f, this->pos.y + 1.0f, this->pos.z + 1.0f }
+                { this->getX() - 1.0f, this->getY() - 1.0f, this->getZ() - 1.0f },
+                { this->getX() + 1.0f, this->getY() + 1.0f, this->getZ() + 1.0f }
             };
         }*/
 
         AABB getMascara() const {
             return {
-                { this->pos.x - 1.0f, this->pos.y - 1.0f, this->pos.z - 1.0f },
-                { this->pos.x + 1.0f, this->pos.y + 1.0f, this->pos.z + 1.0f }
+                { this->getX() - 1.0f, this->getY() - 1.0f, this->getZ() - 1.0f },
+                { this->getX() + 1.0f, this->getY() + 1.0f, this->getZ() + 1.0f }
             };
         }
 
         void nasce_jogador(float ix, float iy, float iz){
-            this->pos = {ix, iy, iz};
+            this->setX(ix), this->setY(iy), this->setZ(iz);
             this->cam_yaw = this->cam_pitch = 0.0f;
             //atualiza_mascara();
             morto = false;
+        }
+
+        void morre(){
+            morto = true;
         }
 
         void desenha_mascara(int stacks = 30, int fatias = 30){
@@ -98,27 +103,27 @@ class Jogador : public Entidade{
                     float theta2 = (j + 1) * (2 * M_PI / fatias);
 
                     // Vertex 1 (bottom-left of current quad)
-                    float x1 = this->mascara.r * cos(phi2) * sin(theta1) + this->pos.x;
-                    float y1 = this->mascara.r * sin(phi2) + this->pos.y;
-                    float z1 = this->mascara.r * cos(phi2) * cos(theta1) + this->pos.z;
+                    float x1 = this->mascara.r * cos(phi2) * sin(theta1) + this->getX();
+                    float y1 = this->mascara.r * sin(phi2) + this->getY();
+                    float z1 = this->mascara.r * cos(phi2) * cos(theta1) + this->getZ();
                     glVertex3f(x1, y1, z1);
 
                     // Vertex 2 (bottom-right of current quad)
-                    float x2 = this->mascara.r * cos(phi2) * sin(theta2) + this->pos.x;
-                    float y2 = this->mascara.r * sin(phi2) + this->pos.y;
-                    float z2 = this->mascara.r * cos(phi2) * cos(theta2) + this->pos.z;
+                    float x2 = this->mascara.r * cos(phi2) * sin(theta2) + this->getX();
+                    float y2 = this->mascara.r * sin(phi2) + this->getY();
+                    float z2 = this->mascara.r * cos(phi2) * cos(theta2) + this->getZ();
                     glVertex3f(x2, y2, z2);
 
                     // Vertex 3 (top-right of current quad)
-                    float x3 = this->mascara.r * cos(phi1) * sin(theta2) + this->pos.x;
-                    float y3 = this->mascara.r * sin(phi1) + this->pos.y;
-                    float z3 = this->mascara.r * cos(phi1) * cos(theta2) + this->pos.z;
+                    float x3 = this->mascara.r * cos(phi1) * sin(theta2) + this->getX();
+                    float y3 = this->mascara.r * sin(phi1) + this->getY();
+                    float z3 = this->mascara.r * cos(phi1) * cos(theta2) + this->getZ();
                     glVertex3f(x3, y3, z3);
 
                     // Vertex 4 (top-left of current quad)
-                    float x4 = this->mascara.r * cos(phi1) * sin(theta1) + this->pos.x;
-                    float y4 = this->mascara.r * sin(phi1) + this->pos.y;
-                    float z4 = this->mascara.r * cos(phi1) * cos(theta1) + this->pos.z;
+                    float x4 = this->mascara.r * cos(phi1) * sin(theta1) + this->getX();
+                    float y4 = this->mascara.r * sin(phi1) + this->getY();
+                    float z4 = this->mascara.r * cos(phi1) * cos(theta1) + this->getZ();
                     glVertex3f(x4, y4, z4);
                 }
             glEnd();
@@ -135,8 +140,8 @@ class Jogador : public Entidade{
             muda_cor(6);
             //glLineWidth(5.0f);
             glBegin(GL_LINES);
-            glVertex3f(this->pos.x,this->pos.y,this->pos.z);
-            glVertex3f(this->pos.x+dirX*1000.0f,this->pos.y+dirY*1000.0f,this->pos.z+dirZ*1000.0f);
+            glVertex3f(this->getX(),this->getY(),this->getZ());
+            glVertex3f(this->getX()+dirX*1000.0f,this->getY()+dirY*1000.0f,this->getZ()+dirZ*1000.0f);
             glEnd();
             //glLineWidth(1.0f);
         }
@@ -147,8 +152,8 @@ class Jogador : public Entidade{
             float dirX = -sin(radYaw) * cos(radPitch);
             float dirY =  sin(radPitch);
             float dirZ = -cos(radYaw) * cos(radPitch);
-            XYZ vi = {this->pos.x,this->pos.y,this->pos.z},
-                vf = {this->pos.x+dirX,this->pos.y+dirY,this->pos.z+dirZ},
+            XYZ vi = {this->getX(),this->getY(),this->getZ()},
+                vf = {this->getX()+dirX,this->getY()+dirY,this->getZ()+dirZ},
                 va = {a.getX(),a.getY(),a.getZ()};
             float grau = Arccos((vf-vi),(va-vi)) * 180.0f / M_PI;
             return grau <= 20.0f and distancia_entidades(*this,a) <= 30.0f;
@@ -196,9 +201,9 @@ class Jogador : public Entidade{
         }
 
         bool tenta_mover(float dx, float dy, float dz){
-            candidate = {
-                { pos.x - 1.0f + dx, pos.y - 1.0f + dy, pos.z - 1.0f + dz },
-                { pos.x + 1.0f + dx, pos.y + 1.0f + dy, pos.z + 1.0f + dz }
+            AABB candidate = {
+                { getX() - 1.0f + dx, getY() - 1.0f + dy, getZ() - 1.0f + dz },
+                { getX() + 1.0f + dx, getY() + 1.0f + dy, getZ() + 1.0f + dz }
             };
             //this->mascara; //Sphere candidate = this->mascara;
             //candidate.min.x += dx; candidate.max.x += dx;
@@ -222,9 +227,9 @@ class Jogador : public Entidade{
                     return false; // colisão detectada => rejeita movimento
                 
             // sem colisão => confirma movimento
-            this->pos.x += dx;
-            this->pos.y += dy;
-            this->pos.z += dz;
+            this->setX(getX()+dx);
+            this->setY(getY()+dy);
+            this->setZ(getZ()+dz);
             //touch = candidate;
             //atualiza_mascara();
             //this->mascara = candidate;
@@ -301,9 +306,9 @@ class Jogador : public Entidade{
                     move_camera(move_vel,-1.0f,-1.0f);
             }
             //atualiza_mascara();
-            //this->mascara = {{this->pos.x-1.0f,this->pos.y-1.0f,this->pos.z-1.0f},
-            //        {this->pos.x+1.0f,this->pos.y+1.0f,this->pos.z+1.0f}};
-            //this->mascara = {{this->pos.x,this->pos.y,this->pos.z},1.0f};
+            //this->mascara = {{this->getX()-1.0f,this->getY()-1.0f,this->getZ()-1.0f},
+            //        {this->getX()+1.0f,this->getY()+1.0f,this->getZ()+1.0f}};
+            //this->mascara = {{this->getX(),this->getY(),this->getZ()},1.0f};
         }
 };
 

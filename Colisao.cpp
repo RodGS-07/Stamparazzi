@@ -3,6 +3,10 @@
 #include "Linear.h"
 #include <algorithm>
 
+#define XBOUNDS 100.0f
+#define YBOUNDS 100.0f
+#define ZBOUNDS 100.0f
+
 using namespace std;
 
 struct AABB {

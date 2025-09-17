@@ -42,6 +42,10 @@ namespace NJ{
                 morto = false;
             }
 
+            void morre(){
+                morto = true;
+            }
+
             void desenha_mascara(int stacks = 30, int fatias = 30){
                 muda_cor(12);
 
