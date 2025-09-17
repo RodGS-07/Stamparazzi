@@ -4,31 +4,6 @@
 #include <GL/glut.h>
 #include <cmath>
 
-enum F{
-    CUBO,
-    PIRAMIDE,
-    ESFERA,
-    CILINDRO,
-    CONE,
-    TORUS,
-    BEZIER
-};
-
-const float cores[13][3] = {
-    {1.0f,0.0f,0.0f}, //vermelho
-    {1.0f,0.5f,0.0f}, //laranja
-    {1.0f,1.0f,0.0f}, //amarelo
-    {0.0f,1.0f,0.0f}, //lima
-    {0.0f,0.5f,0.0f}, //verde
-    {0.0f,1.0f,1.0f}, //ciano
-    {0.0f,0.0f,1.0f}, //azul
-    {0.5f,0.0f,1.0f}, //roxo
-    {1.0f,0.0f,1.0f}, //rosa
-    {0.5f,0.25f,0.0f}, //marrom
-    {1.0f,1.0f,1.0f}, //branco
-    {0.5f,0.5f,0.5f}, //cinza
-    {0.0f,0.0f,0.0f} /*preto*/ };
-
 void muda_cor(int c){
     glColor3f(cores[c][0],cores[c][1],cores[c][2]);
 }
@@ -81,7 +56,7 @@ void desenha_chao() {
     glEnd();
 }
 
-void desenha_cubo(float lado = 2.0f) {
+void desenha_cubo(float lado) {
     glBegin(GL_QUADS);
 
     glVertex3f(-lado, -lado,  lado);
@@ -117,7 +92,7 @@ void desenha_cubo(float lado = 2.0f) {
     glEnd();
 }
 
-void desenha_piramide(float base = 4.0f, float altura = 4.0f){
+void desenha_piramide(float base, float altura){
     float h = altura;
     float b = base / 2.0f; // metade do tamanho da base
 
@@ -153,7 +128,7 @@ void desenha_piramide(float base = 4.0f, float altura = 4.0f){
     glEnd();
 }
 
-void desenha_esfera(float raio = 2.0f, int fatias = 30, int stacks = 30){
+void desenha_esfera(float raio, int fatias, int stacks){
     for (int i = 0; i < stacks; ++i) {
         float phi1 = M_PI / 2 - i * (M_PI / stacks);
         float phi2 = M_PI / 2 - (i + 1) * (M_PI / stacks);
@@ -191,7 +166,7 @@ void desenha_esfera(float raio = 2.0f, int fatias = 30, int stacks = 30){
     }
 }
 
-void desenha_cilindro(float raio = 2.0f, float altura = 4.0f, int fatias = 30, int stacks = 30, bool tampas = true){
+void desenha_cilindro(float raio, float altura, int fatias, int stacks, bool tampas){
     float half = altura / 2.0f;
 
     // Superfície lateral
@@ -242,7 +217,7 @@ void desenha_cilindro(float raio = 2.0f, float altura = 4.0f, int fatias = 30, i
     }
 }
 
-void desenha_cone(float raio = 2.0f, float altura = 4.0f, int fatias = 30){
+void desenha_cone(float raio, float altura, int fatias){
     float half = altura / 2.0f;
 
     // Superfície lateral
@@ -275,7 +250,7 @@ void desenha_cone(float raio = 2.0f, float altura = 4.0f, int fatias = 30){
     glEnd();
 }
 
-void desenha_torus(float R = 3.0f, float r = 1.0f, int fatias = 30, int stacks = 30){
+void desenha_torus(float R, float r, int fatias, int stacks){
     for (int i = 0; i < stacks; ++i) {
         float phi1 = i * (2 * M_PI / stacks);
         float phi2 = (i + 1) * (2 * M_PI / stacks);
@@ -340,12 +315,7 @@ void marcax(float x, float y, float z){
     glLineWidth(1.0f);
 }
 
-const int NI = 10, NJ = 10;
-const int RESOLUTIONI = 3*NI, RESOLUTIONJ = 3*NJ;
-XYZ inp[NI+1][NJ+1];
-XYZ outp[RESOLUTIONI][RESOLUTIONJ];
-
-double BezierBlend(int k,double mu, int n) {
+/*double BezierBlend(int k,double mu, int n) {
     int nn,kn,nkn;
     double blend=1;
     nn = n;
@@ -371,7 +341,7 @@ double BezierBlend(int k,double mu, int n) {
     return(blend);
 }
 
-void entrada_inps(int forma, int i, int j){
+void entrada_inpus(int forma, int i, int j){
     // Normaliza parâmetros u, v em [0,1]
     double u = (double)i / (double)NI;  
     double v = (double)j / (double)NJ;  
@@ -384,41 +354,41 @@ void entrada_inps(int forma, int i, int j){
     switch(forma){
         case ESFERA: 
             R = 2.0f; // raio da esfera
-            inp[i][j].x = R * sin(phi) * cos(theta);
-            inp[i][j].y = R * sin(phi) * sin(theta);
-            inp[i][j].z = R * cos(phi);
+            inpu[i][j].x = R * sin(phi) * cos(theta);
+            inpu[i][j].y = R * sin(phi) * sin(theta);
+            inpu[i][j].z = R * cos(phi);
             break;
         
         case CILINDRO: 
             R = 2.0f; // raio
             H = 4.0f; // altura
-            inp[i][j].x = R * cos(theta);
-            inp[i][j].y = R * sin(theta);
-            inp[i][j].z = (v - 0.5f) * H;
+            inpu[i][j].x = R * cos(theta);
+            inpu[i][j].y = R * sin(theta);
+            inpu[i][j].z = (v - 0.5f) * H;
             break;
         
         case CONE: 
             H = 4.0f;       // altura
             Rmax = 2.0f;    // raio da base
             R = (1.0f - v) * Rmax;
-            inp[i][j].x = R * cos(theta);
-            inp[i][j].y = R * sin(theta);
-            inp[i][j].z = v * H;
+            inpu[i][j].x = R * cos(theta);
+            inpu[i][j].y = R * sin(theta);
+            inpu[i][j].z = v * H;
             break;
         
         case TORUS: 
             R = 3.0f; // raio maior (centro até tubo)
             r = 1.0f; // raio menor (espessura do tubo)
-            inp[i][j].x = (R + r * cos(phi)) * cos(theta);
-            inp[i][j].y = (R + r * cos(phi)) * sin(theta);
-            inp[i][j].z = r * sin(phi);
+            inpu[i][j].x = (R + r * cos(phi)) * cos(theta);
+            inpu[i][j].y = (R + r * cos(phi)) * sin(theta);
+            inpu[i][j].z = r * sin(phi);
             break;
         
         case BEZIER: 
             // Exemplo simples: grid de pontos com ondulação
-            inp[i][j].x = i;
-            inp[i][j].y = j;
-            inp[i][j].z = 2.0f * sin(i * 0.5f) * cos(j * 0.5f);
+            inpu[i][j].x = i;
+            inpu[i][j].y = j;
+            inpu[i][j].z = 2.0f * sin(i * 0.5f) * cos(j * 0.5f);
             break;
         
     }
@@ -431,15 +401,15 @@ void generateControlPoint(int forma) {
     if(forma != CUBO and forma!= PIRAMIDE){
         for (i=0;i<=NI;i++) {
             for (j=0;j<=NJ;j++) {
-                entrada_inps(forma,i,j);
+                entrada_inpus(forma,i,j);
             }
         }
     }
-}
+}*/
 
 
 //cálculos necessários para configurar a normal dos vértices da superfície
-XYZ calculaNormal(XYZ u, XYZ v) {
+/*XYZ calculaNormal(XYZ u, XYZ v) {
     XYZ normal;
     normal.x = u.y * v.z - u.z * v.y;
     normal.y = u.z * v.x - u.x * v.z;
@@ -453,10 +423,10 @@ XYZ calculaNormal(XYZ u, XYZ v) {
     normal.z /= length;
 
     return normal;
-}
+}*/
 
 
-void Surface(int forma) {
+/*void Surface(int forma) {
     if(forma != CUBO and forma != PIRAMIDE){
         int i,j,ki,kj;
         double mui,muj,bi,bj;
@@ -464,30 +434,30 @@ void Surface(int forma) {
             mui = i / (double)(RESOLUTIONI-1);
             for (j=0;j<RESOLUTIONJ;j++) {
                 muj = j / (double)(RESOLUTIONJ-1);
-                outp[i][j].x = 0;
-                outp[i][j].y = 0;
-                outp[i][j].z = 0;
+                outpu[i][j].x = 0;
+                outpu[i][j].y = 0;
+                outpu[i][j].z = 0;
                 for (ki=0;ki<=NI;ki++) {
                     bi = BezierBlend(ki,mui,NI);
                     for (kj=0;kj<=NJ;kj++) {
                     bj = BezierBlend(kj,muj,NJ);
-                    outp[i][j].x += (inp[ki][kj].x * bi * bj);
-                    outp[i][j].y += (inp[ki][kj].y * bi * bj);
-                    outp[i][j].z += (inp[ki][kj].z * bi * bj);
+                    outpu[i][j].x += (inpu[ki][kj].x * bi * bj);
+                    outpu[i][j].y += (inpu[ki][kj].y * bi * bj);
+                    outpu[i][j].z += (inpu[ki][kj].z * bi * bj);
                     }
                 }
             }
         }
         for(i=0;i<RESOLUTIONI-1;i++){
             for(j=0;j<RESOLUTIONJ-1;j++){
-                XYZ u = {outp[i+1][j].x - outp[i][j].x, outp[i+1][j].y - outp[i][j].y, outp[i+1][j].z - outp[i][j].z};
-                XYZ v = {outp[i+1][j+1].x - outp[i][j].x, outp[i+1][j+1].y - outp[i][j].y, outp[i+1][j+1].z - outp[i][j].z};
+                XYZ u = {outpu[i+1][j].x - outpu[i][j].x, outpu[i+1][j].y - outpu[i][j].y, outpu[i+1][j].z - outpu[i][j].z};
+                XYZ v = {outpu[i+1][j+1].x - outpu[i][j].x, outpu[i+1][j+1].y - outpu[i][j].y, outpu[i+1][j+1].z - outpu[i][j].z};
                 XYZ normal = calculaNormal(u,v);
                 glBegin(GL_QUADS);
-                    glNormal3f(normal.x,normal.y,normal.z); glVertex3f(outp[i][j].x,outp[i][j].y,outp[i][j].z);
-                    glNormal3f(normal.x,normal.y,normal.z); glVertex3f(outp[i+1][j].x,outp[i+1][j].y,outp[i+1][j].z);
-                    glNormal3f(normal.x,normal.y,normal.z); glVertex3f(outp[i+1][j+1].x,outp[i+1][j+1].y,outp[i+1][j+1].z);
-                    glNormal3f(normal.x,normal.y,normal.z); glVertex3f(outp[i][j+1].x,outp[i][j+1].y,outp[i][j+1].z);
+                    glNormal3f(normal.x,normal.y,normal.z); glVertex3f(outpu[i][j].x,outpu[i][j].y,outpu[i][j].z);
+                    glNormal3f(normal.x,normal.y,normal.z); glVertex3f(outpu[i+1][j].x,outpu[i+1][j].y,outpu[i+1][j].z);
+                    glNormal3f(normal.x,normal.y,normal.z); glVertex3f(outpu[i+1][j+1].x,outpu[i+1][j+1].y,outpu[i+1][j+1].z);
+                    glNormal3f(normal.x,normal.y,normal.z); glVertex3f(outpu[i][j+1].x,outpu[i][j+1].y,outpu[i][j+1].z);
                 glEnd();
             }
         }
@@ -496,4 +466,4 @@ void Surface(int forma) {
     else {
         desenha_piramide();
     }
-}
+}*/

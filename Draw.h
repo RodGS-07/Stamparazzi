@@ -39,15 +39,15 @@ void desenha_torus(float R = 3.0f, float r = 1.0f, int fatias = 30, int stacks =
 void desenha_superficie(int formato);
 void marcax(float x, float y, float z);
 
-const int NI = 10, NJ = 10;
+/*const int NI = 10, NJ = 10;
 const int RESOLUTIONI = 3*NI, RESOLUTIONJ = 3*NJ;
-XYZ inp[NI+1][NJ+1];
-XYZ outp[RESOLUTIONI][RESOLUTIONJ];
+XYZ inpu[NI+1][NJ+1];
+XYZ outpu[RESOLUTIONI][RESOLUTIONJ];
 
 double BezierBlend(int k,double mu, int n);
 void entrada_inps(int forma, int i, int j);
-void generateControlPoint(int forma);
-XYZ calculaNormal(XYZ u, XYZ v);
-void Surface(int forma);
+void generateControlPoint(int forma);*/
+//XYZ calculaNormal(XYZ u, XYZ v);
+//void Surface(int forma);
 
 #endif

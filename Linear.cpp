@@ -3,14 +3,8 @@
 #include <GL/glut.h>
 #include <cmath>
 
-struct XYZ{//representa pontos e vetores
-    float x, y, z;
-    XYZ() 
-    : x(0.0f), y(0.0f), z(0.0f) { }
-
-    XYZ(float ix, float iy, float iz)
-    : x(ix), y(iy), z(iz) { }
-};
+XYZ::XYZ() : x(0), y(0), z(0) {}
+XYZ::XYZ(float x, float y, float z) : x(x), y(y), z(z) {}
 
 GLfloat operator!(const XYZ& v){//Norma
     return (sqrt(v.x*v.x+v.y*v.y+v.z*v.z));

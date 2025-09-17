@@ -3,12 +3,15 @@
 #include "Entidade.h"
 #include "Draw.h"
 #include "Colisao.h"
-
-class Jogador;
+#include "Jogador.h"
+#include <iostream>
+using namespace std;
 
 Poligono::Poligono(int s) : Entidade(), superficie(s) {}
 Poligono::Poligono(float ix, float iy, float iz, int s) 
 : Entidade(ix,iy,iz), superficie(s) {}
+
+int Poligono::getSuperficie() const {return this->superficie;}
 
 Cubo::Cubo() : Poligono(F::CUBO) {}
 Cubo::Cubo(float ix, float iy, float iz, float l)
@@ -87,6 +90,10 @@ bool Piramide::colide_jogador(const AABB& s) const {
     float b = base / 2.0f;
     float h = altura / 2.0f;
     AABB box = {{this->getX() - b, this->getY() - h, this->getZ() - b}, {this->getX() + b, this->getY() + h, this->getZ() + b}};
+    if(!AABBvsAABB(s,box)) {
+    cout << s.min.x << " " << s.min.y << " " << s.min.z << " " << s.max.x << " " << s.max.y << " " << s.max.z << endl;
+    cout << box.min.x << " " << box.min.y << " " << box.min.z << " " << box.max.x << " " << box.max.y << " " << box.max.z << endl;
+    }
     return AABBvsAABB(s,box);//SphereVsAABB(s, box);
     // base quad vertices (conforme ND::desenha_piramide)
     /*XYZ A = { this->getX() - b, this->getY() - b, this->getZ() - b };
@@ -249,7 +256,7 @@ Cilindro::Cilindro(float ix, float iy, float iz, float r, float h)
     axis = { 0.0f, 0.0f, 1.0f };
 }
 
-bool Cilindro::colide_jogador(const AABB& s) const override {
+bool Cilindro::colide_jogador(const AABB& s) const {
     AABB box = {
         { this->getX() - raio, this->getY() - raio, this->getZ() - altura/2.0f },
         { this->getX() + raio, this->getY() + raio, this->getZ() + altura/2.0f }
@@ -265,12 +272,12 @@ bool Cilindro::colide_jogador(const AABB& s) const override {
     return SphereVsCylinder(s, cyl);*/
 }
 
-void Cilindro::aplica_efeito(Jogador& jogador) override {
+void Cilindro::aplica_efeito(Jogador& jogador) {
     AABB box = {{this->getX() - raio, this->getY() - raio, this->getZ() - raio}, {this->getX() + raio, this->getY() + raio, this->getZ() + raio}};
     if(jogador.getMascara().max.y <= this->getY()) jogador.morre();
 }
 
-void Cilindro::desenha_poligono(int cor) override {
+void Cilindro::desenha_poligono(int cor) {
     if(cor >= 0 and cor <= 12) muda_cor(cor);
     glPushMatrix();
     glTranslatef(this->getX(), this->getY(), this->getZ());
@@ -332,7 +339,7 @@ Cone::Cone(float ix, float iy, float iz, float r, float h)
     axis = { 0.0f, 0.0f, -1.0f }; 
 }
 
-bool Cone::colide_jogador(const AABB& s) const override {
+bool Cone::colide_jogador(const AABB& s) const {
     AABB box = {
         { this->getX() - raio, this->getY() - raio, this->getZ() - altura/2.0f },
         { this->getX() + raio, this->getY() + raio, this->getZ() + altura/2.0f }
@@ -347,7 +354,7 @@ bool Cone::colide_jogador(const AABB& s) const override {
     return SphereVsCone(s,cone); //PointInConeBound(s.c, cone);*/
 }
 
-void Cone::aplica_efeito(Jogador& jogador) override {
+void Cone::aplica_efeito(Jogador& jogador) {
     AABB box = jogador.getMascara();
 
     // origem = ápice do cone
@@ -360,7 +367,7 @@ void Cone::aplica_efeito(Jogador& jogador) override {
     }
 }
 
-void Cone::desenha_poligono(int cor) override {
+void Cone::desenha_poligono(int cor) {
     if(cor >= 0 and cor <= 12) muda_cor(cor);
     glPushMatrix();
     glTranslatef(this->getX(), this->getY(), this->getZ());
@@ -436,7 +443,11 @@ Torus::Torus(float ix, float iy, float iz, float re, float ra)
     conjugado = nullptr;
 }
 
-bool Torus::colide_jogador(const AABB& s) const override{
+Torus* Torus::getConjugado() const {return this->conjugado;}
+
+void Torus::setConjugado(Torus* t) {this->conjugado = t;}
+
+bool Torus::colide_jogador(const AABB& s) const{
     AABB box = {
         {p.c.x - p.raio_maior, p.c.y - p.raio_maior, p.c.z - p.raio_menor},
         {p.c.x + p.raio_maior, p.c.y + p.raio_maior, p.c.z + p.raio_menor}
@@ -444,19 +455,43 @@ bool Torus::colide_jogador(const AABB& s) const override{
     return AABBvsAABB(s, box);
 }
 
-void Torus::aplica_efeito(Jogador& jogador) override {
+void Torus::aplica_efeito(Jogador& jogador) {
+    //cout << (conjugado==NULL) << endl;
     if(conjugado){
+        float dx = conjugado->p.c.x - p.c.x;
+        float dy = conjugado->p.c.y - p.c.y;
+        float dz = conjugado->p.c.z - p.c.z;
+
+        // atualiza posição real do jogador
+        jogador.setX(jogador.getX() + dx);
+        jogador.setY(jogador.getY() + dy);
+        jogador.setZ(jogador.getZ() + dz);
+
+        // atualiza a máscara com o mesmo deslocamento
+        /*AABB mask = jogador.getMascara();
+        mask.min.x += dx; mask.max.x += dx;
+        mask.min.y += dy; mask.max.y += dy;
+        mask.min.z += dz; mask.max.z += dz;
+        jogador.setMascara(mask);*/
+    }
+    /*if(conjugado){
         // teleporta o jogador para o conjugado
+        jogador.setMascara({{jogador.getMascara().min.x+(conjugado->p.c.x - p.c.x),
+                                jogador.getMascara().min.y+(conjugado->p.c.y - p.c.y),
+                                jogador.getMascara().min.z+(conjugado->p.c.z - p.c.z)},
+                            {jogador.getMascara().max.x+(conjugado->p.c.x - p.c.x),
+                                jogador.getMascara().max.y+(conjugado->p.c.y - p.c.y),
+                                jogador.getMascara().max.z+(conjugado->p.c.z - p.c.z)}});
         jogador.getMascara().min.x += (conjugado->p.c.x - p.c.x);
         jogador.getMascara().max.x += (conjugado->p.c.x - p.c.x);
         jogador.getMascara().min.y += (conjugado->p.c.y - p.c.y);
         jogador.getMascara().max.y += (conjugado->p.c.y - p.c.y);
         jogador.getMascara().min.z += (conjugado->p.c.z - p.c.z);
         jogador.getMascara().max.z += (conjugado->p.c.z - p.c.z);
-    }
+    }*/
 }
 
-void Torus::desenha_poligono(int cor) override {
+void Torus::desenha_poligono(int cor) {
     if(cor >= 0 and cor <= 12) muda_cor(cor);
     glPushMatrix();
     glTranslatef(p.c.x, p.c.y, p.c.z);

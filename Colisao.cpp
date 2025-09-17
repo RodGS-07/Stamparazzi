@@ -9,21 +9,6 @@
 
 using namespace std;
 
-struct AABB {
-    XYZ min, max;
-};
-
-struct Sphere {
-    XYZ c;
-    float r;
-};
-
-struct Portal{
-    XYZ c;
-    float raio_menor, raio_maior;
-    Portal* par;
-};
-
 bool AABBvsAABB(const AABB& a, const AABB& b) {
     return (a.min.x <= b.max.x && a.max.x >= b.min.x) &&  // sobreposição em X
         (a.min.y <= b.max.y && a.max.y >= b.min.y) &&  // sobreposição em Y
@@ -91,11 +76,6 @@ XYZ ClosestPointOnSegment(const XYZ& A,const XYZ& B,const XYZ& P){
     return A + AB*t;
 }
 
-struct Capsule {
-    XYZ A,B; // extremos do segmento central
-    float r;  // raio
-};
-
 // distância entre dois segmentos (Ericson, ch.5.1.9)
 float SegmentSegmentDist2(const XYZ& A0,const XYZ& A1,
                         const XYZ& B0,const XYZ& B1,
@@ -124,13 +104,6 @@ bool CapsuleVsCapsule(const Capsule& c1,const Capsule& c2){
     return dist2 <= rsum*rsum;
 }
 
-struct Cylinder {
-    XYZ base;   // centro da base
-    XYZ axis;   // vetor normalizado do eixo
-    float h;     // altura
-    float R;     // raio
-};
-
 bool SphereVsCylinder(const Sphere& s,const Cylinder& cyl){
     // projeção do centro da esfera no eixo
     float t = Escalar(s.c - cyl.base, cyl.axis);
@@ -140,13 +113,6 @@ bool SphereVsCylinder(const Sphere& s,const Cylinder& cyl){
     float dist2 = Length2(d);
     return dist2 <= (s.r + cyl.R)*(s.r + cyl.R);
 }
-
-struct ConeBound {
-    XYZ apex;   // vértice
-    XYZ axis;   // direção (unitário, do ápice à base)
-    float h;     // altura
-    float R;     // raio da base
-};
 
 bool PointInConeBound(const XYZ& P,const ConeBound& cone){
     XYZ v = P - cone.apex;

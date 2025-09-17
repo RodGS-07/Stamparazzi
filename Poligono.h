@@ -16,6 +16,7 @@ class Poligono : public Entidade{
         Poligono(float ix, float iy, float iz, int s);
 
         //virtual bool colide_jogador(const Sphere& s) const = 0;
+        int getSuperficie() const;
         virtual bool colide_jogador(const AABB& s) const = 0;
         virtual void aplica_efeito(Jogador& jogador) = 0;
         virtual void desenha_poligono(int cor) = 0;
@@ -104,6 +105,8 @@ class Torus : public Poligono{
         Torus();
         Torus(float ix, float iy, float iz, float re, float ra);
 
+        Torus* getConjugado() const;
+        void setConjugado(Torus* t);
         bool colide_jogador(const AABB& s) const override;
         void aplica_efeito(Jogador& jogador) override;
         void desenha_poligono(int cor) override;
