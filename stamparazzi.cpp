@@ -144,8 +144,31 @@ void inicializa_opengl(int argc, char* argv[]){
     // Configuração básica do OpenGL
     glEnable(GL_DEPTH_TEST);
     glMatrixMode(GL_PROJECTION);
-    gluPerspective(45.0, 800.0/600.0, 0.1, 250.0);
+    gluPerspective(45.0, 800.0/600.0, 0.1, 300.0);
     glMatrixMode(GL_MODELVIEW);
+
+    // Iluminação da sala
+    GLfloat globalAmbiente[] = { 0.2, 0.2, 0.2, 1.0};
+    GLfloat white[] = { 1.0, 1.0, 1.0, 1.0 };
+    
+    glLightfv(GL_LIGHT0,GL_AMBIENT,globalAmbiente);
+    glLightfv(GL_LIGHT0,GL_DIFFUSE,white);
+    glLightfv(GL_LIGHT0,GL_SPECULAR,white);
+    glEnable(GL_LIGHTING);
+    glEnable(GL_LIGHT0);
+
+    glEnable(GL_COLOR_MATERIAL);
+    glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
+
+    glEnable(GL_NORMALIZE);
+    glShadeModel(GL_SMOOTH);
+
+    GLfloat mat_specular[] = {1.0f, 1.0f, 1.0f, 1.0f}; // reflexo branco
+    glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
+    glMaterialf(GL_FRONT, GL_SHININESS, 96.0f);
+    //glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, white);
+    //glMaterialfv(GL_FRONT, GL_SPECULAR, white);
+    //glMaterialf(GL_FRONT, GL_SHININESS, 30);
 }
 
 void cria_poligonos(int n){
@@ -251,12 +274,16 @@ void loop_jogo(){
                 0.0f,1.0f,0.0f);
             jogador.desenha_mascara();
         }
+
+        GLfloat position[] = { 0.0, 100.0f, 0.0f, 1.0f};
+        glLightfv(GL_LIGHT0,GL_POSITION,position);
+
         jogador.desenha_mira();
 
         // Desenha chão
 		glPushMatrix();
 			glTranslatef(0,-1,0);
-			glScalef(100,-0.1,100);
+			glScalef(100,0.1,100);
         	desenha_chao();
 		glPopMatrix();
 

@@ -3,6 +3,9 @@
 #include "Linear.h"
 #include <GL/glut.h>
 #include <cmath>
+#include <vector>
+
+using namespace std;
 
 void muda_cor(int c){
     glColor3f(cores[c][0],cores[c][1],cores[c][2]);
@@ -12,6 +15,7 @@ void desenha_chao() {
     glBegin(GL_QUADS);
 
     // Frente (vermelha)
+    glNormal3f(0,0,1);
     muda_cor(0);
     glVertex3f(-1, -1,  1);
     glVertex3f( 1, -1,  1);
@@ -19,6 +23,7 @@ void desenha_chao() {
     glVertex3f(-1,  1,  1);
 
     // Trás (verde)
+    glNormal3f(0,0,-1);
     muda_cor(4);
     glVertex3f(-1, -1, -1);
     glVertex3f(-1,  1, -1);
@@ -26,6 +31,7 @@ void desenha_chao() {
     glVertex3f( 1, -1, -1);
 
     // Esquerda (azul)
+    glNormal3f(-1,0,0);
     muda_cor(6);
     glVertex3f(-1, -1, -1);
     glVertex3f(-1, -1,  1);
@@ -33,21 +39,24 @@ void desenha_chao() {
     glVertex3f(-1,  1, -1);
 
     // Direita (amarelo)
+    glNormal3f(1,0,0);
     muda_cor(2);
     glVertex3f(1, -1, -1);
     glVertex3f(1,  1, -1);
     glVertex3f(1,  1,  1);
     glVertex3f(1, -1,  1);
 
-    // Topo (ciano)
-    muda_cor(5);
+    // Topo (magenta)
+    glNormal3f(0,1,0);
+    muda_cor(8);
     glVertex3f(-1, 1, -1);
     glVertex3f(-1, 1,  1);
     glVertex3f( 1, 1,  1);
     glVertex3f( 1, 1, -1);
 
-    // Base (magenta)
-    muda_cor(8);
+    // Base (ciano)
+    glNormal3f(0,-1,0);
+    muda_cor(5);
     glVertex3f(-1, -1, -1);
     glVertex3f( 1, -1, -1);
     glVertex3f( 1, -1,  1);
@@ -57,33 +66,46 @@ void desenha_chao() {
 }
 
 void desenha_cubo(float lado) {
+    XYZ normal;
     glBegin(GL_QUADS);
 
+    normal = Normal({-lado,-lado,lado},{lado,-lado,lado},{lado,lado,lado});
+    glNormal3f(normal.x,normal.y,normal.z);
     glVertex3f(-lado, -lado,  lado);
     glVertex3f( lado, -lado,  lado);
     glVertex3f( lado,  lado,  lado);
     glVertex3f(-lado,  lado,  lado);
 
+    normal = Normal({-lado,-lado,-lado},{-lado,lado,-lado},{lado,lado,-lado});
+    glNormal3f(normal.x,normal.y,normal.z);
     glVertex3f(-lado, -lado, -lado);
     glVertex3f(-lado,  lado, -lado);
     glVertex3f( lado,  lado, -lado);
     glVertex3f( lado, -lado, -lado);
 
+    normal = Normal({-lado,-lado,-lado},{-lado,-lado,lado},{-lado,lado,lado});
+    glNormal3f(normal.x,normal.y,normal.z);
     glVertex3f(-lado, -lado, -lado);
     glVertex3f(-lado, -lado,  lado);
     glVertex3f(-lado,  lado,  lado);
     glVertex3f(-lado,  lado, -lado);
 
+    normal = Normal({lado,-lado,-lado},{lado,lado,-lado},{lado,lado,lado});
+    glNormal3f(normal.x,normal.y,normal.z);
     glVertex3f(lado, -lado, -lado);
     glVertex3f(lado,  lado, -lado);
     glVertex3f(lado,  lado,  lado);
     glVertex3f(lado, -lado,  lado);
 
+    normal = Normal({-lado,lado,-lado},{-lado,lado,lado},{lado,lado,lado});
+    glNormal3f(normal.x,normal.y,normal.z);
     glVertex3f(-lado, lado, -lado);
     glVertex3f(-lado, lado,  lado);
     glVertex3f( lado, lado,  lado);
     glVertex3f( lado, lado, -lado);
 
+    normal = Normal({-lado,-lado,-lado},{lado,-lado,-lado},{lado,-lado,lado});
+    glNormal3f(normal.x,normal.y,normal.z);
     glVertex3f(-lado, -lado, -lado);
     glVertex3f( lado, -lado, -lado);
     glVertex3f( lado, -lado,  lado);
@@ -93,10 +115,13 @@ void desenha_cubo(float lado) {
 }
 
 void desenha_piramide(float base, float altura){
+    XYZ normal;
     float h = altura;
     float b = base / 2.0f; // metade do tamanho da base
 
     // --- Base (quadrado no plano y=0) ---
+    normal = Normal({-b,-b,-b},{b,-b,-b},{b,-b,b});
+    glNormal3f(normal.x,normal.y,normal.z);
     glBegin(GL_QUADS);
         glVertex3f(-b, -b, -b);
         glVertex3f( b, -b, -b);
@@ -107,21 +132,29 @@ void desenha_piramide(float base, float altura){
     // --- Faces laterais (4 triângulos) ---
     glBegin(GL_TRIANGLES);
         // Frente
+        normal = Normal({-b,-b,b},{b,-b,b},{0,h-b,0});
+        glNormal3f(normal.x,normal.y,normal.z);
         glVertex3f(-b, -b,  b);
         glVertex3f( b, -b,  b);
         glVertex3f( 0.0f,  h-b , 0.0f);
 
         // Direita
+        normal = Normal({b,-b,b},{b,-b,-b},{0,h-b,0});
+        glNormal3f(normal.x,normal.y,normal.z);
         glVertex3f( b, -b,  b);
         glVertex3f( b, -b, -b);
         glVertex3f( 0.0f,  h-b , 0.0f);
 
         // Trás
+        normal = Normal({b,-b,-b},{-b,-b,-b},{0,h-b,0});
+        glNormal3f(normal.x,normal.y,normal.z);
         glVertex3f( b, -b, -b);
         glVertex3f(-b, -b, -b);
         glVertex3f( 0.0f,  h-b , 0.0f);
 
         // Esquerda
+        normal = Normal({-b,-b,-b},{-b,-b,b},{0,h-b,0});
+        glNormal3f(normal.x,normal.y,normal.z);
         glVertex3f(-b, -b, -b);
         glVertex3f(-b, -b,  b);
         glVertex3f( 0.0f,  h-b , 0.0f);
@@ -142,25 +175,28 @@ void desenha_esfera(float raio, int fatias, int stacks){
             float x1 = raio * cos(phi2) * sin(theta1);
             float y1 = raio * sin(phi2);
             float z1 = raio * cos(phi2) * cos(theta1);
-            glVertex3f(x1, y1, z1);
 
             // Vertex 2 (bottom-right of current quad)
             float x2 = raio * cos(phi2) * sin(theta2);
             float y2 = raio * sin(phi2);
             float z2 = raio * cos(phi2) * cos(theta2);
-            glVertex3f(x2, y2, z2);
 
             // Vertex 3 (top-right of current quad)
             float x3 = raio * cos(phi1) * sin(theta2);
             float y3 = raio * sin(phi1);
             float z3 = raio * cos(phi1) * cos(theta2);
-            glVertex3f(x3, y3, z3);
 
             // Vertex 4 (top-left of current quad)
             float x4 = raio * cos(phi1) * sin(theta1);
             float y4 = raio * sin(phi1);
             float z4 = raio * cos(phi1) * cos(theta1);
-            glVertex3f(x4, y4, z4);
+
+            //XYZ normal = Normal({x1,y1,z1},{x2,y2,z2},{x3,y3,z3});
+            //glNormal3f(normal.x,normal.y,normal.z);
+            glNormal3f(x1/raio,y1/raio,z1/raio); glVertex3f(x1, y1, z1);
+            glNormal3f(x2/raio,y2/raio,z2/raio); glVertex3f(x2, y2, z2);
+            glNormal3f(x3/raio,y3/raio,z3/raio); glVertex3f(x3, y3, z3);
+            glNormal3f(x4/raio,y4/raio,z4/raio); glVertex3f(x4, y4, z4);
         }
         glEnd();
     }
@@ -168,6 +204,7 @@ void desenha_esfera(float raio, int fatias, int stacks){
 
 void desenha_cilindro(float raio, float altura, int fatias, int stacks, bool tampas){
     float half = altura / 2.0f;
+    XYZ normal;
 
     // Superfície lateral
     for (int i = 0; i < stacks; ++i) {
@@ -184,10 +221,12 @@ void desenha_cilindro(float raio, float altura, int fatias, int stacks, bool tam
             float x2 = raio * cos(theta2);
             float y2 = raio * sin(theta2);
 
-            glVertex3f(x1, y1, z1);
-            glVertex3f(x2, y2, z1);
-            glVertex3f(x2, y2, z2);
-            glVertex3f(x1, y1, z2);
+            //normal = Normal({x1,y1,z1},{x2,y2,z1},{x2,y2,z2});
+            //glNormal3f(normal.x,normal.y,normal.z);
+            glNormal3f(x1/raio,y1/raio,0); glVertex3f(x1, y1, z1);
+            glNormal3f(x2/raio,y2/raio,0); glVertex3f(x2, y2, z1);
+            glNormal3f(x2/raio,y2/raio,0); glVertex3f(x2, y2, z2);
+            glNormal3f(x1/raio,y1/raio,0); glVertex3f(x1, y1, z2);
         }
         glEnd();
     }
@@ -200,6 +239,7 @@ void desenha_cilindro(float raio, float altura, int fatias, int stacks, bool tam
             float theta = j * (2 * M_PI / fatias);
             float x = raio * cos(theta);
             float y = raio * sin(theta);
+            glNormal3f(0,0,-1);
             glVertex3f(x, y, -half);
         }
         glEnd();
@@ -211,6 +251,7 @@ void desenha_cilindro(float raio, float altura, int fatias, int stacks, bool tam
             float theta = j * (2 * M_PI / fatias);
             float x = raio * cos(theta);
             float y = raio * sin(theta);
+            glNormal3f(0,0,1);
             glVertex3f(x, y, half);
         }
         glEnd();
@@ -219,6 +260,7 @@ void desenha_cilindro(float raio, float altura, int fatias, int stacks, bool tam
 
 void desenha_cone(float raio, float altura, int fatias){
     float half = altura / 2.0f;
+    XYZ normal;
 
     // Superfície lateral
     glBegin(GL_TRIANGLES);
@@ -231,10 +273,31 @@ void desenha_cone(float raio, float altura, int fatias){
         float x2 = raio * cos(theta2);
         float y2 = raio * sin(theta2);
 
+        // Normal no ponto 1 da base
+        float nx1 = x1;
+        float ny1 = y1;
+        float nz1 = raio / altura;   // slope
+        float len1 = sqrt(nx1*nx1 + ny1*ny1 + nz1*nz1);
+        nx1 /= len1; ny1 /= len1; nz1 /= len1;
+
+        // Normal no ponto 2 da base
+        float nx2 = x2;
+        float ny2 = y2;
+        float nz2 = raio / altura;
+        float len2 = sqrt(nx2*nx2 + ny2*ny2 + nz2*nz2);
+        nx2 /= len2; ny2 /= len2; nz2 /= len2;
+
+        // Normal no ápice: mesma direção média dos lados
+        float nxA = (nx1 + nx2) * 0.5f;
+        float nyA = (ny1 + ny2) * 0.5f;
+        float nzA = (nz1 + nz2) * 0.5f;
+        float lenA = sqrt(nxA*nxA + nyA*nyA + nzA*nzA);
+        nxA /= lenA; nyA /= lenA; nzA /= lenA;
+
         // Triângulo da lateral (base -> ápice)
-        glVertex3f(0, 0, half);       // ápice
-        glVertex3f(x1, y1, -half);    // base ponto 1
-        glVertex3f(x2, y2, -half);    // base ponto 2
+        glNormal3f(nxA,nyA,nzA); glVertex3f(0, 0, half);       // ápice
+        glNormal3f(nx1,ny1,nz1); glVertex3f(x1, y1, -half);    // base ponto 1
+        glNormal3f(nx2,ny2,nz2); glVertex3f(x2, y2, -half);    // base ponto 2
     }
     glEnd();
 
@@ -245,12 +308,14 @@ void desenha_cone(float raio, float altura, int fatias){
         float theta = j * (2 * M_PI / fatias);
         float x = raio * cos(theta);
         float y = raio * sin(theta);
+        glNormal3f(0,0,-1);
         glVertex3f(x, y, -half);
     }
     glEnd();
 }
 
 void desenha_torus(float R, float r, int fatias, int stacks){
+    vector<vector<float>> mat(3,vector<float> (3));
     for (int i = 0; i < stacks; ++i) {
         float phi1 = i * (2 * M_PI / stacks);
         float phi2 = (i + 1) * (2 * M_PI / stacks);
@@ -262,15 +327,31 @@ void desenha_torus(float R, float r, int fatias, int stacks){
             float cosTheta = cos(theta);
             float sinTheta = sin(theta);
 
+            // Ponto em phi1
             float x1 = (R + r * cosTheta) * cos(phi1);
             float y1 = (R + r * cosTheta) * sin(phi1);
             float z1 = r * sinTheta;
 
+            // Normal em phi1
+            float nx1 = cosTheta * cos(phi1);
+            float ny1 = cosTheta * sin(phi1);
+            float nz1 = sinTheta;
+
+            // Ponto em phi2
             float x2 = (R + r * cosTheta) * cos(phi2);
             float y2 = (R + r * cosTheta) * sin(phi2);
             float z2 = r * sinTheta;
 
+            // Normal em phi2
+            float nx2 = cosTheta * cos(phi2);
+            float ny2 = cosTheta * sin(phi2);
+            float nz2 = sinTheta;
+
+            // Passa normais + vértices
+            glNormal3f(nx1, ny1, nz1);
             glVertex3f(x1, y1, z1);
+
+            glNormal3f(nx2, ny2, nz2);
             glVertex3f(x2, y2, z2);
         }
         glEnd();
