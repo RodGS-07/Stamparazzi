@@ -449,8 +449,8 @@ void Torus::setConjugado(Torus* t) {this->conjugado = t;}
 
 bool Torus::colide_jogador(const AABB& s) const{
     AABB box = {
-        {p.c.x - p.raio_maior, p.c.y - p.raio_maior, p.c.z - p.raio_menor},
-        {p.c.x + p.raio_maior, p.c.y + p.raio_maior, p.c.z + p.raio_menor}
+        {p.c.x - p.raio_menor, p.c.y - p.raio_menor, p.c.z - p.raio_menor},
+        {p.c.x + p.raio_menor, p.c.y + p.raio_menor, p.c.z + p.raio_menor}
     };
     return AABBvsAABB(s, box);
 }
@@ -458,10 +458,9 @@ bool Torus::colide_jogador(const AABB& s) const{
 void Torus::aplica_efeito(Jogador& jogador) {
     //cout << (conjugado==NULL) << endl;
     if(conjugado){
-        float dir = jogador.getCamYaw();
         float dx = conjugado->getX();
         float dy = conjugado->getY();
-        float dz = conjugado->getZ() - 5.0f * ((dir<=90.0f || dir>=270.0f) ? 1.0f : -1.0f);
+        float dz = conjugado->getZ() - 5.0f * ((jogador.getZ() >= this->getZ()) ? 1.0f : -1.0f);
         //float dx = conjugado->p.c.x;// - p.c.x;
         //float dy = conjugado->p.c.y;// - p.c.y;
         //float dz = conjugado->p.c.z;// - p.c.z;
@@ -510,7 +509,7 @@ void Torus::desenha_poligono(int cor) {
 
 void Torus::desenha_mascara() {
     muda_cor(12);
-    AABB mascara = {{this->getX() - p.raio_maior, this->getY() - p.raio_maior, this->getZ() - p.raio_maior}, {this->getX() + p.raio_maior, this->getY() + p.raio_maior, this->getZ() + p.raio_maior}};
+    AABB mascara = {{this->getX() - p.raio_menor, this->getY() - p.raio_menor, this->getZ() - p.raio_menor}, {this->getX() + p.raio_menor, this->getY() + p.raio_menor, this->getZ() + p.raio_menor}};
 
     glBegin(GL_LINE_LOOP);
     glVertex3f(mascara.min.x,mascara.min.y,mascara.min.z);

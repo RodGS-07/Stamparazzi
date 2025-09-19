@@ -318,7 +318,6 @@ void Jogador::controle_camera(float move_vel, float camera_sens, float dt, bool 
         if(SDL_GameControllerGetButton(game_controller,SDL_CONTROLLER_BUTTON_LEFTSHOULDER))
             move_camera(move_vel,-1.0f,dt,poligonos,-1.0f);
     }
-    cout << cam_yaw << " " << cam_pitch << endl;
     //atualiza_mascara();
     //this->mascara = {{this->getX()-1.0f,this->getY()-1.0f,this->getZ()-1.0f},
     //        {this->getX()+1.0f,this->getY()+1.0f,this->getZ()+1.0f}};

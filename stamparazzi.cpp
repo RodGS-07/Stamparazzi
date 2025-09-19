@@ -140,7 +140,7 @@ void inicializa_sdl(){
     }
 }
 
-void inicializa_opengl(){
+void inicializa_opengl(int argc, char* argv[]){
     // Configuração básica do OpenGL
     glEnable(GL_DEPTH_TEST);
     glMatrixMode(GL_PROJECTION);
@@ -349,7 +349,7 @@ void finaliza_sdl(){
 int main(int argc, char* argv[]) {
 
     inicializa_sdl(); if(teste == -1) return teste;
-    inicializa_opengl();
+    inicializa_opengl(argc, argv);
 
 	SDL_ShowCursor(SDL_ENABLE);
 
