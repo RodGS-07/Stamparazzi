@@ -8,12 +8,14 @@
 #include <SDL2/SDL.h>
 #include <GL/glut.h>
 #include <GL/glu.h>
+#include <stdlib.h>
 #include <iostream>
 #include <math.h>
 #include <vector>
 #include <memory>
 #include <algorithm>
 #include <typeinfo>
+#include <time.h>
 
 #define XBOUNDS 100.0f
 #define YBOUNDS 100.0f
@@ -196,6 +198,11 @@ void loop_jogo(){
     SDL_Event evento;
     inicio = SDL_GetTicks();
 
+    int cores[7]; for(int i = 0; i < 7; i++){
+        if(i < 6) cores[i] = rand() % (12+1);
+        else cores[i] = cores[i-1];
+    }
+
     while (rodando) {
 
         fim = SDL_GetTicks();
@@ -287,28 +294,29 @@ void loop_jogo(){
         	desenha_chao();
 		glPopMatrix();
 
-        for(int i = 0; i < 26; i+=2){
-            muda_cor(i/2);
-            glPushMatrix();
-                glTranslatef(-20+i*2,5,-15);
-                desenha_superficie(F::CUBO);
-            glPopMatrix();
-        }
+        // for(int i = 0; i < 26; i+=2){
+        //     muda_cor(i/2);
+        //     glPushMatrix();
+        //         glTranslatef(-20+i*2,5,-15);
+        //         desenha_superficie(F::CUBO);
+        //     glPopMatrix();
+        // }
 
-        for(int i = 0; i < 6; i++){
-            muda_cor(i);
-            glPushMatrix();
-                glTranslatef(i*10,5,-30);
-                desenha_superficie(i);
-            glPopMatrix();
-        }
+        // for(int i = 0; i < 6; i++){
+        //     muda_cor(i);
+        //     glPushMatrix();
+        //         glTranslatef(i*10,5,-30);
+        //         desenha_superficie(i);
+        //     glPopMatrix();
+        // }
 
         // Desenha máscara da room
         room.desenha_mascara();
 
         // Desenha polígonos e máscaras
+        int i = 0;
         for (const auto& p : poligonos){
-            p->desenha_poligono(1);
+            p->desenha_poligono(cores[i]); i++;
             p->desenha_mascara();
         }
 
@@ -374,6 +382,8 @@ void finaliza_sdl(){
 }
 
 int main(int argc, char* argv[]) {
+
+    srand(time(NULL));
 
     inicializa_sdl(); if(teste == -1) return teste;
     inicializa_opengl(argc, argv);
