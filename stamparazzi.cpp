@@ -174,11 +174,11 @@ void inicializa_opengl(int argc, char* argv[]){
 }
 
 void cria_poligonos(int n){
-    poligonos.push_back(make_unique<Cubo>(0.0f,10.0f,-20.0f,2.0f));
-    poligonos.push_back(make_unique<Piramide>(10.0f,10.0f,-20.0f,4.0f,4.0f));
-    poligonos.push_back(make_unique<Esfera>(20.0f,10.0f,-20.0f,2.0f));
-    poligonos.push_back(make_unique<Cilindro>(30.0f,10.0f,-20.0f,2.0f,4.0f));
-    poligonos.push_back(make_unique<Cone>(40.0f,10.0f,-20.0f,2.0f,4.0f));
+    poligonos.push_back(make_unique<Cubo>(0.0f,0.0f,-20.0f,2.0f));
+    poligonos.push_back(make_unique<Piramide>(10.0f,0.0f,-20.0f,4.0f,4.0f));
+    poligonos.push_back(make_unique<Esfera>(20.0f,0.0f,-20.0f,2.0f));
+    poligonos.push_back(make_unique<Cilindro>(30.0f,0.0f,-30.0f,2.0f,4.0f));
+    poligonos.push_back(make_unique<Cone>(40.0f,0.0f,-20.0f,2.0f,4.0f));
 
     auto t1 = make_unique<Torus>(-20,0,0,1.0f,3.0f);
     auto t2 = make_unique<Torus>(20,0,0,1.0f,3.0f);
@@ -313,10 +313,11 @@ void loop_jogo(){
         // Desenha máscara da room
         room.desenha_mascara();
 
-        // Desenha polígonos e máscaras
+        // Desenha polígonos e máscaras e realiza movimentos
         int i = 0;
         for (const auto& p : poligonos){
-            p->desenha_poligono(cores[i]); i++;
+            p->realiza_movimento(cores[i],dt,pause); i++;
+            //p->desenha_poligono(cores[i]); i++;
             p->desenha_mascara();
         }
 

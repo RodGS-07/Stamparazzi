@@ -17,6 +17,10 @@ Cubo::Cubo() : Poligono(F::CUBO) {}
 Cubo::Cubo(float ix, float iy, float iz, float l)
 : Poligono(ix,iy,iz,F::CUBO), lado(l) {}
 
+void Cubo::realiza_movimento(int cor, float dt, bool pause) {
+    desenha_poligono(cor, pause);
+}
+
 bool Cubo::colide_jogador(const AABB& s) const {
     AABB box = {{this->getX() - lado, this->getY() - lado, this->getZ() - lado}, {this->getX() + lado, this->getY() + lado, this->getZ() + lado}};
     return AABBvsAABB(s, box);//SphereVsAABB(s,box);
@@ -26,7 +30,7 @@ void Cubo::aplica_efeito(Jogador& jogador) {
     return;
 }
 
-void Cubo::desenha_poligono(int cor) {
+void Cubo::desenha_poligono(int cor, bool pause) {
     if(cor >= 0 and cor <= 12) muda_cor(cor);
     glPushMatrix();
     glTranslatef(this->getX(), this->getY(), this->getZ());
@@ -86,6 +90,10 @@ Piramide::Piramide() : Poligono(F::PIRAMIDE) {}
 Piramide::Piramide(float ix, float iy, float iz, float b, float h)
 : Poligono(ix,iy,iz,F::PIRAMIDE), base(b), altura(h) {}
 
+void Piramide::realiza_movimento(int cor, float dt, bool pause) {
+    desenha_poligono(cor, pause);
+}
+
 bool Piramide::colide_jogador(const AABB& s) const {
     float b = base / 2.0f;
     float h = altura / 2.0f;
@@ -121,7 +129,7 @@ void Piramide::aplica_efeito(Jogador& jogador) {
     jogador.morre();
 }
 
-void Piramide::desenha_poligono(int cor) {
+void Piramide::desenha_poligono(int cor, bool pause) {
     if(cor >= 0 and cor <= 12) muda_cor(cor);
     glPushMatrix();
     glTranslatef(this->getX(), this->getY(), this->getZ());
@@ -179,7 +187,31 @@ void Piramide::desenha_mascara(){
 
 Esfera::Esfera() : Poligono(F::ESFERA) {}
 Esfera::Esfera(float ix, float iy, float iz, float r)
-: Poligono(ix,iy,iz,F::ESFERA), raio(r) {}
+: Poligono(ix,iy,iz,F::ESFERA), raio(r) {
+    y_vel = 10.0f;
+    grav = -9.8f;     // "gravidade"
+    chao = -1.0f;         // altura do chão (pode ser o y=-1 do seu cenário)
+}
+
+void Esfera::realiza_movimento(int cor, float dt, bool pause) {
+
+    if(!pause){
+        // Atualiza velocidade com gravidade
+        y_vel += grav * dt;
+
+        // Atualiza posição
+        this->setY(this->getY() + y_vel * dt);
+
+        // Checa colisão com o chão
+        if (this->getY() - raio <= chao) {
+            this->setY(chao + raio);
+            if (y_vel < 0) {                  // só inverte se estiver descendo
+                y_vel = -y_vel;
+            }
+        }
+    }
+    desenha_poligono(cor, pause);
+}
 
 bool Esfera::colide_jogador(const AABB& s) const {
     AABB box = {{this->getX() - raio, this->getY() - raio, this->getZ() - raio}, {this->getX() + raio, this->getY() + raio, this->getZ() + raio}};
@@ -194,7 +226,7 @@ void Esfera::aplica_efeito(Jogador& jogador) {
     if(jogador.getMascara().max.y <= this->getY()) jogador.morre();
 }
 
-void Esfera::desenha_poligono(int cor) {
+void Esfera::desenha_poligono(int cor, bool pause) {
     if(cor >= 0 and cor <= 12) muda_cor(cor);
     glPushMatrix();
     glTranslatef(this->getX(), this->getY(), this->getZ());
@@ -251,9 +283,27 @@ void Esfera::desenha_mascara(){
 
 Cilindro::Cilindro() : Poligono(F::CILINDRO) {}
 Cilindro::Cilindro(float ix, float iy, float iz, float r, float h)
-: Poligono(ix,iy,iz,F::CILINDRO), raio(r), altura(h) {
+: Poligono(ix,iy,iz,F::CILINDRO), raio(r), altura(h), x_vel(1.0f) {
     centro_base = { this->getX(), this->getY(), this->getZ() - altura/2.0f };
     axis = { 0.0f, 0.0f, 1.0f };
+}
+
+void Cilindro::realiza_movimento(int cor, float dt, bool pause) {
+    float novaX = this->getX() + dt * 10.0f * x_vel;
+
+    // Verifica se ultrapassou a borda
+    if (novaX > (100.0f - raio)) {
+        novaX = (100.0f - raio); // corrige posição
+        x_vel = -1.0f;          // inverte direção
+    }
+    else if (novaX < -(100.0f - raio)) {
+        novaX = -(100.0f - raio);
+        x_vel = 1.0f;
+    }
+
+    if(!pause) this->setX(novaX);
+
+    desenha_poligono(cor, pause);
 }
 
 bool Cilindro::colide_jogador(const AABB& s) const {
@@ -277,10 +327,11 @@ void Cilindro::aplica_efeito(Jogador& jogador) {
     if(jogador.getMascara().max.y <= this->getY()) jogador.morre();
 }
 
-void Cilindro::desenha_poligono(int cor) {
+void Cilindro::desenha_poligono(int cor, bool pause) {
     if(cor >= 0 and cor <= 12) muda_cor(cor);
     glPushMatrix();
     glTranslatef(this->getX(), this->getY(), this->getZ());
+    if(!pause) glRotatef(this->getX(),0,0,1);
     desenha_cilindro(this->raio, this->altura, 30, 30, true);
     glPopMatrix();
 }
@@ -334,9 +385,24 @@ void Cilindro::desenha_mascara(){
 
 Cone::Cone() : Poligono(F::CONE) {}
 Cone::Cone(float ix, float iy, float iz, float r, float h)
-: Poligono(ix,iy,iz,F::CONE), raio(r), altura(h) { 
-    apex = { this->getX(), this->getY(), this->getZ() + altura/2.0f };
+: Poligono(ix,iy,iz,F::CONE), raio(r), altura(h), ang(0.0f) { 
+    apex = { this->getX(), this->getY(), this->getZ() };
     axis = { 0.0f, 0.0f, -1.0f }; 
+}
+
+void Cone::realiza_movimento(int cor, float dt, bool pause) {
+    if(!pause){
+        ang += 10.0f * dt;
+
+        // rotaciona o eixo em torno do Y
+        float cosA = cos(ang * M_PI/180.0f);
+        float sinA = sin(ang * M_PI/180.0f);
+        axis = { -sinA, 0.0f, -cosA };  // vetor rotacionado em Y
+
+        // Atualiza ápice (sempre no topo do cone no mundo)
+        apex = { this->getX(), this->getY(), this->getZ()};
+    }
+    desenha_poligono(cor, pause);
 }
 
 bool Cone::colide_jogador(const AABB& s) const {
@@ -360,30 +426,33 @@ void Cone::aplica_efeito(Jogador& jogador) {
     // origem = ápice do cone
     XYZ origem = apex;
     // fim = ponto ao longo da direção do cone
-    XYZ fim = apex - axis * altura * 30.0f; // 2x altura, laser longo
+    XYZ fim = apex - axis * altura * 30.0f; // 30x altura, laser longo
 
     if (SegmentVsAABB(origem, fim, box)) {
         jogador.morre();
     }
 }
 
-void Cone::desenha_poligono(int cor) {
+void Cone::desenha_poligono(int cor, bool pause) {
     if(cor >= 0 and cor <= 12) muda_cor(cor);
     glPushMatrix();
-    glTranslatef(this->getX(), this->getY(), this->getZ());
-    desenha_cone(this->raio, this->altura, 30);
-    glPopMatrix();
 
-    muda_cor(0);
-    glLineWidth(2.0f);
-    glBegin(GL_LINES);
-        glVertex3f(apex.x, apex.y, apex.z);
-        glVertex3f(apex.x - axis.x*altura*30,
-                apex.y - axis.y*altura*30,
-                apex.z - axis.z*altura*30);
-    glEnd();
-    glLineWidth(1.0f);
-    muda_cor(cor);
+        muda_cor(0);
+        glLineWidth(2.0f);
+        glBegin(GL_LINES);
+            glVertex3f(apex.x, apex.y, apex.z);
+            glVertex3f(apex.x - axis.x*altura*30,
+                    apex.y - axis.y*altura*30,
+                    apex.z - axis.z*altura*30);
+        glEnd();
+        glLineWidth(1.0f);
+        muda_cor(cor);
+
+        glTranslatef(this->getX(), this->getY(), this->getZ());
+        glRotatef(ang,0,1,0);
+        desenha_cone(this->raio, this->altura, 30);
+
+    glPopMatrix();
 }
 
 void Cone::desenha_mascara(){
@@ -447,6 +516,10 @@ Torus* Torus::getConjugado() const {return this->conjugado;}
 
 void Torus::setConjugado(Torus* t) {this->conjugado = t;}
 
+void Torus::realiza_movimento(int cor, float dt, bool pause) {
+    desenha_poligono(cor, pause);
+}
+
 bool Torus::colide_jogador(const AABB& s) const{
     AABB box = {
         {p.c.x - p.raio_menor, p.c.y - p.raio_menor, p.c.z - p.raio_menor},
@@ -499,7 +572,7 @@ void Torus::aplica_efeito(Jogador& jogador) {
     }*/
 }
 
-void Torus::desenha_poligono(int cor) {
+void Torus::desenha_poligono(int cor, bool pause) {
     if(cor >= 0 and cor <= 12) muda_cor(cor);
     glPushMatrix();
     glTranslatef(p.c.x, p.c.y, p.c.z);
