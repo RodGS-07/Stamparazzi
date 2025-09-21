@@ -313,12 +313,83 @@ void loop_jogo(){
         // Desenha máscara da room
         room.desenha_mascara();
 
-        // Desenha polígonos e máscaras e realiza movimentos
+        // 1) guardamos posições antigas
+        std::vector<XYZ> prevPos;
+        prevPos.reserve(poligonos.size());
+        for (const auto &p : poligonos) {
+            prevPos.push_back({ p->getX(), p->getY(), p->getZ() });
+        }
+
+        // 2) desenhamos polígonos e máscaras e realizamos movimentos
         int i = 0;
         for (const auto& p : poligonos){
             p->realiza_movimento(cores[i],dt,pause); i++;
-            //p->desenha_poligono(cores[i]); i++;
             p->desenha_mascara();
+        }
+
+        // 3) para cada polígono, checamos swept collision contra jogador
+        for (size_t i = 0; i < poligonos.size(); ++i) {
+            auto &p = poligonos[i];
+            AABB newBox = p->getAABB();
+
+            // recuperar AABB antiga: set temporariamente posição anterior,
+            XYZ savedPos = { p->getX(), p->getY(), p->getZ() };
+            p->setX(prevPos[i].x); p->setY(prevPos[i].y); p->setZ(prevPos[i].z);
+            AABB oldBox = p->getAABB();
+            // restaura
+            p->setX(savedPos.x); p->setY(savedPos.y); p->setZ(savedPos.z);
+
+            // swept box = união de old e new
+            AABB swept = unionAABB(oldBox, newBox);
+
+            // se o swept AABB colide com o jogador, houve interseção no caminho potencialmente
+            if (AABBvsAABB(swept, jogador.getMascara())) {
+                // se já está sobreposto ao final: resolvemos com MTV
+                if (AABBvsAABB(newBox, jogador.getMascara())) {
+                    // calcula mtv para separar jogador do polígono (empurrar jogador)
+                    XYZ mtv = computeMTV_AABB_vs_AABB(newBox, jogador.getMascara());
+
+                    // tenta empurrar o jogador: primeiro salva estado do jogador
+                    XYZ playerPrev = { jogador.getX(), jogador.getY(), jogador.getZ() };
+                    AABB playerPrevMask = jogador.getMascara();
+
+                    // aplica deslocamento no jogador
+                    jogador.setX(jogador.getX() + mtv.x);
+                    jogador.setY(jogador.getY() + mtv.y);
+                    jogador.setZ(jogador.getZ() + mtv.z);
+                    jogador.setMascara({
+                        { jogador.getX() - 1.0f, jogador.getY() - 1.0f, jogador.getZ() - 1.0f },
+                        { jogador.getX() + 1.0f, jogador.getY() + 1.0f, jogador.getZ() + 1.0f }
+                    });
+
+                    // verifica se, ao empurrar o jogador, ele colide com outro polígono
+                    bool bad = false;
+                    for (size_t j = 0; j < poligonos.size(); ++j) {
+                        if (j == i) continue; // ignora o polígono que empurrou
+                        if (poligonos[j]->colide_jogador(jogador.getMascara())) {
+                            bad = true;
+                            break;
+                        }
+                    }
+
+                    if (bad) {
+                        // não foi possível empurrar o jogador (bloqueado por outro obstáculo)
+                        // voltamos o jogador para o lugar e revertamos o polígono ao antigo lugar
+                        jogador.setX(playerPrev.x); jogador.setY(playerPrev.y); jogador.setZ(playerPrev.z);
+                        jogador.setMascara(playerPrevMask);
+
+                        p->setX(prevPos[i].x); p->setY(prevPos[i].y); p->setZ(prevPos[i].z);
+
+                        // opcional: inverter velocidade do polígono ou zerá-la (p->vel *= -0.5f)
+                        // você precisa de um método na sua classe para manipular velocidade
+                    }
+                    // else: empurramos com sucesso
+                }
+                else {
+                    // swept overlapped, mas final não -- movimento passou "perto".
+                    // se quiser, pode tratar amostragens/interpolação para evitar tunneling.
+                }
+            }
         }
 
         a.desenha_adesivo();
@@ -330,6 +401,15 @@ void loop_jogo(){
             if(p->getSuperficie()==F::CONE)
                 p->aplica_efeito(jogador);
         }
+        // Checar colisões mesmo quando o jogador está parado
+        // AABB mask = jogador.getMascara();
+        // for (const auto& p : poligonos) {
+        //     if (p->colide_jogador(mask)) {
+        //         if (p->getSuperficie() != F::CONE) {
+        //             p->aplica_efeito(jogador);
+        //         }
+        //     }
+        // }
         //AABB mascara = jogador.getMascara();
         //cout << "Depois: " << mascara.min.x << " " << mascara.min.y << " " << mascara.min.z << " " << mascara.max.x << " " << mascara.max.y << " " << mascara.max.z << endl;
 

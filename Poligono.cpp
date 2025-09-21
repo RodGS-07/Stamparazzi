@@ -17,6 +17,11 @@ Cubo::Cubo() : Poligono(F::CUBO) {}
 Cubo::Cubo(float ix, float iy, float iz, float l)
 : Poligono(ix,iy,iz,F::CUBO), lado(l) {}
 
+AABB Cubo::getAABB() const {
+    return {{ this->getX() - lado, this->getY() - lado, this->getZ() - lado },
+            { this->getX() + lado, this->getY() + lado, this->getZ() + lado }};
+}
+
 void Cubo::realiza_movimento(int cor, float dt, bool pause) {
     desenha_poligono(cor, pause);
 }
@@ -89,6 +94,11 @@ void Cubo::desenha_mascara() {
 Piramide::Piramide() : Poligono(F::PIRAMIDE) {}
 Piramide::Piramide(float ix, float iy, float iz, float b, float h)
 : Poligono(ix,iy,iz,F::PIRAMIDE), base(b), altura(h) {}
+
+AABB Piramide::getAABB() const {
+    return {{this->getX() - base, this->getY() - altura, this->getZ() - base}, 
+            {this->getX() + base, this->getY() + altura, this->getZ() + base}};
+}
 
 void Piramide::realiza_movimento(int cor, float dt, bool pause) {
     desenha_poligono(cor, pause);
@@ -193,6 +203,11 @@ Esfera::Esfera(float ix, float iy, float iz, float r)
     chao = -1.0f;         // altura do chão (pode ser o y=-1 do seu cenário)
 }
 
+AABB Esfera::getAABB() const {
+    return {{ this->getX() - raio, this->getY() - raio, this->getZ() - raio },
+            { this->getX() + raio, this->getY() + raio, this->getZ() + raio }};
+}
+
 void Esfera::realiza_movimento(int cor, float dt, bool pause) {
 
     if(!pause){
@@ -286,6 +301,12 @@ Cilindro::Cilindro(float ix, float iy, float iz, float r, float h)
 : Poligono(ix,iy,iz,F::CILINDRO), raio(r), altura(h), x_vel(1.0f) {
     centro_base = { this->getX(), this->getY(), this->getZ() - altura/2.0f };
     axis = { 0.0f, 0.0f, 1.0f };
+}
+
+AABB Cilindro::getAABB() const {
+    float half = altura / 2.0f;
+    return {{ this->getX() - raio, this->getY() - raio, this->getZ() - half },
+            { this->getX() + raio, this->getY() + raio, this->getZ() + half }};
 }
 
 void Cilindro::realiza_movimento(int cor, float dt, bool pause) {
@@ -388,6 +409,13 @@ Cone::Cone(float ix, float iy, float iz, float r, float h)
 : Poligono(ix,iy,iz,F::CONE), raio(r), altura(h), ang(0.0f) { 
     apex = { this->getX(), this->getY(), this->getZ() };
     axis = { 0.0f, 0.0f, -1.0f }; 
+}
+
+AABB Cone::getAABB() const {
+    return {
+        { this->getX() - raio, this->getY() - raio, this->getZ() - altura/2.0f },
+        { this->getX() + raio, this->getY() + raio, this->getZ() + altura/2.0f }
+    };
 }
 
 void Cone::realiza_movimento(int cor, float dt, bool pause) {
@@ -515,6 +543,13 @@ Torus::Torus(float ix, float iy, float iz, float re, float ra)
 Torus* Torus::getConjugado() const {return this->conjugado;}
 
 void Torus::setConjugado(Torus* t) {this->conjugado = t;}
+
+AABB Torus::getAABB() const {
+    return {
+        {p.c.x - p.raio_menor, p.c.y - p.raio_menor, p.c.z - p.raio_menor},
+        {p.c.x + p.raio_menor, p.c.y + p.raio_menor, p.c.z + p.raio_menor}
+    };
+}
 
 void Torus::realiza_movimento(int cor, float dt, bool pause) {
     desenha_poligono(cor, pause);

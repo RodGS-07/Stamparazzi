@@ -211,3 +211,56 @@ bool SphereVsCone(const Sphere& s, const ConeBound& cone) {
     float rsum = localR + s.r;
     return distPerp2 <= (rsum * rsum);
 }
+
+// retorna AABB que engloba ambas
+AABB unionAABB(const AABB &a, const AABB &b) {
+    AABB u;
+    u.min.x = std::min(a.min.x, b.min.x);
+    u.min.y = std::min(a.min.y, b.min.y);
+    u.min.z = std::min(a.min.z, b.min.z);
+    u.max.x = std::max(a.max.x, b.max.x);
+    u.max.y = std::max(a.max.y, b.max.y);
+    u.max.z = std::max(a.max.z, b.max.z);
+    return u;
+}
+
+// calcula o Mínimo Vetor de Translação (MTV) para separar B para fora de A.
+// Retorna (0,0,0) se não há interseção.
+XYZ computeMTV_AABB_vs_AABB(const AABB &a, const AABB &b) {
+    // pressupõe interseção
+    float axc = 0.5f * (a.min.x + a.max.x);
+    float ayc = 0.5f * (a.min.y + a.max.y);
+    float azc = 0.5f * (a.min.z + a.max.z);
+    float bxc = 0.5f * (b.min.x + b.max.x);
+    float byc = 0.5f * (b.min.y + b.max.y);
+    float bzc = 0.5f * (b.min.z + b.max.z);
+
+    float overlapX1 = a.max.x - b.min.x;
+    float overlapX2 = b.max.x - a.min.x;
+    float overlapX = std::min(overlapX1, overlapX2);
+
+    float overlapY1 = a.max.y - b.min.y;
+    float overlapY2 = b.max.y - a.min.y;
+    float overlapY = std::min(overlapY1, overlapY2);
+
+    float overlapZ1 = a.max.z - b.min.z;
+    float overlapZ2 = b.max.z - a.min.z;
+    float overlapZ = std::min(overlapZ1, overlapZ2);
+
+    // escolhe menor penetração positiva
+    float minOverlap = overlapX;
+    int axis = 0;
+    if (overlapY < minOverlap) { minOverlap = overlapY; axis = 1; }
+    if (overlapZ < minOverlap) { minOverlap = overlapZ; axis = 2; }
+
+    XYZ mtv = {0.0f, 0.0f, 0.0f};
+    if (axis == 0) {
+        // direção: se A está à esquerda de B, empurra B para +x
+        mtv.x = (axc < bxc) ? overlapX : -overlapX;
+    } else if (axis == 1) {
+        mtv.y = (ayc < byc) ? overlapY : -overlapY;
+    } else {
+        mtv.z = (azc < bzc) ? overlapZ : -overlapZ;
+    }
+    return mtv;
+}

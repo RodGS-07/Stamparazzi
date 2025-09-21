@@ -60,5 +60,7 @@ bool SphereVsTriangle(const Sphere& s, const XYZ& A, const XYZ& B, const XYZ& C)
 // cone.axis must be normalized, cone.apex at apex, h = height, R = base radius
 // -----------------------------------------------------------
 bool SphereVsCone(const Sphere& s, const ConeBound& cone);
+AABB unionAABB(const AABB &a, const AABB &b);
+XYZ computeMTV_AABB_vs_AABB(const AABB &a, const AABB &b);
 
 #endif

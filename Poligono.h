@@ -17,6 +17,7 @@ class Poligono : public Entidade{
 
         //virtual bool colide_jogador(const Sphere& s) const = 0;
         int getSuperficie() const;
+        virtual AABB getAABB() const = 0;
         virtual void realiza_movimento(int cor, float dt, bool pause)= 0;
         virtual bool colide_jogador(const AABB& s) const = 0;
         virtual void aplica_efeito(Jogador& jogador) = 0;
@@ -33,6 +34,7 @@ class Cubo : public Poligono{
         Cubo();
         Cubo(float ix, float iy, float iz, float l);
 
+        AABB getAABB() const override;
         void realiza_movimento(int cor, float dt, bool pause) override;
         bool colide_jogador(const AABB& s) const override;
         void aplica_efeito(Jogador& jogador) override;
@@ -48,6 +50,7 @@ class Piramide : public Poligono{
         Piramide();
         Piramide(float ix, float iy, float iz, float b, float h);
 
+        AABB getAABB() const override;
         void realiza_movimento(int cor, float dt, bool pause) override;
         bool colide_jogador(const AABB& s) const override;
         void aplica_efeito(Jogador& jogador) override;
@@ -63,6 +66,7 @@ class Esfera : public Poligono{
         Esfera();
         Esfera(float ix, float iy, float iz, float r);
 
+        AABB getAABB() const override;
         void realiza_movimento(int cor, float dt, bool pause) override;
         bool colide_jogador(const AABB& s) const override;
         void aplica_efeito(Jogador& jogador) override;
@@ -79,6 +83,7 @@ class Cilindro : public Poligono{
         Cilindro();
         Cilindro(float ix, float iy, float iz, float r, float h);
 
+        AABB getAABB() const override;
         void realiza_movimento(int cor, float dt, bool pause) override;
         bool colide_jogador(const AABB& s) const override;
         void aplica_efeito(Jogador& jogador) override;
@@ -95,6 +100,7 @@ class Cone : public Poligono{
         Cone();
         Cone(float ix, float iy, float iz, float r, float h);
 
+        AABB getAABB() const override;
         void realiza_movimento(int cor, float dt, bool pause) override;
         bool colide_jogador(const AABB& s) const override;
         void aplica_efeito(Jogador& jogador) override;
@@ -113,6 +119,7 @@ class Torus : public Poligono{
 
         Torus* getConjugado() const;
         void setConjugado(Torus* t);
+        AABB getAABB() const override;
         void realiza_movimento(int cor, float dt, bool pause) override;
         bool colide_jogador(const AABB& s) const override;
         void aplica_efeito(Jogador& jogador) override;
