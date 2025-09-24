@@ -345,6 +345,7 @@ bool Cilindro::colide_jogador(const AABB& s) const {
 
 void Cilindro::aplica_efeito(Jogador& jogador) {
     AABB box = {{this->getX() - raio, this->getY() - raio, this->getZ() - raio}, {this->getX() + raio, this->getY() + raio, this->getZ() + raio}};
+    //if(fabs(jogador.getX()) >= 100.0f) jogador.morre();
     if(jogador.getMascara().max.y <= this->getY()) jogador.morre();
 }
 

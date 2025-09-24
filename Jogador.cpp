@@ -168,7 +168,8 @@ bool Jogador::detecta_adesivo(const Adesivo& a){
         vf = {this->getX()+dirX,this->getY()+dirY,this->getZ()+dirZ},
         va = {a.getX(),a.getY(),a.getZ()};
     float grau = Arccos((vf-vi),(va-vi)) * 180.0f / M_PI;
-    return grau <= 20.0f and distancia_entidades(*this,a) <= 30.0f;
+    bool frente = (Escalar((vi-va),a.getNormal()) > 0);
+    return frente and grau <= 20.0f and distancia_entidades(*this,a) <= 30.0f;
 }
 
 void Jogador::tirou_foto(const Adesivo& a, float dt, float& flash_alpha, bool& flash_ativo){
@@ -270,14 +271,15 @@ void Jogador::move_camera(float dist, float dir, float dt, const vector<unique_p
 }
 
 void Jogador::controle_camera(float move_vel, float camera_sens, float dt, bool pause, SDL_Window* window, SDL_GameController* game_controller, const Uint8* state, const vector<unique_ptr<Poligono>>& poligonos){
+    if(fabs(this->getX()) >= 100.0f or fabs(this->getY()) >= 100.0f or fabs(this->getZ()) >= 100.0f){
+        this->morre(); return;
+    }
     if(!pause and !game_controller){
-        int midx = 320, midy = 240, tempx, tempy;
-        SDL_ShowCursor(SDL_DISABLE);
-        SDL_GetMouseState(&tempx, &tempy);
-        cam_yaw += camera_sens * (midx - tempx) * dt;
-        cam_pitch += camera_sens * (midy - tempy) * dt;
+        int dx, dy;
+        SDL_GetRelativeMouseState(&dx, &dy);
+        cam_yaw += camera_sens * -dx * dt;
+        cam_pitch += camera_sens * -dy * dt;
         prende_camera();
-        SDL_WarpMouseInWindow(window,midx,midy);
         state = SDL_GetKeyboardState(NULL);
         if(state[SDL_SCANCODE_UP] or state[SDL_SCANCODE_W])
             if(cam_pitch != 90.0f and cam_pitch != -90.0f)

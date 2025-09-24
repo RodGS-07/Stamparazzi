@@ -29,6 +29,7 @@ using namespace std;
 int teste = 0;
 bool mouse_in = false;
 bool pause = false;
+bool tela_cheia = true;
 bool primeira_pessoa = true;
 bool flash_ativo = false;
 float flash_alpha = 0.0f;
@@ -108,7 +109,7 @@ void inicializa_sdl(){
     // Cria a janela com contexto OpenGL
     window = SDL_CreateWindow("Stamparazzi",
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-        800, 600, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
+        0, 0, SDL_WINDOW_OPENGL | SDL_WINDOW_FULLSCREEN_DESKTOP);
 
     if (!window) {
         cerr << "Erro ao criar janela: " << SDL_GetError() << endl;
@@ -123,6 +124,9 @@ void inicializa_sdl(){
         SDL_Quit();
         teste = -1;
     }
+
+    SDL_SetRelativeMouseMode(SDL_TRUE);  // ativa mouse relativo
+    SDL_ShowCursor(SDL_DISABLE);         // esconde o cursor
 
     //Necessário para o meu controle
     SDL_GameControllerAddMapping(
@@ -146,7 +150,12 @@ void inicializa_opengl(int argc, char* argv[]){
     // Configuração básica do OpenGL
     glEnable(GL_DEPTH_TEST);
     glMatrixMode(GL_PROJECTION);
-    gluPerspective(45.0, 800.0/600.0, 0.1, 300.0);
+    int w, h;
+    SDL_GetWindowSize(window, &w, &h);
+    if (h == 0) h = 1;
+    float aspect = (float)w / (float)h;
+    glViewport(0, 0, w, h);
+    gluPerspective(45.0, aspect, 0.1, 300.0);
     glMatrixMode(GL_MODELVIEW);
 
     // Iluminação da sala
@@ -193,6 +202,17 @@ void cria_poligonos(int n){
     }*/
 }
 
+void ajustaProjecao(int largura, int altura) {
+    if (altura == 0) altura = 1; // evita divisão por zero
+    float aspect = (float)largura / (float)altura;
+
+    glViewport(0, 0, largura, altura);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluPerspective(45.0, aspect, 0.1, 300.0);
+    glMatrixMode(GL_MODELVIEW);
+}
+
 void loop_jogo(){
 
     SDL_Event evento;
@@ -220,7 +240,21 @@ void loop_jogo(){
                 if(evento.type == SDL_KEYDOWN){
                     if(evento.key.keysym.sym == SDLK_p){
                         pause = !pause;
+                        SDL_SetRelativeMouseMode(pause ? SDL_FALSE : SDL_TRUE);
                         SDL_ShowCursor(pause ? SDL_ENABLE : SDL_DISABLE);
+                    } else if(evento.key.keysym.sym == SDLK_F11) {
+                        tela_cheia = !tela_cheia;
+                        if (tela_cheia) {
+                            SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
+                            int w, h;
+                            SDL_GetWindowSize(window, &w, &h);
+                            ajustaProjecao(w, h);
+                        } else {
+                            SDL_SetWindowFullscreen(window, 0);
+                            SDL_SetWindowSize(window, 800, 600);
+                            SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+                            ajustaProjecao(800, 600);
+                        }
                     } else if(evento.key.keysym.sym == SDLK_ESCAPE)
                         if(pause) rodando = false;
                         else primeira_pessoa = !primeira_pessoa;
@@ -234,11 +268,27 @@ void loop_jogo(){
                         flash_ativo = true;
                     }
                 }
+                if (evento.type == SDL_WINDOWEVENT && evento.window.event == SDL_WINDOWEVENT_RESIZED || evento.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
+                    ajustaProjecao(evento.window.data1, evento.window.data2);
+                }
             } else {
                 if(evento.type == SDL_CONTROLLERBUTTONDOWN) {
                     if(evento.cbutton.button == SDL_CONTROLLER_BUTTON_START)
                         pause = !pause;
-                    else if(evento.cbutton.button == SDL_CONTROLLER_BUTTON_BACK)
+                    else if(evento.cbutton.button == SDL_CONTROLLER_BUTTON_RIGHTSTICK) {
+                        tela_cheia = !tela_cheia;
+                        if (tela_cheia) {
+                            SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
+                            int w, h;
+                            SDL_GetWindowSize(window, &w, &h);
+                            ajustaProjecao(w, h);
+                        } else {
+                            SDL_SetWindowFullscreen(window, 0);
+                            SDL_SetWindowSize(window, 800, 600);
+                            SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+                            ajustaProjecao(800, 600);
+                        }
+                    } else if(evento.cbutton.button == SDL_CONTROLLER_BUTTON_BACK)
                         if(pause) rodando = false;
                         else primeira_pessoa = !primeira_pessoa;
                 }
