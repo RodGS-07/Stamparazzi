@@ -6,6 +6,7 @@
 #include "Linear.h"
 #include "Poligono.h"
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_ttf.h>
 #include <GL/glut.h>
 #include <GL/glu.h>
 #include <stdlib.h>
@@ -122,6 +123,11 @@ void inicializa_sdl(){
         cerr << "Erro ao criar contexto OpenGL: " << SDL_GetError() << endl;
         SDL_DestroyWindow(window);
         SDL_Quit();
+        teste = -1;
+    }
+
+    if(TTF_Init() < 0){
+        cerr << "Erro ao inicializar SDL_ttf: " << TTF_GetError() << endl;
         teste = -1;
     }
 
@@ -507,6 +513,7 @@ void finaliza_sdl(){
         SDL_GameControllerClose(game_controller);
         game_controller = NULL;
     }
+    TTF_Quit();
     SDL_GL_DeleteContext(glContext);
     SDL_DestroyWindow(window);
     SDL_Quit();
