@@ -38,10 +38,14 @@ bool rodando = true;
 Uint32 inicio, fim;
 float dt;
 const Uint8* state;
+GLuint texturaTexto;
+int larguraTexto, alturaTexto;
 
 SDL_Window* window;
+SDL_Renderer* renderer;
 SDL_GLContext glContext;
 SDL_GameController* game_controller = NULL;
+TTF_Font* fonte;
 
 namespace NG{ //Namespace para Informações do Game/Jogo
 
@@ -100,6 +104,62 @@ Cubo room = Cubo(0.0f,0.0f,0.0f,100.0f);
 
 Jogador jogador = Jogador(0.0f,1.0f,0.0f,0.0f,0.0f);
 
+GLuint criaTexturaDoTexto(const char* texto, TTF_Font* fonte, SDL_Color cor, int &largura, int &altura) {
+    SDL_Surface* surface = TTF_RenderText_Blended(fonte, texto, cor);
+    if (!surface) {
+        std::cerr << "Erro ao renderizar texto: " << TTF_GetError() << std::endl;
+        return 0;
+    }
+
+    largura = surface->w;
+    altura = surface->h;
+
+    GLuint texturaID;
+    glGenTextures(1, &texturaID);
+    glBindTexture(GL_TEXTURE_2D, texturaID);
+
+    // Define parâmetros da textura
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    // Cria a textura no OpenGL (sempre usar GL_RGBA para preservar transparência)
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, surface->w, surface->h,
+                 0, GL_BGRA, GL_UNSIGNED_BYTE, surface->pixels);
+
+    SDL_FreeSurface(surface);
+    return texturaID;
+}
+
+void desenhaTexto(GLuint textura, int x, int y, int largura, int altura) {
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, textura);
+
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    gluOrtho2D(0, 800, 600, 0); // Coordenadas em pixels (ajuste p/ sua janela)
+
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+
+    glColor3f(1.0f, 1.0f, 1.0f); // cor branca
+
+    glBegin(GL_QUADS);
+        glTexCoord2f(0, 0); glVertex2f(x, y);
+        glTexCoord2f(1, 0); glVertex2f(x + largura, y);
+        glTexCoord2f(1, 1); glVertex2f(x + largura, y + altura);
+        glTexCoord2f(0, 1); glVertex2f(x, y + altura);
+    glEnd();
+
+    glPopMatrix();
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+
+    glDisable(GL_TEXTURE_2D);
+}
+
 void inicializa_sdl(){
     // Inicializa SDL2
     if (SDL_Init(SDL_INIT_EVERYTHING) < 0) {
@@ -118,16 +178,13 @@ void inicializa_sdl(){
         teste = -1;
     }
 
+    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+
     glContext = SDL_GL_CreateContext(window);
     if (!glContext) {
         cerr << "Erro ao criar contexto OpenGL: " << SDL_GetError() << endl;
         SDL_DestroyWindow(window);
         SDL_Quit();
-        teste = -1;
-    }
-
-    if(TTF_Init() < 0){
-        cerr << "Erro ao inicializar SDL_ttf: " << TTF_GetError() << endl;
         teste = -1;
     }
 
@@ -186,6 +243,23 @@ void inicializa_opengl(int argc, char* argv[]){
     //glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, white);
     //glMaterialfv(GL_FRONT, GL_SPECULAR, white);
     //glMaterialf(GL_FRONT, GL_SHININESS, 30);
+}
+
+void inicializa_ttf(){
+    if(TTF_Init() < 0){
+        cerr << "Erro ao inicializar SDL_ttf: " << TTF_GetError() << endl;
+        teste = -1;
+    }
+
+    // Carregar fonte
+    fonte = TTF_OpenFont("arial.ttf", 48); // precisa de um .ttf na mesma pasta
+    if (!fonte) {
+        std::cerr << "Erro ao carregar fonte: " << TTF_GetError() << std::endl;
+        teste = -1;
+    }
+
+    SDL_Color preto = {0, 0, 0, 255};
+    texturaTexto = criaTexturaDoTexto("Ola Mundo!", fonte, preto, larguraTexto, alturaTexto);
 }
 
 void cria_poligonos(int n){
@@ -327,6 +401,9 @@ void loop_jogo(){
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glLoadIdentity();
 
+        // desenha texto (posição x=50, y=50)
+        desenhaTexto(texturaTexto, 50, 50, larguraTexto, alturaTexto);
+
         if(primeira_pessoa) {
             glRotatef(-jogador.getCamPitch(), 1.0, 0.0, 0.0); 
             glRotatef(-jogador.getCamYaw(), 0.0, 1.0, 0.0);
@@ -457,40 +534,6 @@ void loop_jogo(){
             if(p->getSuperficie()==F::CONE)
                 p->aplica_efeito(jogador);
         }
-        // Checar colisões mesmo quando o jogador está parado
-        // AABB mask = jogador.getMascara();
-        // for (const auto& p : poligonos) {
-        //     if (p->colide_jogador(mask)) {
-        //         if (p->getSuperficie() != F::CONE) {
-        //             p->aplica_efeito(jogador);
-        //         }
-        //     }
-        // }
-        //AABB mascara = jogador.getMascara();
-        //cout << "Depois: " << mascara.min.x << " " << mascara.min.y << " " << mascara.min.z << " " << mascara.max.x << " " << mascara.max.y << " " << mascara.max.z << endl;
-
-        /*auto mask = jogador.getMascara();
-        for (const auto& p : poligonos) {
-            bool coll = p->colide_jogador(mask);
-            if (coll) {
-                std::cout << "COLLIDE: poly@" << p.get()
-                        << " tipo=" << p->getSuperficie()
-                        << " jogador_pos=("<< jogador.getX() << ","<< jogador.getY() << ","<< jogador.getZ() <<")"
-                        << " mask_min=("<<mask.min.x<<","<<mask.min.y<<","<<mask.min.z<<")"
-                        << " mask_max=("<<mask.max.x<<","<<mask.max.y<<","<<mask.max.z<<")\n";
-                p->aplica_efeito(jogador);
-            }
-        }*/
-        
-        /*for (const auto& p : poligonos){
-            //if(p->getSuperficie()==F::TORUS) cout << p->colide_jogador(jogador.getMascara()) << endl;
-            if(p->colide_jogador(jogador.getMascara()) and p->getSuperficie()!=F::CONE){
-                //cout << (p->getSuperficie()==F::TORUS) << endl;
-                p->aplica_efeito(jogador);
-            }
-            else if(p->getSuperficie()==F::CONE)
-                p->aplica_efeito(jogador);
-        }*/
 
         // Verifica morte do jogador
         if(!jogador.estaVivo()) jogador.nasce_jogador(0.0f,1.0f,0.0f);
@@ -513,6 +556,8 @@ void finaliza_sdl(){
         SDL_GameControllerClose(game_controller);
         game_controller = NULL;
     }
+    glDeleteTextures(1, &texturaTexto);
+    TTF_CloseFont(fonte);
     TTF_Quit();
     SDL_GL_DeleteContext(glContext);
     SDL_DestroyWindow(window);
@@ -525,6 +570,7 @@ int main(int argc, char* argv[]) {
 
     inicializa_sdl(); if(teste == -1) return teste;
     inicializa_opengl(argc, argv);
+    inicializa_ttf(); if(teste == -1) return teste;
 
 	SDL_ShowCursor(SDL_ENABLE);
 
