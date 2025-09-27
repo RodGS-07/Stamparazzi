@@ -184,8 +184,8 @@ void Jogador::tirou_foto(const Adesivo& a, float dt, float& flash_alpha, bool& f
         glPushMatrix();
         glLoadIdentity();
 
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        //glEnable(GL_BLEND);
+        //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glColor4f(1.0f, 1.0f, 1.0f, flash_alpha);
 
         glBegin(GL_QUADS);
@@ -195,7 +195,7 @@ void Jogador::tirou_foto(const Adesivo& a, float dt, float& flash_alpha, bool& f
             glVertex2f(0, 600);
         glEnd();
 
-        glDisable(GL_BLEND);
+        //glDisable(GL_BLEND);
 
         glPopMatrix();
         glMatrixMode(GL_PROJECTION);
