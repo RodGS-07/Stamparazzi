@@ -18,6 +18,8 @@
 #include <algorithm>
 #include <typeinfo>
 #include <time.h>
+#include <sstream>
+#include <iomanip>
 
 #define XBOUNDS 100.0f
 #define YBOUNDS 100.0f
@@ -29,6 +31,9 @@
 using namespace std;
 
 int teste = 0;
+int timer = 60;
+int minutos = timer / 60;
+int segundos = timer % 60;
 bool mouse_in = false;
 bool pause = false;
 bool tela_cheia = true;
@@ -281,7 +286,7 @@ void inicializa_ttf(){
     }
 
     // Carregar fonte
-    fonte = TTF_OpenFont("arial.ttf", 48); // precisa de um .ttf na mesma pasta
+    fonte = TTF_OpenFont("arial.ttf", 12); // precisa de um .ttf na mesma pasta
     //cout << (fonte==NULL) << endl;
     if (!fonte) {
         std::cerr << "Erro ao carregar fonte: " << TTF_GetError() << std::endl;
@@ -289,7 +294,13 @@ void inicializa_ttf(){
     }
 
     SDL_Color preto = {0, 0, 0, 255};
-    texturaTexto = criaTexturaDoTexto("Ola Mundo!", fonte, preto, larguraTexto, alturaTexto);
+    ostringstream oss;
+    oss << "Tempo restante - " 
+    << minutos << ":" << std::setw(2) << std::setfill('0') << segundos;
+
+    string str = oss.str();
+    const char* texto = str.c_str();
+    texturaTexto = criaTexturaDoTexto(texto, fonte, preto, larguraTexto, alturaTexto);
 }
 
 void cria_poligonos(int n){
@@ -323,6 +334,36 @@ void ajustaProjecao(int largura, int altura) {
     glMatrixMode(GL_MODELVIEW);
 }
 
+void atualizaTexto(const string& texto){
+    if (texturaTexto) {
+        glDeleteTextures(1, &texturaTexto); // libera a textura antiga
+        texturaTexto = 0;
+    }
+
+    SDL_Color cor = {0, 0, 0, 255}; // preto
+    texturaTexto = criaTexturaDoTexto(texto.c_str(), fonte, cor, larguraTexto, alturaTexto);
+}
+
+void atualiza_timer(float dt){
+    static float acumulador = 0.0f;
+
+    if (!pause) {
+        acumulador += dt;
+        if (acumulador >= 1.0f) { // passou 1 segundo
+            acumulador -= 1.0f;
+            if (timer > 0) {
+                timer--; minutos = timer/60; segundos = timer%60;
+                ostringstream oss;
+                oss << "Tempo restante - " 
+                << minutos << ":" << std::setw(2) << std::setfill('0') << segundos;
+
+                string str = oss.str();
+                atualizaTexto(str);
+            }
+        }
+    }
+}
+
 void loop_jogo(){
 
     SDL_Event evento;
@@ -338,6 +379,8 @@ void loop_jogo(){
         fim = SDL_GetTicks();
         dt = (fim - inicio) / 1000.0f;
         inicio = fim;
+
+        atualiza_timer(dt);
 
         while (SDL_PollEvent(&evento)) {
             if (evento.type == SDL_QUIT) {
