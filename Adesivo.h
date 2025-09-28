@@ -16,7 +16,7 @@ class Adesivo : public Entidade{
 
         void setNormal(XYZ n);
 
-        void desenha_adesivo();
+        void desenha_adesivo() const;
 };
 
 

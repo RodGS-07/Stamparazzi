@@ -3,24 +3,57 @@
 #include "Entidade.h"
 #include "Draw.h"
 #include "Colisao.h"
+#include "Adesivo.h"
 #include "Jogador.h"
 #include <iostream>
+#include <memory>
 using namespace std;
 
 Poligono::Poligono(int s) : Entidade(), superficie(s) {}
-Poligono::Poligono(float ix, float iy, float iz, int s) 
-: Entidade(ix,iy,iz), superficie(s) {}
+Poligono::Poligono(float ix, float iy, float iz, int s, unique_ptr<Adesivo> a) 
+: Entidade(ix,iy,iz), superficie(s) {
+    this->setAdesivo(move(a));
+}
 
 int Poligono::getSuperficie() const {return this->superficie;}
 
+Adesivo* Poligono::getAdesivo() const {return adesivo.get();}
+
+void Poligono::setAdesivo(unique_ptr<Adesivo> a) {adesivo = move(a);}
+
+void Poligono::desenha_adesivo_no_poligono(const Adesivo& adesivo, float offset) {
+    glPushMatrix();
+
+    // pega normal da face
+    auto n = adesivo.getNormal();
+
+    // rotaciona conforme a normal
+    if (n.x == 1)       glRotatef(90, 0, 1, 0);   // X+
+    else if (n.x == -1) glRotatef(-90, 0, 1, 0);  // X-
+    else if (n.y == 1)  glRotatef(-90, 1, 0, 0);  // Y+
+    else if (n.y == -1) glRotatef(90, 1, 0, 0);   // Y-
+    else if (n.z == -1) glRotatef(180, 0, 1, 0);  // Z-
+    // se for Z+ (default), não precisa girar
+
+    // empurra até a superfície do polígono
+    glTranslatef(n.x * offset, n.y * offset, n.z * offset);
+
+    // desenha o adesivo plano
+    adesivo.desenha_adesivo();
+
+    glPopMatrix();
+}
+
 Cubo::Cubo() : Poligono(F::CUBO) {}
-Cubo::Cubo(float ix, float iy, float iz, float l)
-: Poligono(ix,iy,iz,F::CUBO), lado(l) {}
+Cubo::Cubo(float ix, float iy, float iz, unique_ptr<Adesivo> a, float l)
+: Poligono(ix,iy,iz,F::CUBO,move(a)), lado(l) {}
 
 AABB Cubo::getAABB() const {
     return {{ this->getX() - lado, this->getY() - lado, this->getZ() - lado },
             { this->getX() + lado, this->getY() + lado, this->getZ() + lado }};
 }
+
+float Cubo::getLado() const {return this->lado;}
 
 void Cubo::realiza_movimento(int cor, float dt, bool pause) {
     desenha_poligono(cor, pause);
@@ -41,8 +74,22 @@ void Cubo::desenha_poligono(int cor, bool pause) {
     glTranslatef(this->getX(), this->getY(), this->getZ());
     // aqui `lado` é tratado como meio-extent (compatível com sua desenha_cubo)
     desenha_cubo(this->lado);
+    // Desenha adesivo colado na face +Z
+    if (this->getAdesivo()) {
+        glPushMatrix();
+        glTranslatef(0.0f, 0.0f, this->getLado()/2.0f + 0.01f);
+        desenha_adesivo_no_poligono(*this->getAdesivo(), this->getLado());
+        glPopMatrix();
+    }
     glPopMatrix();
 }
+
+// void Cubo::desenha_adesivo() {
+//     glPushMatrix();
+//     glTranslatef(this->getX(), this->getY(), this->getZ());
+//     desenha_adesivo_no_poligono(this->getAdesivo(), this->getLado()/2.0f + 0.01f);
+//     glPopMatrix();
+// }
 
 void Cubo::desenha_mascara() {
     muda_cor(12);
@@ -92,13 +139,15 @@ void Cubo::desenha_mascara() {
 }
 
 Piramide::Piramide() : Poligono(F::PIRAMIDE) {}
-Piramide::Piramide(float ix, float iy, float iz, float b, float h)
-: Poligono(ix,iy,iz,F::PIRAMIDE), base(b), altura(h) {}
+Piramide::Piramide(float ix, float iy, float iz, unique_ptr<Adesivo> a, float b, float h)
+: Poligono(ix,iy,iz,F::PIRAMIDE,move(a)), base(b), altura(h) {}
 
 AABB Piramide::getAABB() const {
     return {{this->getX() - base, this->getY() - altura, this->getZ() - base}, 
             {this->getX() + base, this->getY() + altura, this->getZ() + base}};
 }
+
+float Piramide::getAltura() const {return this->altura;}
 
 void Piramide::realiza_movimento(int cor, float dt, bool pause) {
     desenha_poligono(cor, pause);
@@ -144,8 +193,32 @@ void Piramide::desenha_poligono(int cor, bool pause) {
     glPushMatrix();
     glTranslatef(this->getX(), this->getY(), this->getZ());
     desenha_piramide(this->base, this->altura);
+    if(this->getAdesivo()){
+        glPushMatrix();
+        glTranslatef(0.0f, this->getAltura()/2.0f, 1.0f);
+
+        // Exemplo: adesivo na base
+        //glTranslatef(0.0f, getAltura() / 2.0f, 0.0f);
+
+        //Adesivo adesivo(0,0,0,{1,1,1}); 
+        desenha_adesivo_no_poligono(*this->getAdesivo(), this->getAltura()/2.0f + 0.01f);
+        glPopMatrix();
+    }
     glPopMatrix();
 }
+
+// void Piramide::desenha_adesivo() {
+//     glPushMatrix();
+//     glTranslatef(this->getX(), this->getY() + this->getAltura()/2.0f, this->getZ());
+
+//     // Exemplo: adesivo na base
+//     //glTranslatef(0.0f, getAltura() / 2.0f, 0.0f);
+
+//     //Adesivo adesivo(0,0,0,{1,1,1}); 
+//     desenha_adesivo_no_poligono(this->getAdesivo(), this->getAltura()/2.0f + 0.01f);
+
+//     glPopMatrix();
+// }
 
 void Piramide::desenha_mascara(){
     muda_cor(12);
@@ -196,8 +269,8 @@ void Piramide::desenha_mascara(){
 }
 
 Esfera::Esfera() : Poligono(F::ESFERA) {}
-Esfera::Esfera(float ix, float iy, float iz, float r)
-: Poligono(ix,iy,iz,F::ESFERA), raio(r) {
+Esfera::Esfera(float ix, float iy, float iz, unique_ptr<Adesivo> a, float r)
+: Poligono(ix,iy,iz,F::ESFERA,move(a)), raio(r) {
     y_vel = 10.0f;
     grav = -9.8f;     // "gravidade"
     chao = -1.0f;         // altura do chão (pode ser o y=-1 do seu cenário)
@@ -207,6 +280,8 @@ AABB Esfera::getAABB() const {
     return {{ this->getX() - raio, this->getY() - raio, this->getZ() - raio },
             { this->getX() + raio, this->getY() + raio, this->getZ() + raio }};
 }
+
+float Esfera::getRaio() const {return this->raio;}
 
 void Esfera::realiza_movimento(int cor, float dt, bool pause) {
 
@@ -246,8 +321,21 @@ void Esfera::desenha_poligono(int cor, bool pause) {
     glPushMatrix();
     glTranslatef(this->getX(), this->getY(), this->getZ());
     desenha_esfera(this->raio, 30, 30);
+    if(this->getAdesivo()){
+        glPushMatrix();
+        glTranslatef(0.0f, 0.0f, this->getRaio()/2.0f + 0.01f);
+        desenha_adesivo_no_poligono(*this->getAdesivo(), this->getRaio() + 0.01f);
+        glPopMatrix();
+    }
     glPopMatrix();
 }
+
+// void Esfera::desenha_adesivo() {
+//     glPushMatrix();
+//     glTranslatef(this->getX(), this->getY(), this->getZ());
+//     desenha_adesivo_no_poligono(this->getAdesivo(), this->getRaio() + 0.01f);
+//     glPopMatrix();
+// }
 
 void Esfera::desenha_mascara(){
     muda_cor(12);
@@ -297,10 +385,11 @@ void Esfera::desenha_mascara(){
 }
 
 Cilindro::Cilindro() : Poligono(F::CILINDRO) {}
-Cilindro::Cilindro(float ix, float iy, float iz, float r, float h)
-: Poligono(ix,iy,iz,F::CILINDRO), raio(r), altura(h), x_vel(1.0f) {
+Cilindro::Cilindro(float ix, float iy, float iz, unique_ptr<Adesivo> a, float r, float h)
+: Poligono(ix,iy,iz,F::CILINDRO,move(a)), raio(r), altura(h), x_vel(1.0f) {
     centro_base = { this->getX(), this->getY(), this->getZ() - altura/2.0f };
     axis = { 0.0f, 0.0f, 1.0f };
+    ang = 0.0f;
 }
 
 AABB Cilindro::getAABB() const {
@@ -308,6 +397,10 @@ AABB Cilindro::getAABB() const {
     return {{ this->getX() - raio, this->getY() - raio, this->getZ() - half },
             { this->getX() + raio, this->getY() + raio, this->getZ() + half }};
 }
+
+float Cilindro::getRaio() const {return this->raio;}
+
+float Cilindro::getAltura() const {return this->altura;}
 
 void Cilindro::realiza_movimento(int cor, float dt, bool pause) {
     float novaX = this->getX() + dt * 10.0f * x_vel;
@@ -350,13 +443,35 @@ void Cilindro::aplica_efeito(Jogador& jogador) {
 }
 
 void Cilindro::desenha_poligono(int cor, bool pause) {
+    if(!pause) ang -= x_vel;
     if(cor >= 0 and cor <= 12) muda_cor(cor);
     glPushMatrix();
     glTranslatef(this->getX(), this->getY(), this->getZ());
-    if(!pause) glRotatef(this->getX(),0,0,1);
+    if(!pause) glRotatef(ang,0,0,1);
     desenha_cilindro(this->raio, this->altura, 30, 30, true);
+    if(this->getAdesivo()){
+        glPushMatrix();
+        glTranslatef(0.0f, 0.0f, this->getAltura()/2.0f + 0.01f);
+
+        auto n = this->getAdesivo()->getNormal();
+        float offset = (fabs(n.y) > 0) ? this->getAltura()/2.0f : this->getRaio();
+        desenha_adesivo_no_poligono(*this->getAdesivo(), offset + 0.01f);
+
+        glPopMatrix();
+    }
     glPopMatrix();
 }
+
+// void Cilindro::desenha_adesivo() {
+//     glPushMatrix();
+//     glTranslatef(this->getX(), this->getY(), this->getZ());
+
+//     auto n = this->getAdesivo().getNormal();
+//     float offset = (fabs(n.y) > 0) ? this->getAltura()/2.0f : this->getRaio();
+//     desenha_adesivo_no_poligono(this->getAdesivo(), offset + 0.01f);
+
+//     glPopMatrix();
+// }
 
 void Cilindro::desenha_mascara(){
     muda_cor(12);
@@ -406,8 +521,8 @@ void Cilindro::desenha_mascara(){
 }
 
 Cone::Cone() : Poligono(F::CONE) {}
-Cone::Cone(float ix, float iy, float iz, float r, float h)
-: Poligono(ix,iy,iz,F::CONE), raio(r), altura(h), ang(0.0f) { 
+Cone::Cone(float ix, float iy, float iz, unique_ptr<Adesivo> a, float r, float h)
+: Poligono(ix,iy,iz,F::CONE,move(a)), raio(r), altura(h), ang(0.0f) { 
     apex = { this->getX(), this->getY(), this->getZ() };
     axis = { 0.0f, 0.0f, -1.0f }; 
 }
@@ -418,6 +533,10 @@ AABB Cone::getAABB() const {
         { this->getX() + raio, this->getY() + raio, this->getZ() + altura/2.0f }
     };
 }
+
+float Cone::getRaio() const {return this->raio;}
+
+float Cone::getAltura() const {return this->altura;}
 
 void Cone::realiza_movimento(int cor, float dt, bool pause) {
     if(!pause){
@@ -480,9 +599,30 @@ void Cone::desenha_poligono(int cor, bool pause) {
         glTranslatef(this->getX(), this->getY(), this->getZ());
         glRotatef(ang,0,1,0);
         desenha_cone(this->raio, this->altura, 30);
+        if(this->getAdesivo()){
+            glPushMatrix();
+            glTranslatef(0.0f, this->getAltura()/2.0f+0.01f, 0.0f);
+
+            auto n = this->getAdesivo()->getNormal();
+            float offset = (fabs(n.y) > 0) ? this->getAltura()/2.0f : this->getRaio();
+            desenha_adesivo_no_poligono(*this->getAdesivo(), offset + 0.01f);
+
+            glPopMatrix();
+        }
 
     glPopMatrix();
 }
+
+// void Cone::desenha_adesivo() {
+//     glPushMatrix();
+//     glTranslatef(this->getX(), this->getY(), this->getZ());
+
+//     auto n = this->getAdesivo().getNormal();
+//     float offset = (fabs(n.y) > 0) ? this->getAltura()/2.0f : this->getRaio();
+//     desenha_adesivo_no_poligono(this->getAdesivo(), offset + 0.01f);
+
+//     glPopMatrix();
+// }
 
 void Cone::desenha_mascara(){
     muda_cor(12);
@@ -532,8 +672,8 @@ void Cone::desenha_mascara(){
 }
 
 Torus::Torus() : Poligono(F::TORUS) {}
-Torus::Torus(float ix, float iy, float iz, float re, float ra)
-: Poligono(ix,iy,iz,F::TORUS) {
+Torus::Torus(float ix, float iy, float iz, unique_ptr<Adesivo> a, float re, float ra)
+: Poligono(ix,iy,iz,F::TORUS,move(a)) {
     p.c = {ix,iy,iz};
     p.raio_menor = re;
     p.raio_maior = ra;
@@ -613,8 +753,34 @@ void Torus::desenha_poligono(int cor, bool pause) {
     glPushMatrix();
     glTranslatef(p.c.x, p.c.y, p.c.z);
     desenha_torus(p.raio_maior, p.raio_menor, 40, 40);
+    if(this->getAdesivo()){
+        glPushMatrix();
+        //glTranslatef(getX(), getY(), getZ());
+
+        float offset = (this->p.raio_menor + this->p.raio_maior) / 2.0f;
+
+        // Cola o adesivo no lado "frontal"
+        glTranslatef(0.0f, 0.0f, offset);
+
+        //Adesivo adesivo(0,0,0,{1,1,1}); 
+        desenha_adesivo_no_poligono(*this->getAdesivo(),offset);
+        glPopMatrix();
+    }
     glPopMatrix();
 }
+
+// void Torus::desenha_adesivo() {
+//     glPushMatrix();
+//     glTranslatef(getX(), getY(), getZ());
+
+//     float offset = (this->p.raio_menor + this->p.raio_maior) / 2.0f;
+
+//     // Cola o adesivo no lado "frontal"
+//     glTranslatef(0.0f, 0.0f, offset);
+
+//     //Adesivo adesivo(0,0,0,{1,1,1}); 
+//     desenha_adesivo_no_poligono(this->getAdesivo(),offset);
+// }
 
 void Torus::desenha_mascara() {
     muda_cor(12);

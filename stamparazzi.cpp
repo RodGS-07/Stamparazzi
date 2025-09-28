@@ -103,10 +103,10 @@ namespace NC{ //Namespace para Controles e Comandos
     }
 };
 
-Adesivo a = Adesivo(-5.0f,5.0f,10.0f,{0,0,1});
+//Adesivo a = Adesivo(-5.0f,5.0f,10.0f,{0,0,1});
 
 vector<unique_ptr<Poligono>> poligonos;
-Cubo room = Cubo(0.0f,0.0f,0.0f,100.0f);
+Cubo room (0.0f,0.0f,0.0f,nullptr,100.0f);
 
 Jogador jogador = Jogador(0.0f,1.0f,0.0f,0.0f,0.0f);
 
@@ -304,20 +304,67 @@ void inicializa_ttf(){
 }
 
 void cria_poligonos(int n){
-    poligonos.push_back(make_unique<Cubo>(0.0f,0.0f,-20.0f,2.0f));
-    poligonos.push_back(make_unique<Piramide>(10.0f,0.0f,-20.0f,4.0f,4.0f));
-    poligonos.push_back(make_unique<Esfera>(20.0f,0.0f,-20.0f,2.0f));
-    poligonos.push_back(make_unique<Cilindro>(30.0f,0.0f,-30.0f,2.0f,4.0f));
-    poligonos.push_back(make_unique<Cone>(40.0f,0.0f,-20.0f,2.0f,4.0f));
+    poligonos.push_back(make_unique<Cubo>(
+        0.0f, 0.0f, -20.0f,
+        make_unique<Adesivo>(0.0f, 0.0f, -19.0f, XYZ{0,0,1}),
+        2.0f
+    ));
 
-    auto t1 = make_unique<Torus>(-20,0,0,1.0f,3.0f);
-    auto t2 = make_unique<Torus>(20,0,0,1.0f,3.0f);
+    poligonos.push_back(make_unique<Piramide>(
+        10.0f, 0.0f, -20.0f,
+        make_unique<Adesivo>(10.0f, 0.0f, -18.0f, XYZ{0,0,1}),
+        4.0f, 4.0f
+    ));
+
+    poligonos.push_back(make_unique<Esfera>(
+        20.0f, 0.0f, -20.0f,
+        make_unique<Adesivo>(20.0f, 0.0f, -19.0f, XYZ{0,0,1}),
+        2.0f
+    ));
+
+    poligonos.push_back(make_unique<Cilindro>(
+        30.0f, 0.0f, -30.0f,
+        make_unique<Adesivo>(30.0f, 0.0f, -28.0f, XYZ{0,0,1}),
+        2.0f, 4.0f
+    ));
+
+    poligonos.push_back(make_unique<Cone>(
+        40.0f, 0.0f, -20.0f,
+        make_unique<Adesivo>(40.0f, 0.0f, -18.0f, XYZ{0,0,1}),
+        2.0f, 4.0f
+    ));
+
+    auto t1 = make_unique<Torus>(
+        -20, 0, 0,
+        make_unique<Adesivo>(-20.0f, 0.0f, -18.5f, XYZ{0,0,1}),
+        1.0f, 3.0f
+    );
+
+    auto t2 = make_unique<Torus>(
+        20, 0, 0,
+        make_unique<Adesivo>(20.0f, 0.0f, -18.5f, XYZ{0,0,1}),
+        1.0f, 3.0f
+    );
 
     t1->setConjugado(t2.get());
     t2->setConjugado(t1.get());
 
     poligonos.push_back(move(t1));
     poligonos.push_back(move(t2));
+    // poligonos.push_back(make_unique<Cubo>(0.0f,0.0f,-20.0f,make_unique<Adesivo>(0.0f,0.0f,-19.0f,{0,0,1}),2.0f));
+    // poligonos.push_back(make_unique<Piramide>(10.0f,0.0f,-20.0f,make_unique<Adesivo>(10.0f,0.0f,-18.0f,{0,0,1}),4.0f,4.0f));
+    // poligonos.push_back(make_unique<Esfera>(20.0f,0.0f,-20.0f,make_unique<Adesivo>(20.0f,0.0f,-19.0f,{0,0,1}),2.0f));
+    // poligonos.push_back(make_unique<Cilindro>(30.0f,0.0f,-30.0f,make_unique<Adesivo>(30.0f,0.0f,-28.0f,{0,0,1}),2.0f,4.0f));
+    // poligonos.push_back(make_unique<Cone>(40.0f,0.0f,-20.0f,make_unique<Adesivo>(40.0f,0.0f,-18.0f,{0,0,1}),2.0f,4.0f));
+
+    // auto t1 = make_unique<Torus>(-20,0,0,make_unique<Adesivo>(-20.0f,0.0f,-18.5f,{0,0,1}),1.0f,3.0f);
+    // auto t2 = make_unique<Torus>(20,0,0,make_unique<Adesivo>(20.0f,0.0f,-18.5f,{0,0,1}),1.0f,3.0f);
+
+    // t1->setConjugado(t2.get());
+    // t2->setConjugado(t1.get());
+
+    // poligonos.push_back(move(t1));
+    // poligonos.push_back(move(t2));
     /*for(int i = 0; i < n; i++){
         poligonos.push_back();
     }*/
@@ -532,6 +579,7 @@ void loop_jogo(){
         for (const auto& p : poligonos){
             p->realiza_movimento(cores[i],dt,pause); i++;
             p->desenha_mascara();
+            //p->desenha_adesivo();
         }
 
         // 3) para cada polígono, checamos swept collision contra jogador
@@ -599,7 +647,7 @@ void loop_jogo(){
             }
         }
 
-        a.desenha_adesivo();
+        //a.desenha_adesivo();
 
         // Controla câmera
         jogador.controle_camera(MOVE_VEL, CAMERA_SENS,dt,pause,window,game_controller,state,poligonos);
@@ -612,13 +660,20 @@ void loop_jogo(){
         // Verifica morte do jogador
         if(!jogador.estaVivo()) jogador.nasce_jogador(0.0f,1.0f,0.0f);
 
-        if(jogador.detecta_adesivo(a)){
-            glDisable(GL_DEPTH_TEST);   // ignora profundidade
-            marcax(a.getX(),a.getY(),a.getZ());
-            glEnable(GL_DEPTH_TEST);    // reativa para os próximos frames
+        for(const auto& p : poligonos){
+            Adesivo* ade = p->getAdesivo();
+            if(ade!=nullptr){
+                Adesivo a = *ade;
+                if(jogador.detecta_adesivo(a)){
+                    glDisable(GL_DEPTH_TEST);   // ignora profundidade
+                    marcax(a.getX(),a.getY(),a.getZ());
+                    glEnable(GL_DEPTH_TEST);    // reativa para os próximos frames
+                }
+                jogador.tirou_foto(a,dt,flash_alpha,flash_ativo);
+            }  
         }
-
-        jogador.tirou_foto(a,dt,flash_alpha,flash_ativo);
+        
+        //jogador.tirou_foto(a,dt,flash_alpha,flash_ativo);
 
         // Atualiza tela
         SDL_GL_SwapWindow(window);

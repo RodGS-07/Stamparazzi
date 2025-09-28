@@ -11,11 +11,20 @@ XYZ Adesivo::getNormal() const {return this->normal;}
 
 void Adesivo::setNormal(XYZ n) {this->normal = n;}
 
-void Adesivo::desenha_adesivo(){
+void Adesivo::desenha_adesivo() const {
+    float size = 0.5f;
     muda_cor(10);
-    glPushMatrix();
-    glTranslatef(this->getX(),this->getY(),this->getZ());
-    glScalef(0.25f,0.25f,0.25f);
-    desenha_cilindro();
-    glPopMatrix();
+
+    glBegin(GL_QUADS);
+        glVertex3f(-size/2, -size/2, 0);
+        glVertex3f( size/2, -size/2, 0);
+        glVertex3f( size/2,  size/2, 0);
+        glVertex3f(-size/2,  size/2, 0);
+    glEnd();
+    // muda_cor(10);
+    // glPushMatrix();
+    // glTranslatef(this->getX(),this->getY(),this->getZ());
+    // glScalef(0.25f,0.25f,0.25f);
+    // desenha_cilindro();
+    // glPopMatrix();
 }
