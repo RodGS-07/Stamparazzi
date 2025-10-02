@@ -108,7 +108,7 @@ namespace NC{ //Namespace para Controles e Comandos
 vector<unique_ptr<Poligono>> poligonos;
 Cubo room (0.0f,0.0f,0.0f,nullptr,100.0f);
 
-Jogador jogador = Jogador(0.0f,1.0f,0.0f,0.0f,0.0f);
+Jogador jogador(0.0f,1.0f,0.0f,0.0f,0.0f);
 
 GLuint criaTexturaDoTexto(const char* texto, TTF_Font* fonte, SDL_Color cor, int &largura, int &altura) {
     SDL_Surface* surface = TTF_RenderText_Blended(fonte, texto, cor);
@@ -578,7 +578,7 @@ void loop_jogo(){
         int i = 0;
         for (const auto& p : poligonos){
             p->realiza_movimento(cores[i],dt,pause); i++;
-            p->desenha_mascara();
+            //p->desenha_mascara();
             //p->desenha_adesivo();
         }
 
@@ -666,7 +666,7 @@ void loop_jogo(){
                 Adesivo a = *ade;
                 if(jogador.detecta_adesivo(a)){
                     glDisable(GL_DEPTH_TEST);   // ignora profundidade
-                    marcax(a.getX(),a.getY(),a.getZ());
+                    marcax(p->getX(),p->getY(),p->getZ());
                     glEnable(GL_DEPTH_TEST);    // reativa para os próximos frames
                 }
                 jogador.tirou_foto(a,dt,flash_alpha,flash_ativo);
