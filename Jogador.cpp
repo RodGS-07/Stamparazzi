@@ -159,17 +159,119 @@ void Jogador::desenha_mira(){
 }
 
 bool Jogador::detecta_adesivo(const Adesivo& a){
+    // float radYaw   = cam_yaw   * M_PI / 180.0f;
+    // float radPitch = cam_pitch * M_PI / 180.0f;
+
+    // // Direção da câmera
+    // XYZ dir = {
+    //     -sin(radYaw) * cos(radPitch),
+    //      sin(radPitch),
+    //     -cos(radYaw) * cos(radPitch)
+    // };
+    // dir = dir / !dir;
+
+    // // Posição da câmera (ligeiramente acima do jogador)
+    // XYZ camPos = {this->getX(), this->getY() + 2.0f, this->getZ()};
+    // XYZ adesivoPos = {a.getX(), a.getY(), a.getZ()};
+    // XYZ normal = a.getNormal();
+    // normal = normal / !normal;
+
+    // // Vetor câmera -> adesivo
+    // XYZ toAdesivo = adesivoPos - camPos;
+    // float distancia = !toAdesivo;
+    // toAdesivo = toAdesivo / distancia;
+
+    // // Parâmetros do cone
+    // const float FOV = 20.0f * M_PI / 180.0f; // abertura total de 20°, então metade é 10°
+    // const float MAX_DIST = 30.0f;
+
+    // // Produto escalar entre a direção da câmera e o vetor até o adesivo
+    // float dot = Escalar(dir, toAdesivo);
+
+    // // Condições de detecção
+    // bool dentroCone   = (dot > cos(FOV / 2.0f)); // ângulo menor que meia abertura
+    // bool dentroDist   = (distancia <= MAX_DIST);
+    // bool deFrente     = (Escalar(dir, normal) < -0.5f); // Adesivo virado para a câmera
+
+    // return dentroCone && dentroDist && deFrente;
     float radYaw   = cam_yaw   * M_PI / 180.0f;
     float radPitch = cam_pitch * M_PI / 180.0f;
+
+    // Direção da câmera
     float dirX = -sin(radYaw) * cos(radPitch);
     float dirY =  sin(radPitch);
     float dirZ = -cos(radYaw) * cos(radPitch);
-    XYZ vi = {this->getX(),this->getY(),this->getZ()},
-        vf = {this->getX()+dirX,this->getY()+dirY,this->getZ()+dirZ},
-        va = {a.getX(),a.getY(),a.getZ()};
-    float grau = Arccos((vf-vi),(va-vi)) * 180.0f / M_PI;
-    bool frente = (Escalar((vi-va),a.getNormal()) > 0);
-    return frente and grau <= 20.0f and distancia_entidades(*this,a) <= 30.0f;
+    XYZ dir = {dirX, dirY, dirZ};
+    dir = dir / !dir;
+
+    // Posição da câmera (ligeiramente acima do jogador)
+    XYZ camPos = {this->getX(), this->getY() + 2.0f, this->getZ()}; 
+
+    // Posição do adesivo e normal
+    XYZ adesivoPos = {a.getX(), a.getY(), a.getZ()};
+    XYZ normal = a.getNormal();
+    normal = normal / !normal;
+
+    // Vetor da câmera até o adesivo
+    XYZ toAdesivo = adesivoPos - camPos;
+    toAdesivo = toAdesivo / !toAdesivo;
+
+    // Ângulo entre visão da câmera e direção até o adesivo
+    float angVisao = Arccos(dir, toAdesivo) * 180.0f / M_PI;
+    bool dentroCampo = (angVisao <= 20.0f);
+
+    // Verifica se o adesivo está virado para a câmera
+    float dot = Escalar(toAdesivo * -1.0f, normal);
+    bool adesivoDeFrente = (dot > 0.5f); // 60° de tolerância
+
+    // Verifica se está próximo o suficiente
+    bool perto = (distancia_entidades(*this, a) <= 30.0f);
+
+    // Tudo certo?
+    return dentroCampo && adesivoDeFrente && perto;
+    // float radYaw   = cam_yaw   * M_PI / 180.0f;
+    // float radPitch = cam_pitch * M_PI / 180.0f;
+
+    // // Direção da câmera
+    // float dirX = -sin(radYaw) * cos(radPitch);
+    // float dirY =  sin(radPitch);
+    // float dirZ = -cos(radYaw) * cos(radPitch);
+    // XYZ dir = {dirX, dirY, dirZ};
+
+    // // Vetores principais
+    // XYZ vi = {this->getX(), this->getY(), this->getZ()};
+    // XYZ va = {a.getX(), a.getY(), a.getZ()};
+    // XYZ normal = a.getNormal();
+
+    // // Normaliza vetores
+    // dir = dir / !dir;
+    // normal = normal / !normal;
+
+    // // Verifica se o adesivo está dentro do cone de visão
+    // XYZ vetorAdesivo = va - vi;
+    // float grauCentro = Arccos(dir, vetorAdesivo) * 180.0f / M_PI;
+    // bool dentroCampo = (grauCentro <= 20.0f);
+
+    // // Verifica se o jogador está olhando na direção oposta ao normal do adesivo
+    // float dot = Escalar(dir, normal);
+    // bool olhandoFrente = (dot < -0.5f); // ajustável (-0.7f = mais restrito)
+
+    // // Verifica distância
+    // bool perto = (distancia_entidades(*this, a) <= 30.0f);
+
+    // // Retorna verdadeiro apenas se todas as condições forem satisfeitas
+    // return olhandoFrente && dentroCampo && perto;
+    // float radYaw   = cam_yaw   * M_PI / 180.0f;
+    // float radPitch = cam_pitch * M_PI / 180.0f;
+    // float dirX = -sin(radYaw) * cos(radPitch);
+    // float dirY =  sin(radPitch);
+    // float dirZ = -cos(radYaw) * cos(radPitch);
+    // XYZ vi = {this->getX(),this->getY(),this->getZ()},
+    //     vf = {this->getX()+dirX,this->getY()+dirY,this->getZ()+dirZ},
+    //     va = {a.getX(),a.getY(),a.getZ()};
+    // float grau = Arccos((vf-vi),(va-vi)) * 180.0f / M_PI;
+    // bool frente = (Escalar((vi-va),a.getNormal()) > 0);
+    // return frente and grau <= 20.0f and distancia_entidades(*this,a) <= 30.0f;
 }
 
 void Jogador::tirou_foto(const Adesivo& a, float dt, float& flash_alpha, bool& flash_ativo){

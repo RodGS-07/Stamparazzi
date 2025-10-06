@@ -37,7 +37,7 @@ void desenha_cilindro(float raio = 2.0f, float altura = 4.0f, int fatias = 30, i
 void desenha_cone(float raio = 2.0f, float altura = 4.0f, int fatias = 30);
 void desenha_torus(float R = 3.0f, float r = 1.0f, int fatias = 30, int stacks = 30);
 void desenha_superficie(int formato);
-void marcax(float x, float y, float z);
+void marcax(float x, float y, float z, float cy, float cp);
 
 /*const int NI = 10, NJ = 10;
 const int RESOLUTIONI = 3*NI, RESOLUTIONJ = 3*NJ;

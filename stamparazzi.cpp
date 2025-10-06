@@ -666,7 +666,7 @@ void loop_jogo(){
                 Adesivo a = *ade;
                 if(jogador.detecta_adesivo(a)){
                     glDisable(GL_DEPTH_TEST);   // ignora profundidade
-                    marcax(p->getX(),p->getY(),p->getZ());
+                    marcax(p->getX(),p->getY(),p->getZ(),jogador.getCamYaw(),jogador.getCamPitch());
                     glEnable(GL_DEPTH_TEST);    // reativa para os próximos frames
                 }
                 jogador.tirou_foto(a,dt,flash_alpha,flash_ativo);

@@ -381,19 +381,77 @@ void desenha_superficie(int formato){
     }
 }
 
-void marcax(float x, float y, float z){
-    muda_cor(0);
-    glLineWidth(5.0f);
-    glBegin(GL_LINES);
-    glVertex3f(x-2.0f,y-2.0f,z-2.0f);
-    glVertex3f(x+2.0f,y+2.0f,z-2.0f);
+void marcax(float x, float y, float z, float cy, float cp){
+    glPushMatrix();
+
+    // Move até o ponto onde o X será desenhado
+    glTranslatef(x, y, z);
+
+    // Pega a matriz atual (modelo-vista)
+    GLfloat modelview[16];
+    glGetFloatv(GL_MODELVIEW_MATRIX, modelview);
+
+    // Zera a rotação da matriz (mantém apenas a posição)
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+            modelview[i*4 + j] = (i == j ? 1.0f : 0.0f);
+        }
+    }
+
+    // Recarrega matriz "sem rotação" → billboard perfeito
+    glLoadMatrixf(modelview);
+
+    glScalef(0.5f,0.5f,0.5f);
+
+    glColor4f(1,1,1,0.5f);
+    glBegin(GL_POLYGON);
+        glVertex3f(-3.25f, -3.0f, 0.0f);
+        glVertex3f( 3.25f, -3.0f, 0.0f);
+        glVertex3f( 3.25f,  3.0f, 0.0f);
+        glVertex3f(-3.25f,  3.0f, 0.0f);
     glEnd();
 
-    glBegin(GL_LINES);
-    glVertex3f(x-2.0f,y+2.0f,z-2.0f);
-    glVertex3f(x+2.0f,y-2.0f,z-2.0f);
+    glColor4f(1,0,0,1.0f);
+    glLineWidth(3.0f);
+
+    // Corpo da câmera (retângulo principal)
+    glBegin(GL_LINE_LOOP);
+        glVertex3f(-3.0f, -2.0f, 0.0f);
+        glVertex3f( 3.0f, -2.0f, 0.0f);
+        glVertex3f( 3.0f,  2.0f, 0.0f);
+        glVertex3f(-3.0f,  2.0f, 0.0f);
     glEnd();
+
+    // Lente (círculo no centro)
+    glBegin(GL_LINE_LOOP);
+    for (int i = 0; i < 32; i++) {
+        float theta = 2.0f * M_PI * i / 32;
+        float cx = 1.0f * cos(theta);
+        float cy = 1.0f * sin(theta);
+        glVertex3f(cx, cy, 0.0f);
+    }
+    glEnd();
+
+    // Flash (retângulo pequeno no topo direito)
+    glBegin(GL_LINE_LOOP);
+        glVertex3f(1.8f, 2.2f, 0.0f);
+        glVertex3f(2.8f, 2.2f, 0.0f);
+        glVertex3f(2.8f, 2.8f, 0.0f);
+        glVertex3f(1.8f, 2.8f, 0.0f);
+    glEnd();
+
+    // Pequeno detalhe no obturador (círculo menor dentro)
+    glBegin(GL_LINE_LOOP);
+    for (int i = 0; i < 32; i++) {
+        float theta = 2.0f * M_PI * i / 32;
+        float cx = 0.5f * cos(theta);
+        float cy = 0.5f * sin(theta);
+        glVertex3f(cx, cy, 0.0f);
+    }
+    glEnd();
+
     glLineWidth(1.0f);
+    glPopMatrix();
 }
 
 /*double BezierBlend(int k,double mu, int n) {
