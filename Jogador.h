@@ -32,8 +32,11 @@ class Jogador : public Entidade{
         void morre();
         void desenha_mascara(int stacks = 30, int fatias = 30);
         void desenha_mira();
-        bool detecta_adesivo(const Adesivo& a);
-        void tirou_foto(const Adesivo& a, float dt, float& flash_alpha, bool& flash_ativo);
+        XYZ centroAABB(const AABB& box);
+        float distancia_ponto(const XYZ& a, const XYZ& b);
+        bool RayIntersectsAABB(const XYZ& orig, const XYZ& dir, const AABB& box);
+        bool detecta_adesivo(const Adesivo& a, const vector<unique_ptr<Poligono>>& poligonos);
+        void tirou_foto(const Adesivo& a, float dt, float& flash_alpha, bool& flash_ativo,const vector<unique_ptr<Poligono>>& poligonos);
         bool tenta_mover(float dx, float dy, float dz, const vector<unique_ptr<Poligono>>& poligonos);
         void prende_camera();
         void move_camera(float dist, float dir, float dt, const vector<unique_ptr<Poligono>>& poligonos, float val = 0.0f);

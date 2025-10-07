@@ -158,7 +158,50 @@ void Jogador::desenha_mira(){
     //glLineWidth(1.0f);
 }
 
-bool Jogador::detecta_adesivo(const Adesivo& a){
+// retorna o centro de uma AABB
+XYZ Jogador::centroAABB(const AABB& box) {
+    return XYZ(
+        (box.min.x + box.max.x) * 0.5f,
+        (box.min.y + box.max.y) * 0.5f,
+        (box.min.z + box.max.z) * 0.5f
+    );
+}
+
+// distância euclidiana entre dois pontos
+float Jogador::distancia_ponto(const XYZ& a, const XYZ& b) {
+    // usa operador ! já definido em Linear.cpp para norma
+    return !(a - b);
+
+    // ou, explicitamente:
+    // float dx = a.x - b.x;
+    // float dy = a.y - b.y;
+    // float dz = a.z - b.z;
+    // return sqrtf(dx*dx + dy*dy + dz*dz);
+}
+
+bool Jogador::RayIntersectsAABB(const XYZ& orig, const XYZ& dir, const AABB& box) {
+    float tmin = (box.min.x - orig.x) / dir.x;
+    float tmax = (box.max.x - orig.x) / dir.x;
+    if (tmin > tmax) std::swap(tmin, tmax);
+
+    float tymin = (box.min.y - orig.y) / dir.y;
+    float tymax = (box.max.y - orig.y) / dir.y;
+    if (tymin > tymax) std::swap(tymin, tymax);
+
+    if ((tmin > tymax) || (tymin > tmax)) return false;
+    if (tymin > tmin) tmin = tymin;
+    if (tymax < tmax) tmax = tymax;
+
+    float tzmin = (box.min.z - orig.z) / dir.z;
+    float tzmax = (box.max.z - orig.z) / dir.z;
+    if (tzmin > tzmax) std::swap(tzmin, tzmax);
+
+    if ((tmin > tzmax) || (tzmin > tmax)) return false;
+
+    return true;
+}
+
+bool Jogador::detecta_adesivo(const Adesivo& a, const vector<unique_ptr<Poligono>>& poligonos){
     // float radYaw   = cam_yaw   * M_PI / 180.0f;
     // float radPitch = cam_pitch * M_PI / 180.0f;
 
@@ -171,10 +214,10 @@ bool Jogador::detecta_adesivo(const Adesivo& a){
     // dir = dir / !dir;
 
     // // Posição da câmera (ligeiramente acima do jogador)
-    // XYZ camPos = {this->getX(), this->getY() + 2.0f, this->getZ()};
-    // XYZ adesivoPos = {a.getX(), a.getY(), a.getZ()};
-    // XYZ normal = a.getNormal();
-    // normal = normal / !normal;
+    // XYZ camPos = {this->getX(), this->getY(), this->getZ()};
+    XYZ adesivoPos = {a.getX(), a.getY(), a.getZ()};
+    XYZ normal = a.getNormal();
+    normal = normal / !normal;
 
     // // Vetor câmera -> adesivo
     // XYZ toAdesivo = adesivoPos - camPos;
@@ -182,7 +225,7 @@ bool Jogador::detecta_adesivo(const Adesivo& a){
     // toAdesivo = toAdesivo / distancia;
 
     // // Parâmetros do cone
-    // const float FOV = 20.0f * M_PI / 180.0f; // abertura total de 20°, então metade é 10°
+    // const float FOV = 20.0f * M_PI / 180.0f; // abertura total 20°
     // const float MAX_DIST = 30.0f;
 
     // // Produto escalar entre a direção da câmera e o vetor até o adesivo
@@ -193,42 +236,131 @@ bool Jogador::detecta_adesivo(const Adesivo& a){
     // bool dentroDist   = (distancia <= MAX_DIST);
     // bool deFrente     = (Escalar(dir, normal) < -0.5f); // Adesivo virado para a câmera
 
-    // return dentroCone && dentroDist && deFrente;
-    float radYaw   = cam_yaw   * M_PI / 180.0f;
-    float radPitch = cam_pitch * M_PI / 180.0f;
+    // // ===========================
+    // // VISUALIZAÇÃO DEBUG DO CONE
+    // // ===========================
+    // // glDisable(GL_LIGHTING);
+    // // glLineWidth(2.0f);
 
-    // Direção da câmera
-    float dirX = -sin(radYaw) * cos(radPitch);
-    float dirY =  sin(radPitch);
-    float dirZ = -cos(radYaw) * cos(radPitch);
-    XYZ dir = {dirX, dirY, dirZ};
-    dir = dir / !dir;
+    // // // Linha central (vermelha) = eixo da visão
+    // // glColor3f(1, 0, 0);
+    // // glBegin(GL_LINES);
+    // //     glVertex3f(camPos.x, camPos.y, camPos.z);
+    // //     glVertex3f(camPos.x + dir.x * MAX_DIST,
+    // //                camPos.y + dir.y * MAX_DIST,
+    // //                camPos.z + dir.z * MAX_DIST);
+    // // glEnd();
 
-    // Posição da câmera (ligeiramente acima do jogador)
-    XYZ camPos = {this->getX(), this->getY() + 2.0f, this->getZ()}; 
+    // // // Desenha bordas do cone (amarelo)
+    // // glColor3f(1, 1, 0);
+    // // int slices = 24;
+    // // for (int i = 0; i < slices; i++) {
+    // //     float ang = (2.0f * M_PI * i) / slices;
+    // //     float nextAng = (2.0f * M_PI * (i + 1)) / slices;
 
-    // Posição do adesivo e normal
-    XYZ adesivoPos = {a.getX(), a.getY(), a.getZ()};
-    XYZ normal = a.getNormal();
-    normal = normal / !normal;
+    // //     // Calcula raio na ponta do cone
+    // //     float r = MAX_DIST * tan(FOV / 2.0f);
 
-    // Vetor da câmera até o adesivo
-    XYZ toAdesivo = adesivoPos - camPos;
-    toAdesivo = toAdesivo / !toAdesivo;
+    // //     // Vetores perpendiculares à direção da câmera
+    // //     float cosY = cos(radYaw), sinY = sin(radYaw);
+    // //     float cosP = cos(radPitch), sinP = sin(radPitch);
 
-    // Ângulo entre visão da câmera e direção até o adesivo
-    float angVisao = Arccos(dir, toAdesivo) * 180.0f / M_PI;
-    bool dentroCampo = (angVisao <= 20.0f);
+    // //     // Vetores baseados no yaw/pitch
+    // //     XYZ right = { cosY, 0, -sinY };
+    // //     XYZ up = { sinY*sinP, cosP, cosY*sinP };
 
-    // Verifica se o adesivo está virado para a câmera
-    float dot = Escalar(toAdesivo * -1.0f, normal);
-    bool adesivoDeFrente = (dot > 0.5f); // 60° de tolerância
+    // //     // Ponto atual e o próximo na borda do cone
+    // //     XYZ p1 = camPos + (dir * MAX_DIST)
+    // //                     + right * (r * cos(ang))
+    // //                     + up * (r * sin(ang));
+    // //     XYZ p2 = camPos + (dir * MAX_DIST)
+    // //                     + right * (r * cos(nextAng))
+    // //                     + up * (r * sin(nextAng));
 
-    // Verifica se está próximo o suficiente
-    bool perto = (distancia_entidades(*this, a) <= 30.0f);
+    // //     // Ligações da base do cone
+    // //     glBegin(GL_LINES);
+    // //         glVertex3f(p1.x, p1.y, p1.z);
+    // //         glVertex3f(p2.x, p2.y, p2.z);
+    // //     glEnd();
 
-    // Tudo certo?
-    return dentroCampo && adesivoDeFrente && perto;
+    // //     // Linhas laterais (do vértice até a base)
+    // //     glBegin(GL_LINES);
+    // //         glVertex3f(camPos.x, camPos.y, camPos.z);
+    // //         glVertex3f(p1.x, p1.y, p1.z);
+    // //     glEnd();
+    // // }
+
+    // // // Normal do adesivo (azul)
+    glColor3f(0, 0, 1);
+    glBegin(GL_LINES);
+        glVertex3f(adesivoPos.x, adesivoPos.y, adesivoPos.z);
+        glVertex3f(adesivoPos.x + normal.x * 5,
+                   adesivoPos.y + normal.y * 5,
+                   adesivoPos.z + normal.z * 5);
+    glEnd();
+
+    // // glLineWidth(1.0f);
+    // // glEnable(GL_LIGHTING);
+
+    // // ===========================
+    // // Retorna se o adesivo está detectado
+    // // ===========================
+    // //return dentroCone && dentroDist && deFrente;
+    // // ===========================
+    // // 4) Teste de oclusão (raycast simples)
+    // // ===========================
+    // bool visivel = true;
+    // for (const auto& p : poligonos) { // veja nota abaixo
+    //     if (p->getSuperficie() == F::CONE) continue; // ignora o cone de visão
+    //     AABB box = p->getAABB();
+    //     if (RayIntersectsAABB(camPos, toAdesivo, box)) {
+    //         float distObs = distancia_ponto(camPos, centroAABB(box));
+    //         if (distObs < distancia) {
+    //             visivel = false;
+    //             break;
+    //         }
+    //     }
+    // }
+
+    // // ===========================
+    // // 5) Resultado final
+    // // ===========================
+    // return dentroCone && dentroDist && deFrente && visivel;
+    // float radYaw   = cam_yaw   * M_PI / 180.0f;
+    // float radPitch = cam_pitch * M_PI / 180.0f;
+
+    // // Direção da câmera
+    // float dirX = -sin(radYaw) * cos(radPitch);
+    // float dirY =  sin(radPitch);
+    // float dirZ = -cos(radYaw) * cos(radPitch);
+    // XYZ dir = {dirX, dirY, dirZ};
+    // dir = dir / !dir;
+
+    // // Posição da câmera (ligeiramente acima do jogador)
+    // XYZ camPos = {this->getX(), this->getY() + 2.0f, this->getZ()}; 
+
+    // // Posição do adesivo e normal
+    // XYZ adesivoPos = {a.getX(), a.getY(), a.getZ()};
+    // XYZ normal = a.getNormal();
+    // normal = normal / !normal;
+
+    // // Vetor da câmera até o adesivo
+    // XYZ toAdesivo = adesivoPos - camPos;
+    // toAdesivo = toAdesivo / !toAdesivo;
+
+    // // Ângulo entre visão da câmera e direção até o adesivo
+    // float angVisao = Arccos(dir, toAdesivo) * 180.0f / M_PI;
+    // bool dentroCampo = (angVisao <= 20.0f);
+
+    // // Verifica se o adesivo está virado para a câmera
+    // float dot = Escalar(toAdesivo * -1.0f, normal);
+    // bool adesivoDeFrente = (dot > 0.5f); // 60° de tolerância
+
+    // // Verifica se está próximo o suficiente
+    // bool perto = (distancia_entidades(*this, a) <= 30.0f);
+
+    // // Tudo certo?
+    // return dentroCampo && adesivoDeFrente && perto;
     // float radYaw   = cam_yaw   * M_PI / 180.0f;
     // float radPitch = cam_pitch * M_PI / 180.0f;
 
@@ -261,21 +393,21 @@ bool Jogador::detecta_adesivo(const Adesivo& a){
 
     // // Retorna verdadeiro apenas se todas as condições forem satisfeitas
     // return olhandoFrente && dentroCampo && perto;
-    // float radYaw   = cam_yaw   * M_PI / 180.0f;
-    // float radPitch = cam_pitch * M_PI / 180.0f;
-    // float dirX = -sin(radYaw) * cos(radPitch);
-    // float dirY =  sin(radPitch);
-    // float dirZ = -cos(radYaw) * cos(radPitch);
-    // XYZ vi = {this->getX(),this->getY(),this->getZ()},
-    //     vf = {this->getX()+dirX,this->getY()+dirY,this->getZ()+dirZ},
-    //     va = {a.getX(),a.getY(),a.getZ()};
-    // float grau = Arccos((vf-vi),(va-vi)) * 180.0f / M_PI;
-    // bool frente = (Escalar((vi-va),a.getNormal()) > 0);
-    // return frente and grau <= 20.0f and distancia_entidades(*this,a) <= 30.0f;
+    float radYaw   = cam_yaw   * M_PI / 180.0f;
+    float radPitch = cam_pitch * M_PI / 180.0f;
+    float dirX = -sin(radYaw) * cos(radPitch);
+    float dirY =  sin(radPitch);
+    float dirZ = -cos(radYaw) * cos(radPitch);
+    XYZ vi = {this->getX(),this->getY(),this->getZ()},
+        vf = {this->getX()+dirX,this->getY()+dirY,this->getZ()+dirZ},
+        va = {a.getX(),a.getY(),a.getZ()};
+    float grau = Arccos((vf-vi),(va-vi)) * 180.0f / M_PI;
+    bool frente = (Escalar((vi-va),a.getNormal()) > 0);
+    return frente and grau <= 20.0f and distancia_entidades(*this,a) <= 30.0f;
 }
 
-void Jogador::tirou_foto(const Adesivo& a, float dt, float& flash_alpha, bool& flash_ativo){
-    if (flash_ativo and detecta_adesivo(a)) {
+void Jogador::tirou_foto(const Adesivo& a, float dt, float& flash_alpha, bool& flash_ativo, const vector<unique_ptr<Poligono>>& poligonos){
+    if (flash_ativo and detecta_adesivo(a,poligonos)) {
         glDisable(GL_DEPTH_TEST);
         glMatrixMode(GL_PROJECTION);
         glPushMatrix();

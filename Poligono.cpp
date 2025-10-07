@@ -299,6 +299,12 @@ void Esfera::realiza_movimento(int cor, float dt, bool pause) {
                 y_vel = -y_vel;
             }
         }
+
+        if (this->getAdesivo()) {
+            this->getAdesivo()->setX(this->getX());
+            this->getAdesivo()->setY(this->getY());
+            this->getAdesivo()->setZ(this->getZ());
+        }
     }
     desenha_poligono(cor, pause);
 }
@@ -416,6 +422,22 @@ void Cilindro::realiza_movimento(int cor, float dt, bool pause) {
     }
 
     if(!pause) this->setX(novaX);
+
+    if(!pause and this->getAdesivo()) {
+        this->getAdesivo()->setX(this->getX());
+        this->getAdesivo()->setY(this->getY());
+        this->getAdesivo()->setZ(this->getZ());
+    }
+    // if (this->getAdesivo() and !pause) {
+    //     auto n = this->getAdesivo()->getNormal();
+    //     float rad = x_vel * M_PI / 180.0f;
+
+    //     // Rotação da normal em torno do eixo Y (ou Z, conforme o cilindro no seu jogo)
+    //     float nx = n.x * cos(rad) - n.z * sin(rad);
+    //     float nz = n.x * sin(rad) + n.z * cos(rad);
+
+    //     this->getAdesivo()->setNormal({nx, n.y, nz});
+    // }
 
     desenha_poligono(cor, pause);
 }
@@ -549,6 +571,15 @@ void Cone::realiza_movimento(int cor, float dt, bool pause) {
 
         // Atualiza ápice (sempre no topo do cone no mundo)
         apex = { this->getX(), this->getY(), this->getZ()};
+
+        // -----------------------------
+        // 2. Atualiza o Adesivo (posição + normal)
+        // -----------------------------
+        if (this->getAdesivo()) {
+            this->getAdesivo()->setNormal({apex.x - axis.x*altura - apex.x,
+                                            apex.y - axis.y*altura - apex.y,
+                                            apex.z - axis.z*altura - apex.z});
+        }
     }
     desenha_poligono(cor, pause);
 }

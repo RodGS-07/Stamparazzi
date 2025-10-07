@@ -336,13 +336,13 @@ void cria_poligonos(int n){
 
     auto t1 = make_unique<Torus>(
         -20, 0, 0,
-        make_unique<Adesivo>(-20.0f, 0.0f, -18.5f, XYZ{0,0,1}),
+        make_unique<Adesivo>(-20.0f, 0.0f, 1.5f, XYZ{0,0,1}),
         1.0f, 3.0f
     );
 
     auto t2 = make_unique<Torus>(
         20, 0, 0,
-        make_unique<Adesivo>(20.0f, 0.0f, -18.5f, XYZ{0,0,1}),
+        make_unique<Adesivo>(20.0f, 0.0f, 1.5f, XYZ{0,0,1}),
         1.0f, 3.0f
     );
 
@@ -664,12 +664,12 @@ void loop_jogo(){
             Adesivo* ade = p->getAdesivo();
             if(ade!=nullptr){
                 Adesivo a = *ade;
-                if(jogador.detecta_adesivo(a)){
+                if(jogador.detecta_adesivo(a,poligonos)){
                     glDisable(GL_DEPTH_TEST);   // ignora profundidade
                     marcax(p->getX(),p->getY(),p->getZ(),jogador.getCamYaw(),jogador.getCamPitch());
                     glEnable(GL_DEPTH_TEST);    // reativa para os próximos frames
                 }
-                jogador.tirou_foto(a,dt,flash_alpha,flash_ativo);
+                jogador.tirou_foto(a,dt,flash_alpha,flash_ativo,poligonos);
             }  
         }
         
