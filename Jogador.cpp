@@ -215,9 +215,9 @@ bool Jogador::detecta_adesivo(const Adesivo& a, const vector<unique_ptr<Poligono
 
     // // Posição da câmera (ligeiramente acima do jogador)
     // XYZ camPos = {this->getX(), this->getY(), this->getZ()};
-    XYZ adesivoPos = {a.getX(), a.getY(), a.getZ()};
-    XYZ normal = a.getNormal();
-    normal = normal / !normal;
+    // XYZ adesivoPos = {a.getX(), a.getY(), a.getZ()};
+    // XYZ normal = a.getNormal();
+    // normal = normal / !normal;
 
     // // Vetor câmera -> adesivo
     // XYZ toAdesivo = adesivoPos - camPos;
@@ -291,13 +291,13 @@ bool Jogador::detecta_adesivo(const Adesivo& a, const vector<unique_ptr<Poligono
     // // }
 
     // // // Normal do adesivo (azul)
-    glColor3f(0, 0, 1);
-    glBegin(GL_LINES);
-        glVertex3f(adesivoPos.x, adesivoPos.y, adesivoPos.z);
-        glVertex3f(adesivoPos.x + normal.x * 5,
-                   adesivoPos.y + normal.y * 5,
-                   adesivoPos.z + normal.z * 5);
-    glEnd();
+    // glColor3f(0, 0, 1);
+    // glBegin(GL_LINES);
+    //     glVertex3f(adesivoPos.x, adesivoPos.y, adesivoPos.z);
+    //     glVertex3f(adesivoPos.x + normal.x * 5,
+    //                adesivoPos.y + normal.y * 5,
+    //                adesivoPos.z + normal.z * 5);
+    // glEnd();
 
     // // glLineWidth(1.0f);
     // // glEnable(GL_LIGHTING);
@@ -449,7 +449,7 @@ void Jogador::tirou_foto(const Adesivo& a, float dt, float& flash_alpha, bool& f
     }
 }
 
-bool Jogador::tenta_mover(float dx, float dy, float dz, const vector<unique_ptr<Poligono>>& poligonos){
+bool Jogador::tenta_mover(float dx, float dy, float dz, const vector<unique_ptr<Poligono>>& poligonos, const vector<unique_ptr<Poligono>>& limites){
     AABB candidate = this->mascara;
     //this->mascara; //Sphere candidate = this->mascara;
     candidate.min.x += dx; candidate.max.x += dx;
@@ -460,7 +460,7 @@ bool Jogador::tenta_mover(float dx, float dy, float dz, const vector<unique_ptr<
     //candidate.c.z += dz;
 
     // testa contra os limites da sala/room
-    AABB a = candidate, 
+    AABB a = candidate,
         b = {{-XBOUNDS, -YBOUNDS, -ZBOUNDS},
             {XBOUNDS, YBOUNDS, ZBOUNDS}};
     if((a.min.x <= b.min.x || a.max.x >= b.max.x) ||
@@ -473,6 +473,12 @@ bool Jogador::tenta_mover(float dx, float dy, float dz, const vector<unique_ptr<
             if(p->getSuperficie()!=F::CONE) p->aplica_efeito(*this);
             return false; // colisão detectada => rejeita movimento
         }
+
+    if(limites[1]->colide_jogador(candidate)) return false;
+    // for (const auto& p : limites)
+    //     if (p->colide_jogador(candidate)){
+    //         return false; // colisão detectada => rejeita movimento
+    //     }
         
     // sem colisão => confirma movimento
     this->setX(this->getX()+dx); //this->getX() += dx;
@@ -493,20 +499,20 @@ void Jogador::prende_camera(){
     if(cam_pitch < -90.0f) cam_pitch = -90.0f;
 }
 
-void Jogador::move_camera(float dist, float dir, float dt, const vector<unique_ptr<Poligono>>& poligonos, float val){
+void Jogador::move_camera(float dist, float dir, float dt, const vector<unique_ptr<Poligono>>& poligonos, const vector<unique_ptr<Poligono>>& limites, float val){
     if(dir >= 0.0f){
         float rad = (cam_yaw + dir) * M_PI / 180.0f;
         float dx = - sin(rad) * dist * dt;
         float dz = - cos(rad) * dist * dt;
-        tenta_mover(dx,0.0f,dz,poligonos);
+        tenta_mover(dx,0.0f,dz,poligonos,limites);
     } else {
         float dy = dist * val * dt;
-        tenta_mover(0.0f,dy,0.0f,poligonos);
+        tenta_mover(0.0f,dy,0.0f,poligonos,limites);
     }
     
 }
 
-void Jogador::controle_camera(float move_vel, float camera_sens, float dt, bool pause, SDL_Window* window, SDL_GameController* game_controller, const Uint8* state, const vector<unique_ptr<Poligono>>& poligonos){
+void Jogador::controle_camera(float move_vel, float camera_sens, float dt, bool pause, SDL_Window* window, SDL_GameController* game_controller, const Uint8* state, const vector<unique_ptr<Poligono>>& poligonos, const vector<unique_ptr<Poligono>>& limites){
     if(fabs(this->getX()) >= 100.0f or fabs(this->getY()) >= 100.0f or fabs(this->getZ()) >= 100.0f){
         this->morre(); return;
     }
@@ -519,18 +525,18 @@ void Jogador::controle_camera(float move_vel, float camera_sens, float dt, bool 
         state = SDL_GetKeyboardState(NULL);
         if(state[SDL_SCANCODE_UP] or state[SDL_SCANCODE_W])
             if(cam_pitch != 90.0f and cam_pitch != -90.0f)
-                move_camera(move_vel,0.0f,dt,poligonos);
+                move_camera(move_vel,0.0f,dt,poligonos,limites);
         if(state[SDL_SCANCODE_DOWN] or state[SDL_SCANCODE_S])
             if(cam_pitch != 90.0f and cam_pitch != -90.0f)
-                move_camera(move_vel,180.0f,dt,poligonos);
+                move_camera(move_vel,180.0f,dt,poligonos,limites);
         if(state[SDL_SCANCODE_LEFT] or state[SDL_SCANCODE_A])
-            move_camera(move_vel,90.0f,dt,poligonos);
+            move_camera(move_vel,90.0f,dt,poligonos,limites);
         if(state[SDL_SCANCODE_RIGHT] or state[SDL_SCANCODE_D])
-            move_camera(move_vel,270.0f,dt,poligonos);
+            move_camera(move_vel,270.0f,dt,poligonos,limites);
         if(state[SDL_SCANCODE_LSHIFT] or state[SDL_SCANCODE_RSHIFT])
-            move_camera(move_vel,-1.0f,dt,poligonos,1.0f);
+            move_camera(move_vel,-1.0f,dt,poligonos,limites,1.0f);
         if(state[SDL_SCANCODE_LCTRL] or state[SDL_SCANCODE_RCTRL])
-            move_camera(move_vel,-1.0f,dt,poligonos,-1.0f);
+            move_camera(move_vel,-1.0f,dt,poligonos,limites,-1.0f);
     } else if(!pause and game_controller) {
         Sint16 axisRX = SDL_GameControllerGetAxis(game_controller, SDL_CONTROLLER_AXIS_RIGHTX);
         Sint16 axisRY = SDL_GameControllerGetAxis(game_controller, SDL_CONTROLLER_AXIS_RIGHTY);
@@ -540,21 +546,21 @@ void Jogador::controle_camera(float move_vel, float camera_sens, float dt, bool 
         if(SDL_GameControllerGetButton(game_controller, SDL_CONTROLLER_BUTTON_DPAD_UP)
             or SDL_GameControllerGetAxis(game_controller, SDL_CONTROLLER_AXIS_LEFTY) < -16000)
             if(cam_pitch != 90.0f and cam_pitch != -90.0f)
-                move_camera(move_vel,0.0f,dt,poligonos);
+                move_camera(move_vel,0.0f,dt,poligonos,limites);
         if(SDL_GameControllerGetButton(game_controller, SDL_CONTROLLER_BUTTON_DPAD_DOWN)
             or SDL_GameControllerGetAxis(game_controller, SDL_CONTROLLER_AXIS_LEFTY) > 16000)
             if(cam_pitch != 90.0f and cam_pitch != -90.0f)
-                move_camera(move_vel,180.0f,dt,poligonos);
+                move_camera(move_vel,180.0f,dt,poligonos,limites);
         if(SDL_GameControllerGetButton(game_controller, SDL_CONTROLLER_BUTTON_DPAD_LEFT)
             or SDL_GameControllerGetAxis(game_controller, SDL_CONTROLLER_AXIS_LEFTX) < -16000)
-            move_camera(move_vel,90.0f,dt,poligonos);
+            move_camera(move_vel,90.0f,dt,poligonos,limites);
         if(SDL_GameControllerGetButton(game_controller, SDL_CONTROLLER_BUTTON_DPAD_RIGHT)
             or SDL_GameControllerGetAxis(game_controller, SDL_CONTROLLER_AXIS_LEFTX) > 16000)
-            move_camera(move_vel,270.0f,dt,poligonos);
+            move_camera(move_vel,270.0f,dt,poligonos,limites);
         if(SDL_GameControllerGetButton(game_controller,SDL_CONTROLLER_BUTTON_RIGHTSHOULDER))
-            move_camera(move_vel,-1.0f,dt,poligonos,1.0f);
+            move_camera(move_vel,-1.0f,dt,poligonos,limites,1.0f);
         if(SDL_GameControllerGetButton(game_controller,SDL_CONTROLLER_BUTTON_LEFTSHOULDER))
-            move_camera(move_vel,-1.0f,dt,poligonos,-1.0f);
+            move_camera(move_vel,-1.0f,dt,poligonos,limites,-1.0f);
     }
     //atualiza_mascara();
     //this->mascara = {{this->getX()-1.0f,this->getY()-1.0f,this->getZ()-1.0f},

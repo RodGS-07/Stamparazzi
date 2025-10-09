@@ -107,9 +107,11 @@ namespace NC{ //Namespace para Controles e Comandos
 //Adesivo a = Adesivo(-5.0f,5.0f,10.0f,{0,0,1});
 
 vector<unique_ptr<Poligono>> poligonos;
-Cubo room (0.0f,0.0f,0.0f,nullptr,100.0f);
+vector<unique_ptr<Poligono>> limites;
+//Cubo room (0.0f,0.0f,0.0f,nullptr,100.0f);
+//Cubo chao (0.0f,0.0f,0.0f,100.0f,0.1f,100.0f,nullptr,1.0f);
 
-Jogador jogador(0.0f,1.0f,0.0f,0.0f,0.0f);
+Jogador jogador(0.0f,1.5f,0.0f,0.0f,0.0f);
 
 GLuint criaTexturaDoTexto(const char* texto, TTF_Font* fonte, SDL_Color cor, int &largura, int &altura) {
     SDL_Surface* surface = TTF_RenderText_Blended(fonte, texto, cor);
@@ -329,6 +331,12 @@ void inicializa_ttf(){
 }
 
 void cria_poligonos(int n){
+    //room
+    limites.push_back(make_unique<Cubo>(0.0f,0.0f,0.0f,nullptr,200.0f));
+
+    //chao
+    limites.push_back(make_unique<Cubo>(0.0f,-1.0f,0.0f,100.0f,0.1f,100.0f,nullptr,2.0f));
+
     poligonos.push_back(make_unique<Cubo>(
         0.0f, 0.0f, -20.0f,
         make_unique<Adesivo>(0.0f, 0.0f, -19.0f, XYZ{0,0,1}),
@@ -360,14 +368,14 @@ void cria_poligonos(int n){
     ));
 
     auto t1 = make_unique<Torus>(
-        -20, 0, 0,
-        make_unique<Adesivo>(-20.0f, 0.0f, 1.5f, XYZ{0,0,1}),
+        -20, -98.5, 0,
+        make_unique<Adesivo>(-20.0f, -98.5f, 1.5f, XYZ{0,0,1}),
         1.0f, 3.0f
     );
 
     auto t2 = make_unique<Torus>(
-        20, 0, 0,
-        make_unique<Adesivo>(20.0f, 0.0f, 1.5f, XYZ{0,0,1}),
+        20, 1.5, 0,
+        make_unique<Adesivo>(20.0f, 1.5f, 1.5f, XYZ{0,0,1}),
         1.0f, 3.0f
     );
 
@@ -593,8 +601,11 @@ void loop_jogo(){
         // }
 
         // Desenha máscara da room
-        room.desenha_mascara();
+        //room.desenha_mascara();
+        //limites[0]->desenha_mascara();
         desenha_paredes();
+        //limites[1]->desenha_mascara();
+        //chao.desenha_mascara();
 
         // 1) guardamos posições antigas
         vector<XYZ> prevPos;
@@ -677,7 +688,8 @@ void loop_jogo(){
         }
 
         // Controla câmera
-        jogador.controle_camera(MOVE_VEL, CAMERA_SENS,dt,pause,window,game_controller,state,poligonos);
+        jogador.controle_camera(MOVE_VEL, CAMERA_SENS,dt,pause,window,game_controller,state,poligonos,limites);
+        //jogador.controle_camera(MOVE_VEL, CAMERA_SENS,dt,pause,window,game_controller,state,limites);
 
         for(const auto& p : poligonos){
             if(p->getSuperficie()==F::CONE)
@@ -685,7 +697,7 @@ void loop_jogo(){
         }
 
         // Verifica morte do jogador
-        if(!jogador.estaVivo()) jogador.nasce_jogador(0.0f,1.0f,0.0f);
+        if(!jogador.estaVivo()) jogador.nasce_jogador(0.0f,1.5f,0.0f);
 
         for(const auto& p : poligonos){
             Adesivo* ade = p->getAdesivo();

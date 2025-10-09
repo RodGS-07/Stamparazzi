@@ -14,8 +14,22 @@ Poligono::Poligono(float ix, float iy, float iz, int s, unique_ptr<Adesivo> a)
 : Entidade(ix,iy,iz), superficie(s) {
     this->setAdesivo(move(a));
 }
+Poligono::Poligono(float ix, float iy, float iz, float xs, float ys, float zs, int s, unique_ptr<Adesivo> a)
+: Entidade(ix,iy,iz), escalax(xs), escalay(ys), escalaz(zs), superficie(s) {
+    this->setAdesivo(move(a));
+}
 
 int Poligono::getSuperficie() const {return this->superficie;}
+
+float Poligono::getEscalaX() const {return this->escalax;}
+
+float Poligono::getEscalaY() const {return this->escalay;}
+
+float Poligono::getEscalaZ() const {return this->escalaz;}
+
+void Poligono::setEscala(float xs, float ys, float zs) {
+    escalax = xs, escalay = ys, escalaz = zs;
+}
 
 Adesivo* Poligono::getAdesivo() const {return adesivo.get();}
 
@@ -47,10 +61,12 @@ void Poligono::desenha_adesivo_no_poligono(const Adesivo& adesivo, float offset)
 Cubo::Cubo() : Poligono(F::CUBO) {}
 Cubo::Cubo(float ix, float iy, float iz, unique_ptr<Adesivo> a, float l)
 : Poligono(ix,iy,iz,F::CUBO,move(a)), lado(l) {}
+Cubo::Cubo(float ix, float iy, float iz, float xs, float ys, float zs, unique_ptr<Adesivo> a, float l)
+: Poligono(ix,iy,iz,xs,ys,zs,F::CUBO,move(a)), lado(l) {}
 
 AABB Cubo::getAABB() const {
-    return {{ this->getX() - lado, this->getY() - lado, this->getZ() - lado },
-            { this->getX() + lado, this->getY() + lado, this->getZ() + lado }};
+    return {{ (this->getX() - lado) * getEscalaX(), (this->getY() - lado) * getEscalaY(), (this->getZ() - lado) * getEscalaZ() },
+            { (this->getX() + lado) * getEscalaX(), (this->getY() + lado) * getEscalaY(), (this->getZ() + lado) * getEscalaZ()}};
 }
 
 float Cubo::getLado() const {return this->lado;}
@@ -60,7 +76,7 @@ void Cubo::realiza_movimento(int cor, float dt, bool pause) {
 }
 
 bool Cubo::colide_jogador(const AABB& s) const {
-    AABB box = {{this->getX() - lado, this->getY() - lado, this->getZ() - lado}, {this->getX() + lado, this->getY() + lado, this->getZ() + lado}};
+    AABB box = getAABB(); //{{this->getX() - lado, this->getY() - lado, this->getZ() - lado}, {this->getX() + lado, this->getY() + lado, this->getZ() + lado}};
     return AABBvsAABB(s, box);//SphereVsAABB(s,box);
 }
 
@@ -93,7 +109,7 @@ void Cubo::desenha_poligono(int cor, bool pause) {
 
 void Cubo::desenha_mascara() {
     muda_cor(12);
-    AABB mascara = {{this->getX() - lado, this->getY() - lado, this->getZ() - lado}, {this->getX() + lado, this->getY() + lado, this->getZ() + lado}};
+    AABB mascara = getAABB();//{{this->getX() - lado, this->getY() - lado, this->getZ() - lado}, {this->getX() + lado, this->getY() + lado, this->getZ() + lado}};
 
     glBegin(GL_LINE_LOOP);
     glVertex3f(mascara.min.x,mascara.min.y,mascara.min.z);
@@ -141,10 +157,12 @@ void Cubo::desenha_mascara() {
 Piramide::Piramide() : Poligono(F::PIRAMIDE) {}
 Piramide::Piramide(float ix, float iy, float iz, unique_ptr<Adesivo> a, float b, float h)
 : Poligono(ix,iy,iz,F::PIRAMIDE,move(a)), base(b), altura(h) {}
+Piramide::Piramide(float ix, float iy, float iz, float xs, float ys, float zs, unique_ptr<Adesivo> a, float b, float h)
+: Poligono(ix,iy,iz,xs,ys,zs,F::PIRAMIDE,move(a)), base(b), altura(h) {}
 
 AABB Piramide::getAABB() const {
-    return {{this->getX() - base, this->getY() - altura, this->getZ() - base}, 
-            {this->getX() + base, this->getY() + altura, this->getZ() + base}};
+    return {{(this->getX() - base/2.0f) * getEscalaX(), (this->getY() - altura/2.0f) * getEscalaY(), (this->getZ() - base/2.0f) * getEscalaZ()}, 
+            {(this->getX() + base/2.0f) * getEscalaX(), (this->getY() + altura/2.0f) * getEscalaY(), (this->getZ() + base/2.0f) * getEscalaZ()}};
 }
 
 float Piramide::getAltura() const {return this->altura;}
@@ -156,7 +174,8 @@ void Piramide::realiza_movimento(int cor, float dt, bool pause) {
 bool Piramide::colide_jogador(const AABB& s) const {
     float b = base / 2.0f;
     float h = altura / 2.0f;
-    AABB box = {{this->getX() - b, this->getY() - h, this->getZ() - b}, {this->getX() + b, this->getY() + h, this->getZ() + b}};
+    AABB box = getAABB();//{{(this->getX() - b) * getEscalaX(), (this->getY() - h) * getEscalaY(), (this->getZ() - b) * getEscalaZ()}, 
+               // {(this->getX() + b) * getEscalaX(), (this->getY() + h) * getEscalaY(), (this->getZ() + b) * getEscalaZ()}};
     //if(!AABBvsAABB(s,box)) {
     //cout << s.min.x << " " << s.min.y << " " << s.min.z << " " << s.max.x << " " << s.max.y << " " << s.max.z << endl;
     //cout << box.min.x << " " << box.min.y << " " << box.min.z << " " << box.max.x << " " << box.max.y << " " << box.max.z << endl;
@@ -223,7 +242,9 @@ void Piramide::desenha_poligono(int cor, bool pause) {
 void Piramide::desenha_mascara(){
     muda_cor(12);
     float b = base / 2.0f, h = altura / 2.0f;
-    AABB mascara = {{this->getX() - b, this->getY() - h, this->getZ() - b}, {this->getX() + b, this->getY() + h, this->getZ() + b}};
+    AABB mascara = {{(this->getX() - b) * getEscalaX(), (this->getY() - h) * getEscalaY(), (this->getZ() - b) * getEscalaZ()}, 
+                    {(this->getX() + b) * getEscalaX(), (this->getY() + h) * getEscalaY(), (this->getZ() + b) * getEscalaZ()}};
+    //AABB mascara = {{this->getX() - b, this->getY() - h, this->getZ() - b}, {this->getX() + b, this->getY() + h, this->getZ() + b}};
     
     glBegin(GL_LINE_LOOP);
     glVertex3f(mascara.min.x,mascara.min.y,mascara.min.z);
@@ -275,10 +296,16 @@ Esfera::Esfera(float ix, float iy, float iz, unique_ptr<Adesivo> a, float r)
     grav = -9.8f;     // "gravidade"
     chao = -1.0f;         // altura do chão (pode ser o y=-1 do seu cenário)
 }
+Esfera::Esfera(float ix, float iy, float iz, float xs, float ys, float zs, unique_ptr<Adesivo> a, float r)
+: Poligono(ix,iy,iz,xs,ys,zs,F::ESFERA,move(a)), raio(r) {
+    y_vel = 10.0f;
+    grav = -9.8f;     // "gravidade"
+    chao = -1.0f;         // altura do chão (pode ser o y=-1 do seu cenário)
+}
 
 AABB Esfera::getAABB() const {
-    return {{ this->getX() - raio, this->getY() - raio, this->getZ() - raio },
-            { this->getX() + raio, this->getY() + raio, this->getZ() + raio }};
+    return {{ (this->getX() - raio) * getEscalaX(), (this->getY() - raio) * getEscalaY(), (this->getZ() - raio) * getEscalaZ() },
+            { (this->getX() + raio) * getEscalaX(), (this->getY() + raio) * getEscalaY(), (this->getZ() + raio) * getEscalaZ()}};
 }
 
 float Esfera::getRaio() const {return this->raio;}
@@ -310,7 +337,7 @@ void Esfera::realiza_movimento(int cor, float dt, bool pause) {
 }
 
 bool Esfera::colide_jogador(const AABB& s) const {
-    AABB box = {{this->getX() - raio, this->getY() - raio, this->getZ() - raio}, {this->getX() + raio, this->getY() + raio, this->getZ() + raio}};
+    AABB box = getAABB();//{{this->getX() - raio, this->getY() - raio, this->getZ() - raio}, {this->getX() + raio, this->getY() + raio, this->getZ() + raio}};
     return AABBvsAABB(s,box);//SphereVsAABB(s, box);
     //Sphere s2 = {{this->getX(), this->getY(), this->getZ()}, raio };
     //return SphereVsSphere(s, s2);
@@ -345,7 +372,7 @@ void Esfera::desenha_poligono(int cor, bool pause) {
 
 void Esfera::desenha_mascara(){
     muda_cor(12);
-    AABB mascara = {{this->getX() - raio, this->getY() - raio, this->getZ() - raio}, {this->getX() + raio, this->getY() + raio, this->getZ() + raio}};
+    AABB mascara = getAABB();//{{this->getX() - raio, this->getY() - raio, this->getZ() - raio}, {this->getX() + raio, this->getY() + raio, this->getZ() + raio}};
     
     glBegin(GL_LINE_LOOP);
     glVertex3f(mascara.min.x,mascara.min.y,mascara.min.z);
@@ -397,11 +424,17 @@ Cilindro::Cilindro(float ix, float iy, float iz, unique_ptr<Adesivo> a, float r,
     axis = { 0.0f, 0.0f, 1.0f };
     ang = 0.0f;
 }
+Cilindro::Cilindro(float ix, float iy, float iz, float xs, float ys, float zs, unique_ptr<Adesivo> a, float r, float h)
+: Poligono(ix,iy,iz,xs,ys,zs,F::CILINDRO,move(a)), raio(r), altura(h), x_vel(1.0f) {
+    centro_base = { this->getX(), this->getY(), this->getZ() - altura/2.0f };
+    axis = { 0.0f, 0.0f, 1.0f };
+    ang = 0.0f;
+}
 
 AABB Cilindro::getAABB() const {
     float half = altura / 2.0f;
-    return {{ this->getX() - raio, this->getY() - raio, this->getZ() - half },
-            { this->getX() + raio, this->getY() + raio, this->getZ() + half }};
+    return {{ (this->getX() - raio) * getEscalaX(), (this->getY() - raio) * getEscalaY(), (this->getZ() - half) * getEscalaZ()},
+            { (this->getX() + raio) * getEscalaX(), (this->getY() + raio) * getEscalaY(), (this->getZ() + half) * getEscalaZ()}};
 }
 
 float Cilindro::getRaio() const {return this->raio;}
@@ -443,10 +476,11 @@ void Cilindro::realiza_movimento(int cor, float dt, bool pause) {
 }
 
 bool Cilindro::colide_jogador(const AABB& s) const {
-    AABB box = {
-        { this->getX() - raio, this->getY() - raio, this->getZ() - altura/2.0f },
-        { this->getX() + raio, this->getY() + raio, this->getZ() + altura/2.0f }
-    };
+    // AABB box = {
+    //     { this->getX() - raio, this->getY() - raio, this->getZ() - altura/2.0f },
+    //     { this->getX() + raio, this->getY() + raio, this->getZ() + altura/2.0f }
+    // };
+    AABB box = getAABB();
     return AABBvsAABB(s,box);//SphereVsAABB(s, box);
     /*Cylinder cyl;
     cyl.base = centro_base;    // use o centro_base calculado no construtor
@@ -497,7 +531,7 @@ void Cilindro::desenha_poligono(int cor, bool pause) {
 
 void Cilindro::desenha_mascara(){
     muda_cor(12);
-    AABB mascara = {{this->getX() - raio, this->getY() - raio, this->getZ() - altura/2.0f}, {this->getX() + raio, this->getY() + raio, this->getZ() + altura/2.0f}};
+    AABB mascara = getAABB();//{{this->getX() - raio, this->getY() - raio, this->getZ() - altura/2.0f}, {this->getX() + raio, this->getY() + raio, this->getZ() + altura/2.0f}};
     
     glBegin(GL_LINE_LOOP);
     glVertex3f(mascara.min.x,mascara.min.y,mascara.min.z);
@@ -548,11 +582,16 @@ Cone::Cone(float ix, float iy, float iz, unique_ptr<Adesivo> a, float r, float h
     apex = { this->getX(), this->getY(), this->getZ() };
     axis = { 0.0f, 0.0f, -1.0f }; 
 }
+Cone::Cone(float ix, float iy, float iz, float xs, float ys, float zs, unique_ptr<Adesivo> a, float r, float h)
+: Poligono(ix,iy,iz,xs,ys,zs,F::CONE,move(a)), raio(r), altura(h), ang(0.0f) { 
+    apex = { this->getX(), this->getY(), this->getZ() };
+    axis = { 0.0f, 0.0f, -1.0f }; 
+}
 
 AABB Cone::getAABB() const {
     return {
-        { this->getX() - raio, this->getY() - raio, this->getZ() - altura/2.0f },
-        { this->getX() + raio, this->getY() + raio, this->getZ() + altura/2.0f }
+        { (this->getX() - raio) * getEscalaX(), (this->getY() - raio) * getEscalaY(), (this->getZ() - altura/2.0f) * getEscalaZ()},
+        { (this->getX() + raio) * getEscalaX(), (this->getY() + raio) * getEscalaY(), (this->getZ() + altura/2.0f) * getEscalaZ()}
     };
 }
 
@@ -585,10 +624,11 @@ void Cone::realiza_movimento(int cor, float dt, bool pause) {
 }
 
 bool Cone::colide_jogador(const AABB& s) const {
-    AABB box = {
-        { this->getX() - raio, this->getY() - raio, this->getZ() - altura/2.0f },
-        { this->getX() + raio, this->getY() + raio, this->getZ() + altura/2.0f }
-    };
+    // AABB box = {
+    //     { this->getX() - raio, this->getY() - raio, this->getZ() - altura/2.0f },
+    //     { this->getX() + raio, this->getY() + raio, this->getZ() + altura/2.0f }
+    // };
+    AABB box = getAABB();
     return AABBvsAABB(s,box);//SphereVsAABB(s, box);
     /*ConeBound cone;
     cone.apex = {this->getX(), this->getY(), this->getZ() + altura/2};  // ápice no topo
@@ -657,7 +697,7 @@ void Cone::desenha_poligono(int cor, bool pause) {
 
 void Cone::desenha_mascara(){
     muda_cor(12);
-    AABB mascara = {{this->getX() - raio, this->getY() - raio, this->getZ() - altura/2.0f}, {this->getX() + raio, this->getY() + raio, this->getZ() + altura/2.0f}};
+    AABB mascara = getAABB();//{{this->getX() - raio, this->getY() - raio, this->getZ() - altura/2.0f}, {this->getX() + raio, this->getY() + raio, this->getZ() + altura/2.0f}};
     
     glBegin(GL_LINE_LOOP);
     glVertex3f(mascara.min.x,mascara.min.y,mascara.min.z);
@@ -705,6 +745,14 @@ void Cone::desenha_mascara(){
 Torus::Torus() : Poligono(F::TORUS) {}
 Torus::Torus(float ix, float iy, float iz, unique_ptr<Adesivo> a, float re, float ra)
 : Poligono(ix,iy,iz,F::TORUS,move(a)) {
+    p.c = {ix,iy,iz};
+    p.raio_menor = re;
+    p.raio_maior = ra;
+    p.par = nullptr;
+    conjugado = nullptr;
+}
+Torus::Torus(float ix, float iy, float iz, float xs, float ys, float zs, unique_ptr<Adesivo> a, float re, float ra)
+: Poligono(ix,iy,iz,xs,ys,zs,F::TORUS,move(a)) {
     p.c = {ix,iy,iz};
     p.raio_menor = re;
     p.raio_maior = ra;

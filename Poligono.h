@@ -15,14 +15,20 @@ class Adesivo;
 class Poligono : public Entidade{
     private:
         int superficie;
+        float escalax = 1.0f, escalay = 1.0f, escalaz = 1.0f;
         unique_ptr<Adesivo> adesivo;
 
     public:
         Poligono(int s);
         Poligono(float ix, float iy, float iz, int s, unique_ptr<Adesivo> a);
+        Poligono(float ix, float iy, float iz, float xs, float ys, float zs, int s, unique_ptr<Adesivo> a);
 
         //virtual bool colide_jogador(const Sphere& s) const = 0;
         int getSuperficie() const;
+        float getEscalaX() const;
+        float getEscalaY() const;
+        float getEscalaZ() const;
+        void setEscala(float xs, float ys, float zs);
         Adesivo* getAdesivo() const;
         void setAdesivo(unique_ptr<Adesivo> a);
         void desenha_adesivo_no_poligono(const Adesivo& adesivo, float offset);
@@ -43,6 +49,7 @@ class Cubo : public Poligono{
     public:
         Cubo();
         Cubo(float ix, float iy, float iz, unique_ptr<Adesivo> a, float l);
+        Cubo(float ix, float iy, float iz, float xs, float ys, float zs, unique_ptr<Adesivo> a, float l);
 
         AABB getAABB() const override;
         float getLado() const;
@@ -61,6 +68,7 @@ class Piramide : public Poligono{
     public:
         Piramide();
         Piramide(float ix, float iy, float iz, unique_ptr<Adesivo> a, float b, float h);
+        Piramide(float ix, float iy, float iz, float xs, float ys, float zs, unique_ptr<Adesivo> a, float b, float h);
 
         AABB getAABB() const override;
         float getAltura() const;
@@ -79,6 +87,7 @@ class Esfera : public Poligono{
     public:
         Esfera();
         Esfera(float ix, float iy, float iz, unique_ptr<Adesivo> a, float r);
+        Esfera(float ix, float iy, float iz, float xs, float ys, float zs, unique_ptr<Adesivo> a, float r);
 
         AABB getAABB() const override;
         float getRaio() const;
@@ -98,6 +107,7 @@ class Cilindro : public Poligono{
     public:
         Cilindro();
         Cilindro(float ix, float iy, float iz, unique_ptr<Adesivo> a, float r, float h);
+        Cilindro(float ix, float iy, float iz, float xs, float ys, float zs, unique_ptr<Adesivo> a, float r, float h);
 
         AABB getAABB() const override;
         float getRaio() const;
@@ -118,6 +128,7 @@ class Cone : public Poligono{
     public:
         Cone();
         Cone(float ix, float iy, float iz, unique_ptr<Adesivo> a, float r, float h);
+        Cone(float ix, float iy, float iz, float xs, float ys, float zs, unique_ptr<Adesivo> a, float r, float h);
 
         AABB getAABB() const override;
         float getRaio() const;
@@ -138,6 +149,7 @@ class Torus : public Poligono{
     public:
         Torus();
         Torus(float ix, float iy, float iz, unique_ptr<Adesivo> a, float re, float ra);
+        Torus(float ix, float iy, float iz, float xs, float ys, float zs, unique_ptr<Adesivo> a, float re, float ra);
 
         Torus* getConjugado() const;
         void setConjugado(Torus* t);
