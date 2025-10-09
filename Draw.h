@@ -29,7 +29,6 @@ const float cores[13][3] = {
     {0.0f,0.0f,0.0f} /*preto*/ };
 
 void muda_cor(int c);
-void desenha_chao();
 void desenha_cubo(float lado = 2.0f);
 void desenha_piramide(float base = 4.0f, float altura = 4.0f);
 void desenha_esfera(float raio = 2.0f, int fatias = 30, int stacks = 30);

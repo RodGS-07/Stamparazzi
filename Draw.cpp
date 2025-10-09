@@ -12,60 +12,6 @@ void muda_cor(int c){
     glColor3f(cores[c][0],cores[c][1],cores[c][2]);
 }
 
-void desenha_chao() {
-    glBegin(GL_QUADS);
-
-    // Frente (vermelha)
-    glNormal3f(0,0,1);
-    muda_cor(0);
-    glVertex3f(-1, -1,  1);
-    glVertex3f( 1, -1,  1);
-    glVertex3f( 1,  1,  1);
-    glVertex3f(-1,  1,  1);
-
-    // Trás (verde)
-    glNormal3f(0,0,-1);
-    muda_cor(4);
-    glVertex3f(-1, -1, -1);
-    glVertex3f(-1,  1, -1);
-    glVertex3f( 1,  1, -1);
-    glVertex3f( 1, -1, -1);
-
-    // Esquerda (azul)
-    glNormal3f(-1,0,0);
-    muda_cor(6);
-    glVertex3f(-1, -1, -1);
-    glVertex3f(-1, -1,  1);
-    glVertex3f(-1,  1,  1);
-    glVertex3f(-1,  1, -1);
-
-    // Direita (amarelo)
-    glNormal3f(1,0,0);
-    muda_cor(2);
-    glVertex3f(1, -1, -1);
-    glVertex3f(1,  1, -1);
-    glVertex3f(1,  1,  1);
-    glVertex3f(1, -1,  1);
-
-    // Topo (magenta)
-    glNormal3f(0,1,0);
-    muda_cor(8);
-    glVertex3f(-1, 1, -1);
-    glVertex3f(-1, 1,  1);
-    glVertex3f( 1, 1,  1);
-    glVertex3f( 1, 1, -1);
-
-    // Base (ciano)
-    glNormal3f(0,-1,0);
-    muda_cor(5);
-    glVertex3f(-1, -1, -1);
-    glVertex3f( 1, -1, -1);
-    glVertex3f( 1, -1,  1);
-    glVertex3f(-1, -1,  1);
-
-    glEnd();
-}
-
 void desenha_cubo(float lado) {
     XYZ normal;
     glBegin(GL_QUADS);

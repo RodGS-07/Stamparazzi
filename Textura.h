@@ -17,5 +17,6 @@ void CarregaTexturas();
 void TransformaParede(int i, int s);
 void DesenhaSkybox();
 void desenha_paredes();
+void desenha_chao();
 
 #endif

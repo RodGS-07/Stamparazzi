@@ -200,3 +200,60 @@ void desenha_paredes() {
 
     glDisable(GL_TEXTURE_2D);
 }
+
+void desenha_chao() {
+
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, texID[0]); // textura do chão
+    muda_cor(9);
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+    glColor3f(1, 1, 1); // evita tingir a textura
+
+    glBegin(GL_QUADS);
+
+    // Frente
+    glNormal3f(0,0,1);
+    glTexCoord2f(0,0); glVertex3f(-1, -1,  1);
+    glTexCoord2f(1,0); glVertex3f( 1, -1,  1);
+    glTexCoord2f(1,1); glVertex3f( 1,  1,  1);
+    glTexCoord2f(0,1); glVertex3f(-1,  1,  1);
+
+    // Trás
+    glNormal3f(0,0,-1);
+    glTexCoord2f(0,0); glVertex3f(-1, -1, -1);
+    glTexCoord2f(1,0); glVertex3f( 1, -1, -1);
+    glTexCoord2f(1,1); glVertex3f( 1,  1, -1);
+    glTexCoord2f(0,1); glVertex3f(-1,  1, -1);
+
+    // Esquerda
+    glNormal3f(-1,0,0);
+    glTexCoord2f(0,0); glVertex3f(-1, -1, -1);
+    glTexCoord2f(1,0); glVertex3f(-1, -1,  1);
+    glTexCoord2f(1,1); glVertex3f(-1,  1,  1);
+    glTexCoord2f(0,1); glVertex3f(-1,  1, -1);
+
+    // Direita 
+    glNormal3f(1,0,0);
+    glTexCoord2f(0,0); glVertex3f( 1, -1, -1);
+    glTexCoord2f(1,0); glVertex3f( 1, -1,  1);
+    glTexCoord2f(1,1); glVertex3f( 1,  1,  1);
+    glTexCoord2f(0,1); glVertex3f( 1,  1, -1);
+
+    // Topo (chão visível)
+    glNormal3f(0,1,0);
+    glTexCoord2f(0,0); glVertex3f(-1, 1, -1);
+    glTexCoord2f(4,0); glVertex3f( 1, 1, -1);
+    glTexCoord2f(4,4); glVertex3f( 1, 1,  1);
+    glTexCoord2f(0,4); glVertex3f(-1, 1,  1);
+
+    // Base 
+    glNormal3f(0,-1,0);
+    glTexCoord2f(0,0); glVertex3f(-1, -1, -1);
+    glTexCoord2f(4,0); glVertex3f( 1, -1, -1);
+    glTexCoord2f(4,4); glVertex3f( 1, -1,  1);
+    glTexCoord2f(0,4); glVertex3f(-1, -1,  1);
+
+    glEnd();
+
+    glDisable(GL_TEXTURE_2D);
+}
