@@ -5,6 +5,7 @@
 #include "Jogador.h"
 #include "Linear.h"
 #include "Poligono.h"
+#include "Textura.h"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 #include <GL/glut.h>
@@ -252,6 +253,22 @@ void inicializa_opengl(int argc, char* argv[]){
     gluPerspective(45.0, aspect, 0.1, 300.0);
     glMatrixMode(GL_MODELVIEW);
 
+    // // 1. Luz ambiente global mais forte
+    // GLfloat globalAmbiente[] = { 0.4, 0.4, 0.4, 1.0 };
+    // glLightModelfv(GL_LIGHT_MODEL_AMBIENT, globalAmbiente);
+
+    // // 2. Luz direcional simulando lâmpada do teto
+    // GLfloat lightDir[] = { 0.0f, -1.0f, -0.3f, 0.0f };
+    // GLfloat white[] = { 1.0, 1.0, 1.0, 1.0 };
+    // glLightfv(GL_LIGHT0, GL_POSITION, lightDir);
+    // glLightfv(GL_LIGHT0, GL_DIFFUSE, white);
+    // glLightfv(GL_LIGHT0, GL_SPECULAR, white);
+
+    // // 3. Ativa luz e material
+    // glEnable(GL_LIGHTING);
+    // glEnable(GL_LIGHT0);
+    // glEnable(GL_COLOR_MATERIAL);
+    // glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
     // Iluminação da sala
     GLfloat globalAmbiente[] = { 0.2, 0.2, 0.2, 1.0};
     GLfloat white[] = { 1.0, 1.0, 1.0, 1.0 };
@@ -259,8 +276,14 @@ void inicializa_opengl(int argc, char* argv[]){
     glLightfv(GL_LIGHT0,GL_AMBIENT,globalAmbiente);
     glLightfv(GL_LIGHT0,GL_DIFFUSE,white);
     glLightfv(GL_LIGHT0,GL_SPECULAR,white);
+
+    glLightfv(GL_LIGHT1,GL_AMBIENT,globalAmbiente);
+    glLightfv(GL_LIGHT1,GL_DIFFUSE,white);
+    glLightfv(GL_LIGHT1,GL_SPECULAR,white);
+
     glEnable(GL_LIGHTING);
     glEnable(GL_LIGHT0);
+    glEnable(GL_LIGHT1);
 
     glEnable(GL_COLOR_MATERIAL);
     glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
@@ -277,6 +300,8 @@ void inicializa_opengl(int argc, char* argv[]){
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    CarregaTexturas();
 }
 
 void inicializa_ttf(){
@@ -536,8 +561,11 @@ void loop_jogo(){
             jogador.desenha_mascara();
         }
 
-        GLfloat position[] = { 0.0, 100.0f, 0.0f, 1.0f};
-        glLightfv(GL_LIGHT0,GL_POSITION,position);
+        GLfloat position0[] = { 0.0, 100.0f, 0.0f, 1.0f};
+        glLightfv(GL_LIGHT0,GL_POSITION,position0);
+
+        GLfloat position1[] = { 0.0, -100.0f, 0.0f, 1.0f};
+        glLightfv(GL_LIGHT1,GL_POSITION,position1);
 
         jogador.desenha_mira();
 
@@ -566,9 +594,10 @@ void loop_jogo(){
 
         // Desenha máscara da room
         room.desenha_mascara();
+        desenha_paredes();
 
         // 1) guardamos posições antigas
-        std::vector<XYZ> prevPos;
+        vector<XYZ> prevPos;
         prevPos.reserve(poligonos.size());
         for (const auto &p : poligonos) {
             prevPos.push_back({ p->getX(), p->getY(), p->getZ() });
@@ -646,8 +675,6 @@ void loop_jogo(){
                 }
             }
         }
-
-        //a.desenha_adesivo();
 
         // Controla câmera
         jogador.controle_camera(MOVE_VEL, CAMERA_SENS,dt,pause,window,game_controller,state,poligonos);

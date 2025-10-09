@@ -1,6 +1,7 @@
 // Código para Desenhos
 #include "Draw.h"
 #include "Linear.h"
+#include "Textura.h"
 #include <GL/glut.h>
 #include <cmath>
 #include <vector>
