@@ -384,6 +384,13 @@ void cria_poligonos(int n){
 
     poligonos.push_back(move(t1));
     poligonos.push_back(move(t2));
+
+    poligonos.push_back(make_unique<Cubo>(
+        0.0f, -90.0f, -20.0f,
+        2.0f, 2.0f, 2.0f,
+        make_unique<Adesivo>(0.0f, -90.0f, -18.0f, XYZ{0,0,1}),
+        2.0f
+    ));
     // poligonos.push_back(make_unique<Cubo>(0.0f,0.0f,-20.0f,make_unique<Adesivo>(0.0f,0.0f,-19.0f,{0,0,1}),2.0f));
     // poligonos.push_back(make_unique<Piramide>(10.0f,0.0f,-20.0f,make_unique<Adesivo>(10.0f,0.0f,-18.0f,{0,0,1}),4.0f,4.0f));
     // poligonos.push_back(make_unique<Esfera>(20.0f,0.0f,-20.0f,make_unique<Adesivo>(20.0f,0.0f,-19.0f,{0,0,1}),2.0f));
