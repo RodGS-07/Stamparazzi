@@ -6,11 +6,16 @@
 
 class Adesivo : public Entidade{
     private:
+        int texturaID;
         XYZ normal;
 
     public:
         Adesivo();
-        Adesivo(float ix, float iy, float iz, XYZ n);
+        Adesivo(float ix, float iy, float iz, int t, XYZ n);
+
+        int getTexturaID() const;
+
+        void setTexturaID(int t);
 
         XYZ getNormal() const;
 

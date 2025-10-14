@@ -6,10 +6,11 @@
 #include <GL/glut.h>
 #include <cmath>
 
-// const int QTDTEXT; //quantidade de texturas
-// GLuint texID[];  // Texture ID's for the three textures.
+#define QTDTEXT 23 // quantidade de texturas
 
-// char* textureFileNames[];   // file names for the files from which texture images are loaded
+extern GLuint texID[QTDTEXT]; // ID para as texturas
+
+extern const char* textureFileNames[QTDTEXT]; // nomes dos arquivos das texturas
 
 void drawSquare(XYZ s,XYZ t);
 void drawSphere(GLfloat r);

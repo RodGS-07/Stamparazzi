@@ -10,13 +10,32 @@
 
 using namespace std;
 
-const int QTDTEXT = 3; // quantidade de texturas
 GLuint texID[QTDTEXT];  // ID para as texturas
 
 const char* textureFileNames[QTDTEXT] = {   //nomes dos arquivos das texturas
     "chatgpt_chao.png",
     "chatgpt_parede.png",
-    "chatgpt_teto.png"
+    "chatgpt_teto.png",
+    "adesivo_01.png",
+    "adesivo_02.png",
+    "adesivo_03.png",
+    "adesivo_04.png",
+    "adesivo_05.png",
+    "adesivo_06.png",
+    "adesivo_07.png",
+    "adesivo_08.png",
+    "adesivo_09.png",
+    "adesivo_10.png",
+    "adesivo_11.png",
+    "adesivo_12.png",
+    "adesivo_13.png",
+    "adesivo_14.png",
+    "adesivo_15.png",
+    "adesivo_16.png",
+    "adesivo_17.png",
+    "adesivo_18.png",
+    "adesivo_19.png",
+    "adesivo_20.png"
 };
 
 void drawSquare(XYZ s,XYZ t){
@@ -79,12 +98,17 @@ void CarregaTexturas(){
 
     for(int i = 0; i < QTDTEXT;i++)
     {
+            glGenTextures(1, &texID[i]);
             glBindTexture(GL_TEXTURE_2D, texID[i]);
+            glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+            stbi_set_flip_vertically_on_load(true);
+
             // set the texture wrapping/filtering options (on the currently bound texture object)
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            
             // load and generate the texture
 
             data = stbi_load(textureFileNames[i], &width, &height, &nrChannels, 0);
