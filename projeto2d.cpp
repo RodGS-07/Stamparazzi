@@ -1,4 +1,5 @@
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_ttf.h>
 #include <iostream>
 #include <vector>
 #include <array>
@@ -13,6 +14,7 @@ using namespace std;
 SDL_Window* window;
 SDL_Renderer* renderer;
 SDL_GameController* game_controller;
+TTF_Font* fonte;
 int teste = 0;
 bool rodando = true;
 Uint32 inicio, fim;
@@ -30,7 +32,7 @@ namespace NG{ //Namespace para informações do Jogo/Game
 
 namespace NB{ //Namespace para Bounding Boxes e colisões
     struct AABB {
-        float x_min, y_min, x_max, y_max;
+        float x_min, y_min, x_len, y_len;
     };
 
     struct ABC {
@@ -42,8 +44,8 @@ namespace NB{ //Namespace para Bounding Boxes e colisões
     };
 
     bool AABBvsAABB(const AABB& a, const AABB& b) {
-        return (a.x_min <= b.x_max && a.x_max >= b.x_min) &&  // sobreposição em X
-            (a.y_min <= b.y_max && a.y_max >= b.y_min);  // sobreposição em Y
+        return (a.x_min <= b.x_min+b.x_len && a.x_min+a.x_len >= b.x_min) &&  // sobreposição em X
+            (a.y_min <= b.y_min+b.y_len && a.y_min+a.y_len >= b.y_min);  // sobreposição em Y
     }
 };
 
@@ -99,16 +101,16 @@ namespace NP{ //Namespace para Poligonos
             AABB mascara;
 
             Cubo(float ix, float iy, float l)
-            : Poligono(ix,iy,1), lado(l), mascara({ix-l,iy-l,ix+l,iy+l}) { }
+            : Poligono(ix,iy,1), lado(l), mascara({ix-l,iy-l,2*l,2*l}) { }
 
             bool colide_jogador(const AABB& s) const override {
-                AABB box = {x - lado, y - lado, x + lado, y + lado};
+                //AABB box = {x - lado, y - lado, 50, 50};
                 return AABBvsAABB(s, this->mascara);//SphereVsAABB(s,box);
             }
 
             void desenha_poligono(int cor) override {
                 SDL_SetRenderDrawColor(renderer, 255*1.0f, 255*0.0f, 255*0.0f, SDL_ALPHA_OPAQUE); // vermelho
-                SDL_Rect cubo = {(int)(x-25),(int)(y-25),50,50};
+                SDL_Rect cubo = {(int)(mascara.x_min),(int)(mascara.y_min),(int)(mascara.x_len),(int)(mascara.y_len)};
                 SDL_RenderFillRect(renderer, &cubo);
             }
     };
@@ -125,12 +127,12 @@ namespace NP{ //Namespace para Poligonos
                 float bx = ix + b/2, by = iy + h/2;  // canto direito
                 float cx = ix,       cy = iy - h/2;  // ápice
 
-                mascara = {
-                    min({ax,bx,cx}),
-                    min({ay,by,cy}),
-                    max({ax,bx,cx}),
-                    max({ay,by,cy})
-                };
+                float minx = min({ax,bx,cx});
+                float maxx = max({ax,bx,cx});
+                float miny = min({ay,by,cy});
+                float maxy = max({ay,by,cy});
+
+                mascara = {minx, miny, maxx - minx, maxy - miny};
             }
 
             bool colide_jogador(const AABB& s) const override {
@@ -155,7 +157,7 @@ namespace NP{ //Namespace para Poligonos
             AABB mascara;
 
             Circulo(float ix, float iy, float r)
-            : Poligono(ix,iy,3), raio(r), mascara({ix-r,iy-r,ix+r,iy+r}) { }
+            : Poligono(ix,iy,3), raio(r), mascara({ix-r,iy-r,2*r,2*r}) { }
 
             bool colide_jogador(const AABB& s) const override {
                 //AABB box = {x - lado, y - lado, x + lado, y + lado};
@@ -163,15 +165,14 @@ namespace NP{ //Namespace para Poligonos
             }
 
             void desenha_poligono(int cor) override {
-                SDL_SetRenderDrawColor(renderer, 255*0.0f, 255*0.0f, 255*1.0f, SDL_ALPHA_OPAQUE); // verde
+                SDL_SetRenderDrawColor(renderer, 255*0.0f, 255*0.0f, 255*1.0f, SDL_ALPHA_OPAQUE); // azu
                 // desenha um círculo simples como "pizza slice"
-                for(int w=0; w < raio*2; w++){
-                    for(int h=0; h < raio*2; h++){
-                        int dx = raio - w; // distância x ao centro
-                        int dy = raio - h; // distância y ao centro
-                        if((dx*dx + dy*dy) <= (raio*raio)){
-                            SDL_RenderDrawPoint(renderer, x + dx, y + dy);
-                        }
+                for(int w = 0; w < mascara.x_len; w++) {
+                    for(int h = 0; h < mascara.y_len; h++) {
+                        float dx = w - raio;
+                        float dy = h - raio;
+                        if(dx*dx + dy*dy <= raio*raio)
+                            SDL_RenderDrawPoint(renderer, mascara.x_min + w, mascara.y_min + h);
                     }
                 }
             }
@@ -188,27 +189,31 @@ namespace NJ{ //Namespace para o Jogador
     class Jogador : public Entidade{
         public:
             int image_xscale = 1;
-            float cx = 50, cy = 25;
+            float cx = 25, cy = 25;
             AABB mascara;
         
             Jogador(float ix, float iy)
-            : Entidade(ix,iy),  mascara({x-cx,y-cy,x+cx,y+cy}) {};
+            : Entidade(ix,iy),  mascara({x-cx,y-cy,75,50}) {};
             Jogador(){};
+
+            void atualiza_mascara() {
+                mascara = {x - cx, y - cy, 75, 50};
+            }
 
             void desenha_jogador(SDL_Renderer* renderer){
                 SDL_Color cinza = {127, 127, 127, SDL_ALPHA_OPAQUE};
-                SDL_Vertex v1 = {x+25*image_xscale,y,cinza},
-                v2 = {x+50*image_xscale,y+25,cinza},
-                v3 = {x+50*image_xscale,y-25,cinza};
+                SDL_Vertex v1 = {x+25*(image_xscale==1),y,cinza},
+                v2 = {x+50-75*(image_xscale==-1),y+25,cinza},
+                v3 = {x+50-75*(image_xscale==-1),y-25,cinza};
 
                 SDL_SetRenderDrawColor(renderer, 255*0.5f, 255*0.5f, 255*0.5f, SDL_ALPHA_OPAQUE); // cinza
-                SDL_Rect retangulo_jogador = {(int)(x-25),(int)(y-25),50,50};
+                SDL_Rect retangulo_jogador = {(int)(x-25+25*(image_xscale==-1)),(int)(y-25),50,50};
                 SDL_RenderFillRect(renderer, &retangulo_jogador);
                 vector<SDL_Vertex> vertices = {v1, v2, v3};
                 SDL_RenderGeometry(renderer,nullptr,vertices.data(),3,nullptr,3);
-                SDL_SetRenderDrawColor(renderer, 255.0f, 0.0f, 0.0f, SDL_ALPHA_OPAQUE);
-                SDL_Rect hitbox = {(int)(x-(25+25*(image_xscale==-1))),(int)(y-25),75,50};
-                SDL_RenderDrawRect(renderer, &hitbox);
+                //SDL_SetRenderDrawColor(renderer, 255.0f, 0.0f, 0.0f, SDL_ALPHA_OPAQUE);
+                //SDL_Rect hitbox = {(int)(x-25),(int)(y-25),75,50};
+                //SDL_RenderDrawRect(renderer, &hitbox);
             }
 
             bool colisaoComQualquer(const AABB& candidato){
@@ -227,7 +232,7 @@ namespace NJ{ //Namespace para o Jogador
                     const Uint8* state = SDL_GetKeyboardState(NULL);
                     if(state[SDL_SCANCODE_UP]   && this->y - move_vel >= 25) dy -= move_vel * dt;
                     if(state[SDL_SCANCODE_DOWN] && this->y + move_vel <= 575) dy += move_vel * dt;
-                    if(state[SDL_SCANCODE_LEFT] && this->x - move_vel >= 50){ dx -= move_vel * dt; image_xscale = -1; }
+                    if(state[SDL_SCANCODE_LEFT] && this->x - move_vel >= 25){ dx -= move_vel * dt; image_xscale = -1; }
                     if(state[SDL_SCANCODE_RIGHT]&& this->x + move_vel <= 750){ dx += move_vel * dt; image_xscale = 1; }
                 }
                 // controle
@@ -239,7 +244,7 @@ namespace NJ{ //Namespace para o Jogador
                 }
 
                 // tenta mover nos dois eixos
-                AABB candidato = {x - cx + dx, y - cy + dy, x + cx + dx, y + cy + dy};
+                AABB candidato = {x - cx + dx, y - cy + dy, 75, 50};
                 if(!colisaoComQualquer(candidato)){
                     x += dx; y += dy;
                     mascara = candidato;
@@ -247,7 +252,7 @@ namespace NJ{ //Namespace para o Jogador
                 }
 
                 // tenta só no eixo X
-                candidato = {x - cx + dx, y - cy, x + cx + dx, y + cy};
+                candidato = {x - cx + dx, y - cy, 75, 50};
                 if(!colisaoComQualquer(candidato)){
                     x += dx;
                     mascara = candidato;
@@ -255,7 +260,7 @@ namespace NJ{ //Namespace para o Jogador
                 }
 
                 // tenta só no eixo Y
-                candidato = {x - cx, y - cy + dy, x + cx, y + cy + dy};
+                candidato = {x - cx, y - cy + dy, 75, 50};
                 if(!colisaoComQualquer(candidato)){
                     y += dy;
                     mascara = candidato;
@@ -292,6 +297,17 @@ void inicializa_sdl(){
         cerr << "Erro ao criar renderizador: " << SDL_GetError() << endl;
         if(window) SDL_DestroyWindow(window);
         SDL_Quit();
+        teste = -1;
+    }
+
+    if (TTF_Init() < 0) {
+        cerr << "Erro ao inicializar TTF: " << TTF_GetError() << endl;
+        teste = -1;
+    }
+
+    fonte = TTF_OpenFont("arial.ttf", 12); // precisa de um .ttf na mesma pasta
+    if (!fonte) {
+        std::cerr << "Erro ao carregar fonte: " << TTF_GetError() << std::endl;
         teste = -1;
     }
 
