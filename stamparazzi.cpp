@@ -398,9 +398,8 @@ void cria_poligonos(int n){
 }
 
 void define_objetivos(int n) {
-    objetivos.insert(1);
-    objetivos.insert(3);
-    objetivos.insert(6);
+    while(objetivos.size() < n)
+        objetivos.insert((rand() % (8 - 1 + 1)) + 1);
 }
 
 void ajustaProjecao(int largura, int altura) {
@@ -472,6 +471,9 @@ void loop_jogo(){
         inicio = fim;
 
         atualiza_timer(dt);
+        if(!timer) {rodando = false; cout << "Seu tempo acabou!" << endl; break;}
+
+        if(!objetivos.size()) {rodando = false; cout << "Voce venceu!" << endl; break;}
         atualiza_objetivos();
 
         while (SDL_PollEvent(&evento)) {
@@ -577,9 +579,15 @@ void loop_jogo(){
             glRotatef(-jogador.getCamYaw(), 0.0, 1.0, 0.0);
             glTranslatef(-(jogador.getX()),-(jogador.getY()),-(jogador.getZ()));        
         } else {
-            gluLookAt(jogador.getX(),jogador.getY()+5.0f,jogador.getZ()+25.0f,
-                jogador.getX(),jogador.getY(),jogador.getZ(),
-                0.0f,1.0f,0.0f);
+            if(jogador.getZ()+25.0f < 100.0f) {
+                gluLookAt(jogador.getX(),jogador.getY()+5.0f,jogador.getZ()+25.0f,
+                    jogador.getX(),jogador.getY(),jogador.getZ(),
+                    0.0f,1.0f,0.0f);
+            } else {
+                gluLookAt(jogador.getX(),jogador.getY()+5.0f,100.0f,
+                    jogador.getX(),jogador.getY(),jogador.getZ(),
+                    0.0f,1.0f,0.0f);
+            }
             jogador.desenha_mascara();
         }
 
@@ -761,7 +769,7 @@ int main(int argc, char* argv[]) {
 
     cria_poligonos(7);
 
-    define_objetivos(3);
+    define_objetivos(rand() % (8 - 1 + 1) + 1);
 
     loop_jogo();
 
