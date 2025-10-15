@@ -8,6 +8,10 @@ Adesivo::Adesivo() : Entidade(), normal({0.0f,0.0f,1.0f}) {}
 Adesivo::Adesivo(float ix, float iy, float iz, int t, XYZ n)
 : Entidade(ix, iy, iz), texturaID(3+t), normal(n) {}
 
+bool Adesivo::operator<(const Adesivo& outro) const {
+    return this->texturaID < outro.getTexturaID();
+}
+
 int Adesivo::getTexturaID() const {return this->texturaID;}
 
 void Adesivo::setTexturaID(int t) {texturaID = t+3;}

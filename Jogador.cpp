@@ -9,6 +9,7 @@
 #include <SDL2/SDL.h>
 #include <vector>
 #include <memory>
+#include <set>
 #include <iostream>
 
 #define XBOUNDS 100.0f
@@ -406,7 +407,7 @@ bool Jogador::detecta_adesivo(const Adesivo& a, const vector<unique_ptr<Poligono
     return frente and grau <= 20.0f and distancia_entidades(*this,a) <= 30.0f;
 }
 
-void Jogador::tirou_foto(const Adesivo& a, float dt, float& flash_alpha, bool& flash_ativo, const vector<unique_ptr<Poligono>>& poligonos){
+void Jogador::tirou_foto(const Adesivo& a, float dt, float& flash_alpha, bool& flash_ativo, const vector<unique_ptr<Poligono>>& poligonos,set<int>& objetivos){
     if (flash_ativo and detecta_adesivo(a,poligonos)) {
         glDisable(GL_DEPTH_TEST);
         glMatrixMode(GL_PROJECTION);
@@ -438,6 +439,13 @@ void Jogador::tirou_foto(const Adesivo& a, float dt, float& flash_alpha, bool& f
         glPopMatrix();
         glMatrixMode(GL_MODELVIEW);
         glEnable(GL_DEPTH_TEST);
+
+        for (auto it = objetivos.begin(); it != objetivos.end(); it++) {
+            if ((*it) == a.getTexturaID() - 2) {
+                objetivos.erase(it);
+                break;
+            }
+        }
     }
 
     if (flash_ativo) {

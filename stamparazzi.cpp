@@ -15,6 +15,7 @@
 #include <iostream>
 #include <math.h>
 #include <vector>
+#include <set>
 #include <memory>
 #include <algorithm>
 #include <typeinfo>
@@ -45,8 +46,8 @@ bool rodando = true;
 Uint32 inicio, fim;
 float dt;
 const Uint8* state;
-GLuint texturaTexto = 0;
-int larguraTexto = 0, alturaTexto = 0;
+GLuint texturaTexto1 = 0, texturaTexto2 = 0;
+int larguraTexto1 = 0, larguraTexto2 = 0, alturaTexto1 = 0, alturaTexto2 = 0;
 
 SDL_Window* window;
 SDL_Renderer* renderer;
@@ -108,6 +109,7 @@ namespace NC{ //Namespace para Controles e Comandos
 
 vector<unique_ptr<Poligono>> poligonos;
 vector<unique_ptr<Poligono>> limites;
+set<int> objetivos;
 //Cubo room (0.0f,0.0f,0.0f,nullptr,100.0f);
 //Cubo chao (0.0f,0.0f,0.0f,100.0f,0.1f,100.0f,nullptr,1.0f);
 
@@ -139,29 +141,6 @@ GLuint criaTexturaDoTexto(const char* texto, TTF_Font* fonte, SDL_Color cor, int
 
     SDL_FreeSurface(formattedSurface);
     return texturaID;
-    // SDL_Surface* surface = TTF_RenderText_Blended(fonte, texto, cor);
-    // if (!surface) {
-    //     std::cerr << "Erro ao renderizar texto: " << TTF_GetError() << std::endl;
-    //     return 0;
-    // }
-
-    // largura = surface->w;
-    // altura = surface->h;
-
-    // GLuint texturaID;
-    // glGenTextures(1, &texturaID);
-    // glBindTexture(GL_TEXTURE_2D, texturaID);
-
-    // // Define parâmetros da textura
-    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    // // Cria a textura no OpenGL (sempre usar GL_RGBA para preservar transparência)
-    // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, surface->w, surface->h,
-    //              0, GL_BGRA, GL_UNSIGNED_BYTE, surface->pixels);
-
-    // SDL_FreeSurface(surface);
-    // return texturaID;
 }
 
 void desenhaTexto(GLuint textura, int x, int y, int largura, int altura) {
@@ -327,7 +306,15 @@ void inicializa_ttf(){
 
     string str = oss.str();
     const char* texto = str.c_str();
-    texturaTexto = criaTexturaDoTexto(texto, fonte, preto, larguraTexto, alturaTexto);
+    texturaTexto1 = criaTexturaDoTexto(texto, fonte, preto, larguraTexto1, alturaTexto1);
+
+    oss << "Adesivos faltando: ";
+    for(int n : objetivos) {
+        oss << n << " ";
+    }
+    str = oss.str();
+    texto = str.c_str();
+    texturaTexto2 = criaTexturaDoTexto(texto, fonte, preto, larguraTexto2, alturaTexto2);
 }
 
 void cria_poligonos(int n){
@@ -410,6 +397,12 @@ void cria_poligonos(int n){
     }*/
 }
 
+void define_objetivos(int n) {
+    objetivos.insert(1);
+    objetivos.insert(3);
+    objetivos.insert(6);
+}
+
 void ajustaProjecao(int largura, int altura) {
     if (altura == 0) altura = 1; // evita divisão por zero
     float aspect = (float)largura / (float)altura;
@@ -421,7 +414,7 @@ void ajustaProjecao(int largura, int altura) {
     glMatrixMode(GL_MODELVIEW);
 }
 
-void atualizaTexto(const string& texto){
+void atualizaTexto(const string& texto, GLuint& texturaTexto, int& larguraTexto, int& alturaTexto){
     if (texturaTexto) {
         glDeleteTextures(1, &texturaTexto); // libera a textura antiga
         texturaTexto = 0;
@@ -445,10 +438,21 @@ void atualiza_timer(float dt){
                 << minutos << ":" << std::setw(2) << std::setfill('0') << segundos;
 
                 string str = oss.str();
-                atualizaTexto(str);
+                atualizaTexto(str,texturaTexto1,larguraTexto1,alturaTexto1);
             }
         }
     }
+}
+
+void atualiza_objetivos() {
+    ostringstream oss;
+    oss << "Adesivos faltando: ";
+    for(int n : objetivos) {
+        oss << n << " ";
+    }
+
+    string str = oss.str();
+    atualizaTexto(str,texturaTexto2,larguraTexto2,alturaTexto2);
 }
 
 void loop_jogo(){
@@ -468,6 +472,7 @@ void loop_jogo(){
         inicio = fim;
 
         atualiza_timer(dt);
+        atualiza_objetivos();
 
         while (SDL_PollEvent(&evento)) {
             if (evento.type == SDL_QUIT) {
@@ -561,9 +566,11 @@ void loop_jogo(){
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glLoadIdentity();
 
-        // desenha texto (posição x=50, y=50)
-        if(texturaTexto)
-            desenhaTexto(texturaTexto, 50, 50, larguraTexto, alturaTexto);
+        // desenha texto
+        if(texturaTexto1 and texturaTexto2) {
+            desenhaTexto(texturaTexto1, 50, 50, larguraTexto1, alturaTexto1);
+            desenhaTexto(texturaTexto2, 50, 100, larguraTexto2, alturaTexto2);
+        }
 
         if(primeira_pessoa) {
             glRotatef(-jogador.getCamPitch(), 1.0, 0.0, 0.0); 
@@ -715,7 +722,7 @@ void loop_jogo(){
                     marcax(p->getX(),p->getY(),p->getZ(),jogador.getCamYaw(),jogador.getCamPitch());
                     glEnable(GL_DEPTH_TEST);    // reativa para os próximos frames
                 }
-                jogador.tirou_foto(a,dt,flash_alpha,flash_ativo,poligonos);
+                jogador.tirou_foto(a,dt,flash_alpha,flash_ativo,poligonos,objetivos);
             }  
         }
         
@@ -731,7 +738,7 @@ void finaliza_sdl(){
         SDL_GameControllerClose(game_controller);
         game_controller = NULL;
     }
-    glDeleteTextures(1, &texturaTexto);
+    glDeleteTextures(1, &texturaTexto1);
     TTF_CloseFont(fonte);
     TTF_Quit();
     SDL_GL_DeleteContext(glContext);
@@ -753,6 +760,8 @@ int main(int argc, char* argv[]) {
 	SDL_ShowCursor(SDL_ENABLE);
 
     cria_poligonos(7);
+
+    define_objetivos(3);
 
     loop_jogo();
 

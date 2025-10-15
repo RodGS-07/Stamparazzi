@@ -13,6 +13,8 @@ class Adesivo : public Entidade{
         Adesivo();
         Adesivo(float ix, float iy, float iz, int t, XYZ n);
 
+        bool operator<(const Adesivo& outro) const;
+
         int getTexturaID() const;
 
         void setTexturaID(int t);
