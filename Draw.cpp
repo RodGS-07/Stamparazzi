@@ -12,8 +12,9 @@ void muda_cor(int c){
     glColor3f(cores[c][0],cores[c][1],cores[c][2]);
 }
 
-void desenha_cubo(float lado) {
+void desenha_cubo(float lado, int id) {
     XYZ normal;
+
     glBegin(GL_QUADS);
 
     normal = Normal({-lado,-lado,lado},{lado,-lado,lado},{lado,lado,lado});
@@ -59,9 +60,31 @@ void desenha_cubo(float lado) {
     glVertex3f(-lado, -lado,  lado);
 
     glEnd();
+
+    glEnable(GL_POLYGON_OFFSET_FILL);
+    glPolygonOffset(-1.0f, -1.0f);
+
+    float adesivoTamanho = lado * 0.3f; // 30% da face
+    float offset = lado + 0.01f;       // ligeiramente à frente da face
+
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, texID[id]);
+
+    glColor4f(1, 1, 1, 1); // mantém as cores originais da textura
+
+    glBegin(GL_QUADS);
+        glTexCoord2f(0, 0); glVertex3f(-adesivoTamanho, -adesivoTamanho, offset);
+        glTexCoord2f(1, 0); glVertex3f( adesivoTamanho, -adesivoTamanho, offset);
+        glTexCoord2f(1, 1); glVertex3f( adesivoTamanho,  adesivoTamanho, offset);
+        glTexCoord2f(0, 1); glVertex3f(-adesivoTamanho,  adesivoTamanho, offset);
+    glEnd();
+
+    glDisable(GL_TEXTURE_2D);
+
+    glDisable(GL_POLYGON_OFFSET_FILL);
 }
 
-void desenha_piramide(float base, float altura){
+void desenha_piramide(float base, float altura, int id){
     XYZ normal;
     float h = altura;
     float b = base / 2.0f; // metade do tamanho da base
@@ -106,9 +129,31 @@ void desenha_piramide(float base, float altura){
         glVertex3f(-b, -b,  b);
         glVertex3f( 0.0f,  h-b , 0.0f);
     glEnd();
+
+    glDisable(GL_TEXTURE_2D);
+
+    glEnable(GL_POLYGON_OFFSET_FILL);
+    glPolygonOffset(-1.0f, -1.0f);
+
+    float offset = 0.001f;                // leve afastamento da superfície
+
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, texID[id]);
+
+    glColor4f(1, 1, 1, 1);
+
+    glBegin(GL_TRIANGLES);
+        glTexCoord2f(0, 0); glVertex3f(-(b/2) * 0.5f, (-b + offset) * 0.25f,  b*0.65f);
+        glTexCoord2f(1, 0); glVertex3f( (b/2) * 0.5f, (-b + offset) * 0.25f,  b*0.65f);
+        glTexCoord2f(0.5, 1); glVertex3f( 0,  (h*0.4f) * 0.15f,      b*0.4375f);
+    glEnd();
+
+    glDisable(GL_TEXTURE_2D);
+
+    glDisable(GL_POLYGON_OFFSET_FILL);
 }
 
-void desenha_esfera(float raio, int fatias, int stacks){
+void desenha_esfera(float raio, int fatias, int stacks, int id){
     for (int i = 0; i < stacks; ++i) {
         float phi1 = M_PI / 2 - i * (M_PI / stacks);
         float phi2 = M_PI / 2 - (i + 1) * (M_PI / stacks);
@@ -147,9 +192,54 @@ void desenha_esfera(float raio, int fatias, int stacks){
         }
         glEnd();
     }
+
+    glEnable(GL_POLYGON_OFFSET_FILL);
+    glPolygonOffset(-1.0f, -1.0f);
+
+    float adesivoRaio = raio * 1.001f; // ligeiramente menor (pra evitar z-fighting)
+    float adesivoAngulo = M_PI / 6;    // “tamanho” angular do adesivo (~30°)
+    float fatiasAdesivo = 20;          // resolução do adesivo
+
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, texID[id]);
+
+    glColor4f(1, 1, 1, 1);
+
+    for (int i = 0; i < fatiasAdesivo; ++i) {
+        float phi1 = -adesivoAngulo / 2 + i * (adesivoAngulo / fatiasAdesivo);
+        float phi2 = -adesivoAngulo / 2 + (i + 1) * (adesivoAngulo / fatiasAdesivo);
+
+        glBegin(GL_QUAD_STRIP);
+        for (int j = 0; j <= fatiasAdesivo; ++j) {
+            float theta = -adesivoAngulo / 2 + j * (adesivoAngulo / fatiasAdesivo);
+
+            // Ponto da “fileira” superior
+            float x1 = adesivoRaio * cos(phi2) * sin(theta);
+            float y1 = adesivoRaio * sin(phi2);
+            float z1 = adesivoRaio * cos(phi2) * cos(theta);
+
+            // Ponto da “fileira” inferior
+            float x2 = adesivoRaio * cos(phi1) * sin(theta);
+            float y2 = adesivoRaio * sin(phi1);
+            float z2 = adesivoRaio * cos(phi1) * cos(theta);
+
+            // Coordenadas de textura proporcionais
+            float u = (theta + adesivoAngulo / 2) / adesivoAngulo;
+            float v1 = (phi2 + adesivoAngulo / 2) / adesivoAngulo;
+            float v2 = (phi1 + adesivoAngulo / 2) / adesivoAngulo;
+
+            glTexCoord2f(u, v1); glVertex3f(x1, y1, z1);
+            glTexCoord2f(u, v2); glVertex3f(x2, y2, z2);
+        }
+        glEnd();
+    }
+
+    glDisable(GL_TEXTURE_2D);
+
+    glDisable(GL_POLYGON_OFFSET_FILL);
 }
 
-void desenha_cilindro(float raio, float altura, int fatias, int stacks, bool tampas){
+void desenha_cilindro(float raio, float altura, int fatias, int stacks, bool tampas, int id){
     float half = altura / 2.0f;
     XYZ normal;
 
@@ -202,10 +292,44 @@ void desenha_cilindro(float raio, float altura, int fatias, int stacks, bool tam
             glVertex3f(x, y, half);
         }
         glEnd();
+
+        glEnable(GL_POLYGON_OFFSET_FILL);
+        glPolygonOffset(-1.0f, -1.0f);
+        // --- Adesivo na tampa superior ---
+        float adesivoRaio = raio * 0.4f; // menor que o raio da tampa
+        float offset = half + 0.01f;    // um pouquinho acima da tampa
+
+        glEnable(GL_TEXTURE_2D);
+        glBindTexture(GL_TEXTURE_2D, texID[id]);
+
+        glColor4f(1, 1, 1, 1); // mantém a cor da textura
+
+        glBegin(GL_TRIANGLE_FAN);
+            glNormal3f(0, 0, 1);
+            glTexCoord2f(0.5f, 0.5f); // centro da textura
+            glVertex3f(0, 0, offset);
+
+            for (int j = 0; j <= fatias; ++j) {
+                float theta = j * (2 * M_PI / fatias);
+                float x = adesivoRaio * cos(theta);
+                float y = adesivoRaio * sin(theta);
+
+                // Mapeamento da textura de forma circular
+                float u = 0.5f + 0.5f * cos(theta);
+                float v = 0.5f + 0.5f * sin(theta);
+
+                glTexCoord2f(u, v);
+                glVertex3f(x, y, offset);
+            }
+        glEnd();
+
+        glDisable(GL_TEXTURE_2D);
+
+        glDisable(GL_POLYGON_OFFSET_FILL);
     }
 }
 
-void desenha_cone(float raio, float altura, int fatias){
+void desenha_cone(float raio, float altura, int fatias, int id){
     float half = altura / 2.0f;
     XYZ normal;
 
@@ -259,9 +383,61 @@ void desenha_cone(float raio, float altura, int fatias){
         glVertex3f(x, y, -half);
     }
     glEnd();
+
+    glEnable(GL_POLYGON_OFFSET_FILL);
+    glPolygonOffset(-1.0f, -1.0f);
+    // ---------------- Adesivo na lateral ----------------
+    // O adesivo será colado no lado "frontal" do cone (direção +Z)
+    float adesivoAltura = altura * 0.3f;  // fração da altura
+    float adesivoLargura = raio * 0.8f;   // fração da largura
+    float zOffset = half - adesivoAltura * 0.8f; // mais próximo do ápice
+    float rOffset = raio * 0.98f;         // quase colado à lateral
+
+    // Calcula ângulo médio da frente (+Z)
+    float theta = 0.0f; // direção frontal (Z positivo)
+    float xDir = rOffset * sin(theta);
+    float yDir = rOffset * cos(theta);
+
+    // Posição média do adesivo na superfície
+    float adesivoZ = -half + adesivoAltura * 0.5f;
+
+    // Configura textura
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, texID[id]);
+
+    glColor4f(1, 1, 1, 1); // mantém cores da textura
+
+    // Coloca o adesivo orientado tangente à superfície
+    glPushMatrix();
+        // Move o adesivo até a posição na lateral do cone
+        glTranslatef(xDir, yDir - 0.26f, adesivoZ);
+
+        // Calcula ângulo de inclinação da superfície do cone
+        float slopeAngle = 63.75f; //atan(raio / altura) * 180.0f / M_PI + 36.5f;
+
+        // Rotaciona o adesivo para acompanhar a inclinação do cone
+        glRotatef(-slopeAngle, 1, 0, 0);
+
+        // Rotaciona para ficar de frente (+Z)
+        //glRotatef(90, 0, 1, 0);
+
+        float s = adesivoLargura * 0.5f;
+        float h = adesivoAltura * 0.5f;
+
+        glBegin(GL_QUADS);
+            glTexCoord2f(0, 0); glVertex3f(-s, -h, 0);
+            glTexCoord2f(1, 0); glVertex3f( s, -h, 0);
+            glTexCoord2f(1, 1); glVertex3f( s,  h, 0);
+            glTexCoord2f(0, 1); glVertex3f(-s,  h, 0);
+        glEnd();
+    glPopMatrix();
+
+    glDisable(GL_TEXTURE_2D);
+
+    glDisable(GL_POLYGON_OFFSET_FILL);
 }
 
-void desenha_torus(float R, float r, int fatias, int stacks){
+void desenha_torus(float R, float r, int fatias, int stacks, int id){
     vector<vector<float>> mat(3,vector<float> (3));
     for (int i = 0; i < stacks; ++i) {
         float phi1 = i * (2 * M_PI / stacks);
@@ -303,6 +479,48 @@ void desenha_torus(float R, float r, int fatias, int stacks){
         }
         glEnd();
     }
+
+    glEnable(GL_POLYGON_OFFSET_FILL);
+    glPolygonOffset(-1.0f, -1.0f);
+    // ---------- Define posição e lado do adesivo ----------
+    bool ladoDireito = 1; // 1 = direito
+
+    float angulo = ladoDireito ? M_PI / 2 : -M_PI / 2; // +90° ou -90°
+    float xAdesivo = R * cos(angulo);
+    float yAdesivo = R * sin(angulo);
+    float zAdesivo = 0.0f;
+
+    float offset = 0.002f; // evita z-fighting
+    float tamanho = r * 1.2f; // tamanho relativo do adesivo
+
+    // ---------- Desenha o adesivo ----------
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, texID[id]);
+
+    glColor4f(1, 1, 1, 1);
+
+    glPushMatrix();
+        // Move até o ponto da lateral (esquerda ou direita)
+        //glTranslatef(xAdesivo, yAdesivo, zAdesivo);
+
+        // Rotaciona o adesivo para ficar tangente à superfície
+        //glRotatef(ladoDireito ? 90 : -90, 0, 0, 1); // orienta o plano
+        //glRotatef(90, 0, 1, 0);                     // vira para o lado externo
+
+        glTranslatef(0, R, r + offset); // move ligeiramente para fora
+
+        float s = tamanho * 0.5f;
+        glBegin(GL_QUADS);
+            glTexCoord2f(0, 0); glVertex3f(-s, -s, 0);
+            glTexCoord2f(1, 0); glVertex3f( s, -s, 0);
+            glTexCoord2f(1, 1); glVertex3f( s,  s, 0);
+            glTexCoord2f(0, 1); glVertex3f(-s,  s, 0);
+        glEnd();
+    glPopMatrix();
+
+    glDisable(GL_TEXTURE_2D);
+
+    glDisable(GL_POLYGON_OFFSET_FILL);
 }
 
 void desenha_superficie(int formato){

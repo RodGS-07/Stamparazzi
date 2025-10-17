@@ -33,7 +33,7 @@
 using namespace std;
 
 int teste = 0;
-int timer = 60;
+int timer = 180;
 int minutos = timer / 60;
 int segundos = timer % 60;
 bool mouse_in = false;
@@ -326,43 +326,43 @@ void cria_poligonos(int n){
 
     poligonos.push_back(make_unique<Cubo>(
         0.0f, 0.0f, -20.0f,
-        make_unique<Adesivo>(0.0f, 0.0f, -19.0f, 0, XYZ{0,0,1}),
+        make_unique<Adesivo>(0.0f, 0.0f, -20.0f, 0, XYZ{0,0,1}),
         2.0f
     ));
 
     poligonos.push_back(make_unique<Piramide>(
         10.0f, 0.0f, -20.0f,
-        make_unique<Adesivo>(10.0f, 0.0f, -18.0f, 1, XYZ{0,0,1}),
+        make_unique<Adesivo>(10.0f, 0.0f, -20.0f, 1, XYZ{0,0,1}),
         4.0f, 4.0f
     ));
 
     poligonos.push_back(make_unique<Esfera>(
         20.0f, 0.0f, -20.0f,
-        make_unique<Adesivo>(20.0f, 0.0f, -19.0f, 2, XYZ{0,0,1}),
+        make_unique<Adesivo>(20.0f, 0.0f, -20.0f, 2, XYZ{0,0,1}),
         2.0f
     ));
 
     poligonos.push_back(make_unique<Cilindro>(
         30.0f, 0.0f, -30.0f,
-        make_unique<Adesivo>(30.0f, 0.0f, -28.0f, 3, XYZ{0,0,1}),
+        make_unique<Adesivo>(30.0f, 0.0f, -30.0f, 3, XYZ{0,0,1}),
         2.0f, 4.0f
     ));
 
     poligonos.push_back(make_unique<Cone>(
         40.0f, 0.0f, -20.0f,
-        make_unique<Adesivo>(40.0f, 0.0f, -18.0f, 4, XYZ{0,0,1}),
+        make_unique<Adesivo>(40.0f, 0.0f, -20.0f, 4, XYZ{0,0,1}),
         2.0f, 4.0f
     ));
 
     auto t1 = make_unique<Torus>(
         -20, -98.5, 0,
-        make_unique<Adesivo>(-20.0f, -98.5f, 1.5f, 5, XYZ{0,0,1}),
+        make_unique<Adesivo>(-20, -98.5, 0, 5, XYZ{0,0,1}),
         1.0f, 3.0f
     );
 
     auto t2 = make_unique<Torus>(
         20, 1.5, 0,
-        make_unique<Adesivo>(20.0f, 1.5f, 1.5f, 6, XYZ{0,0,1}),
+        make_unique<Adesivo>(20, 1.5, 0, 6, XYZ{0,0,1}),
         1.0f, 3.0f
     );
 
@@ -375,7 +375,7 @@ void cria_poligonos(int n){
     poligonos.push_back(make_unique<Cubo>(
         0.0f, -90.0f, -20.0f,
         2.0f, 2.0f, 2.0f,
-        make_unique<Adesivo>(0.0f, -90.0f, -18.0f, 7, XYZ{0,0,1}),
+        make_unique<Adesivo>(0.0f, -90.0f, -20.0f, 7, XYZ{0,0,1}),
         2.0f
     ));
     // poligonos.push_back(make_unique<Cubo>(0.0f,0.0f,-20.0f,make_unique<Adesivo>(0.0f,0.0f,-19.0f,{0,0,1}),2.0f));

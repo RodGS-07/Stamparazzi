@@ -89,14 +89,14 @@ void Cubo::desenha_poligono(int cor, bool pause) {
     glPushMatrix();
     glTranslatef(this->getX(), this->getY(), this->getZ());
     // aqui `lado` é tratado como meio-extent (compatível com sua desenha_cubo)
-    desenha_cubo(this->lado);
+    desenha_cubo(this->lado,this->getAdesivo()->getTexturaID());
     // Desenha adesivo colado na face +Z
-    if (this->getAdesivo()) {
-        glPushMatrix();
-        glTranslatef(0.0f, 0.0f, this->getLado()/2.0f + 0.01f);
-        desenha_adesivo_no_poligono(*this->getAdesivo(), this->getLado());
-        glPopMatrix();
-    }
+    // if (this->getAdesivo()) {
+    //     glPushMatrix();
+    //     glTranslatef(0.0f, 0.0f, this->getLado()/2.0f + 0.01f);
+    //     desenha_adesivo_no_poligono(*this->getAdesivo(), this->getLado());
+    //     glPopMatrix();
+    // }
     glPopMatrix();
 }
 
@@ -211,18 +211,18 @@ void Piramide::desenha_poligono(int cor, bool pause) {
     if(cor >= 0 and cor <= 12) muda_cor(cor);
     glPushMatrix();
     glTranslatef(this->getX(), this->getY(), this->getZ());
-    desenha_piramide(this->base, this->altura);
-    if(this->getAdesivo()){
-        glPushMatrix();
-        glTranslatef(0.0f, this->getAltura()/2.0f, 1.0f);
+    desenha_piramide(this->base, this->altura,this->getAdesivo()->getTexturaID());
+    // if(this->getAdesivo()){
+    //     glPushMatrix();
+    //     glTranslatef(0.0f, this->getAltura()/2.0f, 1.0f);
 
-        // Exemplo: adesivo na base
-        //glTranslatef(0.0f, getAltura() / 2.0f, 0.0f);
+    //     // Exemplo: adesivo na base
+    //     //glTranslatef(0.0f, getAltura() / 2.0f, 0.0f);
 
-        //Adesivo adesivo(0,0,0,{1,1,1}); 
-        desenha_adesivo_no_poligono(*this->getAdesivo(), this->getAltura()/2.0f + 0.01f);
-        glPopMatrix();
-    }
+    //     //Adesivo adesivo(0,0,0,{1,1,1}); 
+    //     desenha_adesivo_no_poligono(*this->getAdesivo(), this->getAltura()/2.0f + 0.01f);
+    //     glPopMatrix();
+    // }
     glPopMatrix();
 }
 
@@ -353,13 +353,13 @@ void Esfera::desenha_poligono(int cor, bool pause) {
     if(cor >= 0 and cor <= 12) muda_cor(cor);
     glPushMatrix();
     glTranslatef(this->getX(), this->getY(), this->getZ());
-    desenha_esfera(this->raio, 30, 30);
-    if(this->getAdesivo()){
-        glPushMatrix();
-        glTranslatef(0.0f, 0.0f, this->getRaio()/2.0f + 0.01f);
-        desenha_adesivo_no_poligono(*this->getAdesivo(), this->getRaio() + 0.01f);
-        glPopMatrix();
-    }
+    desenha_esfera(this->raio, 30, 30, this->getAdesivo()->getTexturaID());
+    // if(this->getAdesivo()){
+    //     glPushMatrix();
+    //     glTranslatef(0.0f, 0.0f, this->getRaio()/2.0f + 0.01f);
+    //     desenha_adesivo_no_poligono(*this->getAdesivo(), this->getRaio() + 0.01f);
+    //     glPopMatrix();
+    // }
     glPopMatrix();
 }
 
@@ -503,18 +503,18 @@ void Cilindro::desenha_poligono(int cor, bool pause) {
     if(cor >= 0 and cor <= 12) muda_cor(cor);
     glPushMatrix();
     glTranslatef(this->getX(), this->getY(), this->getZ());
-    if(!pause) glRotatef(ang,0,0,1);
-    desenha_cilindro(this->raio, this->altura, 30, 30, true);
-    if(this->getAdesivo()){
-        glPushMatrix();
-        glTranslatef(0.0f, 0.0f, this->getAltura()/2.0f + 0.01f);
+    /*if(!pause)*/ glRotatef(ang,0,0,1);
+    desenha_cilindro(this->raio, this->altura, 30, 30, true, this->getAdesivo()->getTexturaID());
+    // if(this->getAdesivo()){
+    //     glPushMatrix();
+    //     glTranslatef(0.0f, 0.0f, this->getAltura()/2.0f + 0.01f);
 
-        auto n = this->getAdesivo()->getNormal();
-        float offset = (fabs(n.y) > 0) ? this->getAltura()/2.0f : this->getRaio();
-        desenha_adesivo_no_poligono(*this->getAdesivo(), offset + 0.01f);
+    //     auto n = this->getAdesivo()->getNormal();
+    //     float offset = (fabs(n.y) > 0) ? this->getAltura()/2.0f : this->getRaio();
+    //     desenha_adesivo_no_poligono(*this->getAdesivo(), offset + 0.01f);
 
-        glPopMatrix();
-    }
+    //     glPopMatrix();
+    // }
     glPopMatrix();
 }
 
@@ -669,17 +669,17 @@ void Cone::desenha_poligono(int cor, bool pause) {
 
         glTranslatef(this->getX(), this->getY(), this->getZ());
         glRotatef(ang,0,1,0);
-        desenha_cone(this->raio, this->altura, 30);
-        if(this->getAdesivo()){
-            glPushMatrix();
-            glTranslatef(0.0f, this->getAltura()/2.0f+0.01f, 0.0f);
+        desenha_cone(this->raio, this->altura, 30, this->getAdesivo()->getTexturaID());
+        // if(this->getAdesivo()){
+        //     glPushMatrix();
+        //     glTranslatef(0.0f, this->getAltura()/2.0f+0.01f, 0.0f);
 
-            auto n = this->getAdesivo()->getNormal();
-            float offset = (fabs(n.y) > 0) ? this->getAltura()/2.0f : this->getRaio();
-            desenha_adesivo_no_poligono(*this->getAdesivo(), offset + 0.01f);
+        //     auto n = this->getAdesivo()->getNormal();
+        //     float offset = (fabs(n.y) > 0) ? this->getAltura()/2.0f : this->getRaio();
+        //     desenha_adesivo_no_poligono(*this->getAdesivo(), offset + 0.01f);
 
-            glPopMatrix();
-        }
+        //     glPopMatrix();
+        // }
 
     glPopMatrix();
 }
@@ -832,20 +832,20 @@ void Torus::desenha_poligono(int cor, bool pause) {
     if(cor >= 0 and cor <= 12) muda_cor(cor);
     glPushMatrix();
     glTranslatef(p.c.x, p.c.y, p.c.z);
-    desenha_torus(p.raio_maior, p.raio_menor, 40, 40);
-    if(this->getAdesivo()){
-        glPushMatrix();
-        //glTranslatef(getX(), getY(), getZ());
+    desenha_torus(p.raio_maior, p.raio_menor, 40, 40, this->getAdesivo()->getTexturaID());
+    // if(this->getAdesivo()){
+    //     glPushMatrix();
+    //     //glTranslatef(getX(), getY(), getZ());
 
-        float offset = (this->p.raio_menor + this->p.raio_maior) / 2.0f;
+    //     float offset = (this->p.raio_menor + this->p.raio_maior) / 2.0f;
 
-        // Cola o adesivo no lado "frontal"
-        glTranslatef(0.0f, 0.0f, offset);
+    //     // Cola o adesivo no lado "frontal"
+    //     glTranslatef(0.0f, 0.0f, offset);
 
-        //Adesivo adesivo(0,0,0,{1,1,1}); 
-        desenha_adesivo_no_poligono(*this->getAdesivo(),offset);
-        glPopMatrix();
-    }
+    //     //Adesivo adesivo(0,0,0,{1,1,1}); 
+    //     desenha_adesivo_no_poligono(*this->getAdesivo(),offset);
+    //     glPopMatrix();
+    // }
     glPopMatrix();
 }
 

@@ -29,12 +29,12 @@ const float cores[13][3] = {
     {0.0f,0.0f,0.0f} /*preto*/ };
 
 void muda_cor(int c);
-void desenha_cubo(float lado = 2.0f);
-void desenha_piramide(float base = 4.0f, float altura = 4.0f);
-void desenha_esfera(float raio = 2.0f, int fatias = 30, int stacks = 30);
-void desenha_cilindro(float raio = 2.0f, float altura = 4.0f, int fatias = 30, int stacks = 30, bool tampas = true);
-void desenha_cone(float raio = 2.0f, float altura = 4.0f, int fatias = 30);
-void desenha_torus(float R = 3.0f, float r = 1.0f, int fatias = 30, int stacks = 30);
+void desenha_cubo(float lado = 2.0f, int id = 3);
+void desenha_piramide(float base = 4.0f, float altura = 4.0f, int id = 3);
+void desenha_esfera(float raio = 2.0f, int fatias = 30, int stacks = 30, int id = 3);
+void desenha_cilindro(float raio = 2.0f, float altura = 4.0f, int fatias = 30, int stacks = 30, bool tampas = true, int id = 3);
+void desenha_cone(float raio = 2.0f, float altura = 4.0f, int fatias = 30, int id = 3);
+void desenha_torus(float R = 3.0f, float r = 1.0f, int fatias = 30, int stacks = 30, int id = 3);
 void desenha_superficie(int formato);
 void marcax(float x, float y, float z, float cy, float cp);
 
