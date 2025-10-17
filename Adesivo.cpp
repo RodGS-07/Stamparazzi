@@ -3,6 +3,7 @@
 #include "Entidade.h"
 #include "Draw.h"
 #include "Textura.h"
+#include <GL/glext.h>
 
 Adesivo::Adesivo() : Entidade(), normal({0.0f,0.0f,1.0f}) {}
 Adesivo::Adesivo(float ix, float iy, float iz, int t, XYZ n)
@@ -21,6 +22,7 @@ XYZ Adesivo::getNormal() const {return this->normal;}
 void Adesivo::setNormal(XYZ n) {this->normal = n;}
 
 void Adesivo::desenha_adesivo() const {
+    
     float size = 1.0f;
 
     glEnable(GL_TEXTURE_2D);

@@ -5,6 +5,7 @@
 #include "Linear.h"
 #include "Draw.h"
 #include <GL/glut.h>
+#include <GL/glext.h>
 #include <iostream>
 #include <cmath>
 
@@ -16,26 +17,26 @@ const char* textureFileNames[QTDTEXT] = {   //nomes dos arquivos das texturas
     "chatgpt_chao.png",
     "chatgpt_parede.png",
     "chatgpt_teto.png",
-    "adesivo_01.png",
-    "adesivo_02.png",
-    "adesivo_03.png",
-    "adesivo_04.png",
-    "adesivo_05.png",
-    "adesivo_06.png",
-    "adesivo_07.png",
-    "adesivo_08.png",
-    "adesivo_09.png",
-    "adesivo_10.png",
-    "adesivo_11.png",
-    "adesivo_12.png",
-    "adesivo_13.png",
-    "adesivo_14.png",
-    "adesivo_15.png",
-    "adesivo_16.png",
-    "adesivo_17.png",
-    "adesivo_18.png",
-    "adesivo_19.png",
-    "adesivo_20.png"
+    "adesivo_photopea01.png",
+    "adesivo_photopea02.png",
+    "adesivo_photopea03.png",
+    "adesivo_photopea04.png",
+    "adesivo_photopea05.png",
+    "adesivo_photopea06.png",
+    "adesivo_photopea07.png",
+    "adesivo_photopea08.png",
+    "adesivo_photopea09.png",
+    "adesivo_photopea10.png",
+    "adesivo_photopea11.png",
+    "adesivo_photopea12.png",
+    "adesivo_photopea13.png",
+    "adesivo_photopea14.png",
+    "adesivo_photopea15.png",
+    "adesivo_photopea16.png",
+    "adesivo_photopea17.png",
+    "adesivo_photopea18.png",
+    "adesivo_photopea19.png",
+    "adesivo_photopea20.png"
 };
 
 void drawSquare(XYZ s,XYZ t){
@@ -90,6 +91,33 @@ void drawSphere(GLfloat r = 1.0){
 }
 
 void CarregaTexturas(){
+    // stbi_set_flip_vertically_on_load(true);        // carrega com Y certo
+    // glPixelStorei(GL_UNPACK_ALIGNMENT, 1);         // evita leitura desalinhada
+
+    // glGenTextures(QTDTEXT, texID);
+    // for(int i=0;i<QTDTEXT;i++){
+    //     int w,h,channels;
+    //     unsigned char* data = stbi_load(textureFileNames[i], &w, &h, &channels, 4);
+    //     if(!data){
+    //         fprintf(stderr,"Erro load %s\n", textureFileNames[i]);
+    //         continue;
+    //     }
+
+    //     glBindTexture(GL_TEXTURE_2D, texID[i]);
+
+    //     // essencial: parâmetros aplicados *imediatamente* após bind e antes de gerar mipmaps
+    //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    //     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+    //     glGenerateMipmap(GL_TEXTURE_2D);
+
+    //     stbi_image_free(data);
+    // }
+    // glBindTexture(GL_TEXTURE_2D, 0);
     stbi_set_flip_vertically_on_load(true);
     int width, height, nrChannels;
     unsigned char *data;
@@ -114,8 +142,11 @@ void CarregaTexturas(){
             data = stbi_load(textureFileNames[i], &width, &height, &nrChannels, 0);
             if (data)
             {
-                gluBuild2DMipmaps(GL_TEXTURE_2D, GL_RGB, width, height, GL_RGB, GL_UNSIGNED_BYTE, data);//Yussi não é capaz de ver as texturas sem esta função
-                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+                gluBuild2DMipmaps(GL_TEXTURE_2D, GL_RGB, width, height, GL_RGB, GL_UNSIGNED_BYTE, data);
+                if (nrChannels == 3)
+                    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+                else if (nrChannels == 4)
+                    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
             }
             else
             {

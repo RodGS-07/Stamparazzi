@@ -561,10 +561,12 @@ void loop_jogo(){
         }
 
         // Limpa tela
-        if(!game_controller and !pause) glClearColor(1.0f,0.0f,0.5f,1.0f);
-        else if(!game_controller and pause) glClearColor(0.5f,0.0f,0.25f,1.0f);
-        else if(!pause) glClearColor(0.5f,0.0f,0.5f,1.0f);
-        else glClearColor(0.25f,0.0f,0.5f,1.0f);
+        if(!pause) glClearColor(1.0f,1.0f,1.0f,1.0f);
+        else glClearColor(0.5f,0.5f,0.5f,1.0f);
+        // if(!game_controller and !pause) glClearColor(1.0f,0.0f,0.5f,1.0f);
+        // else if(!game_controller and pause) glClearColor(0.5f,0.0f,0.25f,1.0f);
+        // else if(!pause) glClearColor(0.5f,0.0f,0.5f,1.0f);
+        // else glClearColor(0.25f,0.0f,0.5f,1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glLoadIdentity();
 
