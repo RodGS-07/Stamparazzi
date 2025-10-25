@@ -324,47 +324,86 @@ void cria_poligonos(int n){
     //chao
     limites.push_back(make_unique<Cubo>(0.0f,-1.0f,0.0f,100.0f,0.1f,100.0f,nullptr,2.0f));
 
+    set<int> copia; int idx;
+    for(int num : objetivos) copia.insert(num);
+    while(copia.size() < 8) copia.insert((rand() % (20 - 1 + 1)) + 1);
+
+    int randomIndex = rand() % copia.size();
+    auto it = copia.begin();
+    advance(it, randomIndex);
+    int id = *it - 1;
     poligonos.push_back(make_unique<Cubo>(
         0.0f, 0.0f, -20.0f,
-        make_unique<Adesivo>(0.0f, 0.0f, -20.0f, 0, XYZ{0,0,1}),
+        make_unique<Adesivo>(0.0f, 0.0f, -20.0f, id, XYZ{0,0,1}),
         2.0f
     ));
+    copia.erase(it);
 
+    randomIndex = rand() % copia.size();
+    it = copia.begin();
+    advance(it, randomIndex);
+    id = *it - 1;
     poligonos.push_back(make_unique<Piramide>(
         10.0f, 0.0f, -20.0f,
-        make_unique<Adesivo>(10.0f, 0.0f, -20.0f, 1, XYZ{0,0,1}),
+        make_unique<Adesivo>(10.0f, 0.0f, -20.0f, id, XYZ{0,0,1}),
         4.0f, 4.0f
     ));
+    copia.erase(it);
 
+    randomIndex = rand() % copia.size();
+    it = copia.begin();
+    advance(it, randomIndex);
+    id = *it - 1;
     poligonos.push_back(make_unique<Esfera>(
         20.0f, 0.0f, -20.0f,
-        make_unique<Adesivo>(20.0f, 0.0f, -20.0f, 2, XYZ{0,0,1}),
+        make_unique<Adesivo>(20.0f, 0.0f, -20.0f, id, XYZ{0,0,1}),
         2.0f
     ));
+    copia.erase(it);
 
+    randomIndex = rand() % copia.size();
+    it = copia.begin();
+    advance(it, randomIndex);
+    id = *it - 1;
     poligonos.push_back(make_unique<Cilindro>(
         30.0f, 0.0f, -30.0f,
-        make_unique<Adesivo>(30.0f, 0.0f, -30.0f, 3, XYZ{0,0,1}),
+        make_unique<Adesivo>(30.0f, 0.0f, -30.0f, id, XYZ{0,0,1}),
         2.0f, 4.0f
     ));
+    copia.erase(it);
 
+    randomIndex = rand() % copia.size();
+    it = copia.begin();
+    advance(it, randomIndex);
+    id = *it - 1;
     poligonos.push_back(make_unique<Cone>(
         40.0f, 0.0f, -20.0f,
-        make_unique<Adesivo>(40.0f, 0.0f, -20.0f, 4, XYZ{0,0,1}),
+        make_unique<Adesivo>(40.0f, 0.0f, -20.0f, id, XYZ{0,0,1}),
         2.0f, 4.0f
     ));
+    copia.erase(it);
 
+    randomIndex = rand() % copia.size();
+    it = copia.begin();
+    advance(it, randomIndex);
+    id = *it - 1;
     auto t1 = make_unique<Torus>(
         -20, -98.5, 0,
-        make_unique<Adesivo>(-20, -98.5, 0, 5, XYZ{0,0,1}),
+        make_unique<Adesivo>(-20, -98.5, 0, id, XYZ{0,0,1}),
         1.0f, 3.0f
     );
+    copia.erase(it);
 
+    randomIndex = rand() % copia.size();
+    it = copia.begin();
+    advance(it, randomIndex);
+    id = *it - 1;
     auto t2 = make_unique<Torus>(
         20, 1.5, 0,
-        make_unique<Adesivo>(20, 1.5, 0, 6, XYZ{0,0,1}),
+        make_unique<Adesivo>(20, 1.5, 0, id, XYZ{0,0,1}),
         1.0f, 3.0f
     );
+    copia.erase(it);
 
     t1->setConjugado(t2.get());
     t2->setConjugado(t1.get());
@@ -372,12 +411,17 @@ void cria_poligonos(int n){
     poligonos.push_back(move(t1));
     poligonos.push_back(move(t2));
 
+    randomIndex = rand() % copia.size();
+    it = copia.begin();
+    advance(it, randomIndex);
+    id = *it - 1;
     poligonos.push_back(make_unique<Cubo>(
         0.0f, -90.0f, -20.0f,
         2.0f, 2.0f, 2.0f,
-        make_unique<Adesivo>(0.0f, -90.0f, -20.0f, 7, XYZ{0,0,1}),
+        make_unique<Adesivo>(0.0f, -90.0f, -20.0f, id, XYZ{0,0,1}),
         2.0f
     ));
+    copia.erase(it);
     // poligonos.push_back(make_unique<Cubo>(0.0f,0.0f,-20.0f,make_unique<Adesivo>(0.0f,0.0f,-19.0f,{0,0,1}),2.0f));
     // poligonos.push_back(make_unique<Piramide>(10.0f,0.0f,-20.0f,make_unique<Adesivo>(10.0f,0.0f,-18.0f,{0,0,1}),4.0f,4.0f));
     // poligonos.push_back(make_unique<Esfera>(20.0f,0.0f,-20.0f,make_unique<Adesivo>(20.0f,0.0f,-19.0f,{0,0,1}),2.0f));
@@ -399,7 +443,7 @@ void cria_poligonos(int n){
 
 void define_objetivos(int n) {
     while(objetivos.size() < n)
-        objetivos.insert((rand() % (8 - 1 + 1)) + 1);
+        objetivos.insert((rand() % (20 - 1 + 1)) + 1);
 }
 
 void ajustaProjecao(int largura, int altura) {
@@ -769,9 +813,9 @@ int main(int argc, char* argv[]) {
 
 	SDL_ShowCursor(SDL_ENABLE);
 
-    cria_poligonos(7);
-
     define_objetivos(rand() % (8 - 1 + 1) + 1);
+
+    cria_poligonos(7);
 
     loop_jogo();
 
