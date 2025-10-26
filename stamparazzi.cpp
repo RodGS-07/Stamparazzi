@@ -46,8 +46,9 @@ bool rodando = true;
 Uint32 inicio, fim;
 float dt;
 const Uint8* state;
-GLuint texturaTexto1 = 0, texturaTexto2 = 0;
-int larguraTexto1 = 0, larguraTexto2 = 0, alturaTexto1 = 0, alturaTexto2 = 0;
+GLuint texturaTexto1 = 0, texturaTexto2 = 0, texturaTexto3 = 0;
+int larguraTexto1 = 0, larguraTexto2 = 0, larguraTexto3 = 0, alturaTexto1 = 0, alturaTexto2 = 0, alturaTexto3 = 0;
+vector<int> cores_poligonos;
 
 SDL_Window* window;
 SDL_Renderer* renderer;
@@ -66,45 +67,6 @@ namespace NG{ //Namespace para Informações do Game/Jogo
     };
 };
 
-namespace NC{ //Namespace para Controles e Comandos
-    enum C {
-        FRENTE,
-        TRAS,
-        ESQUERDA,
-        DIREITA,
-        CIMA,
-        BAIXO,
-        CAM_ESQUERDA,
-        CAM_DIREITA,
-        CAM_CIMA,
-        CAM_BAIXO,
-        SAIR,
-        PAUSAR
-    }; //comandos
-
-    void traduz_entradas(){
-        
-    }
-
-    void atualiza_controller(SDL_Event evento){
-        if (evento.type == SDL_CONTROLLERDEVICEADDED) {
-            if (!game_controller) {
-                for(int i = 0; i < SDL_NumJoysticks(); i++){
-                    if(SDL_IsGameController(i)){
-                        game_controller = SDL_GameControllerOpen(i);
-                        break;
-                    }
-                }
-            }
-        } else if (evento.type == SDL_CONTROLLERDEVICEREMOVED) {
-            if (game_controller) {
-                SDL_GameControllerClose(game_controller);
-                game_controller = NULL;
-            }
-        }
-    }
-};
-
 //Adesivo a = Adesivo(-5.0f,5.0f,10.0f,{0,0,1});
 
 vector<unique_ptr<Poligono>> poligonos;
@@ -114,6 +76,24 @@ set<int> objetivos;
 //Cubo chao (0.0f,0.0f,0.0f,100.0f,0.1f,100.0f,nullptr,1.0f);
 
 Jogador jogador(0.0f,1.5f,0.0f,0.0f,0.0f);
+
+void atualiza_controller(SDL_Event evento){
+    if (evento.type == SDL_CONTROLLERDEVICEADDED) {
+        if (!game_controller) {
+            for(int i = 0; i < SDL_NumJoysticks(); i++){
+                if(SDL_IsGameController(i)){
+                    game_controller = SDL_GameControllerOpen(i);
+                    break;
+                }
+            }
+        }
+    } else if (evento.type == SDL_CONTROLLERDEVICEREMOVED) {
+        if (game_controller) {
+            SDL_GameControllerClose(game_controller);
+            game_controller = NULL;
+        }
+    }
+}
 
 GLuint criaTexturaDoTexto(const char* texto, TTF_Font* fonte, SDL_Color cor, int &largura, int &altura) {
     SDL_Surface* surface = TTF_RenderText_Blended(fonte, texto, cor);
@@ -299,7 +279,7 @@ void inicializa_ttf(){
         teste = -1;
     }
 
-    SDL_Color preto = {0, 0, 0, 255};
+    SDL_Color preto = {0, 0, 0, 255}, branco = {1, 1, 1, 255};
     ostringstream oss;
     oss << "Tempo restante - " 
     << minutos << ":" << std::setw(2) << std::setfill('0') << segundos;
@@ -315,6 +295,12 @@ void inicializa_ttf(){
     str = oss.str();
     texto = str.c_str();
     texturaTexto2 = criaTexturaDoTexto(texto, fonte, preto, larguraTexto2, alturaTexto2);
+
+    ostringstream poss;
+    poss << "PAUSE";
+    str = poss.str();
+    texto = str.c_str();
+    texturaTexto3 = criaTexturaDoTexto(texto, fonte, preto, larguraTexto3, alturaTexto3);
 }
 
 void cria_poligonos(int n){
@@ -422,20 +408,16 @@ void cria_poligonos(int n){
         2.0f
     ));
     copia.erase(it);
-    // poligonos.push_back(make_unique<Cubo>(0.0f,0.0f,-20.0f,make_unique<Adesivo>(0.0f,0.0f,-19.0f,{0,0,1}),2.0f));
-    // poligonos.push_back(make_unique<Piramide>(10.0f,0.0f,-20.0f,make_unique<Adesivo>(10.0f,0.0f,-18.0f,{0,0,1}),4.0f,4.0f));
-    // poligonos.push_back(make_unique<Esfera>(20.0f,0.0f,-20.0f,make_unique<Adesivo>(20.0f,0.0f,-19.0f,{0,0,1}),2.0f));
-    // poligonos.push_back(make_unique<Cilindro>(30.0f,0.0f,-30.0f,make_unique<Adesivo>(30.0f,0.0f,-28.0f,{0,0,1}),2.0f,4.0f));
-    // poligonos.push_back(make_unique<Cone>(40.0f,0.0f,-20.0f,make_unique<Adesivo>(40.0f,0.0f,-18.0f,{0,0,1}),2.0f,4.0f));
+    
+    cores_poligonos.resize(n);
 
-    // auto t1 = make_unique<Torus>(-20,0,0,make_unique<Adesivo>(-20.0f,0.0f,-18.5f,{0,0,1}),1.0f,3.0f);
-    // auto t2 = make_unique<Torus>(20,0,0,make_unique<Adesivo>(20.0f,0.0f,-18.5f,{0,0,1}),1.0f,3.0f);
+    for(int i = 0; i < n; i++){
+        cores_poligonos[i] = rand() % (12+1);
+        if(poligonos[i]->getSuperficie()==F::TORUS) {
+            cores_poligonos[i+1]=cores_poligonos[i]; i++;
+        }
+    }
 
-    // t1->setConjugado(t2.get());
-    // t2->setConjugado(t1.get());
-
-    // poligonos.push_back(move(t1));
-    // poligonos.push_back(move(t2));
     /*for(int i = 0; i < n; i++){
         poligonos.push_back();
     }*/
@@ -503,10 +485,10 @@ void loop_jogo(){
     SDL_Event evento;
     inicio = SDL_GetTicks();
 
-    int cores[7]; for(int i = 0; i < 7; i++){
-        if(i < 6) cores[i] = rand() % (12+1);
-        else cores[i] = cores[i-1];
-    }
+    // int cores[7]; for(int i = 0; i < 7; i++){
+    //     if(i < 6) cores[i] = rand() % (12+1);
+    //     else cores[i] = cores[i-1];
+    // }
 
     while (rodando) {
 
@@ -525,7 +507,7 @@ void loop_jogo(){
                 rodando = false;
             }
 
-            NC::atualiza_controller(evento);
+            atualiza_controller(evento);
             
             if(!game_controller){
                 if(evento.type == SDL_KEYDOWN){
@@ -615,9 +597,18 @@ void loop_jogo(){
         glLoadIdentity();
 
         // desenha texto
-        if(texturaTexto1 and texturaTexto2) {
+        if(texturaTexto1 and texturaTexto2 and texturaTexto3) {
             desenhaTexto(texturaTexto1, 50, 50, larguraTexto1, alturaTexto1);
             desenhaTexto(texturaTexto2, 50, 100, larguraTexto2, alturaTexto2);
+            if(pause) {
+                if(!tela_cheia){
+                    int larguraJanela, alturaJanela;
+                    SDL_GetWindowSize(window, &larguraJanela, &alturaJanela);
+                    int xCentro = (larguraJanela - larguraTexto3) / 2;
+                    int yCentro = (alturaJanela - alturaTexto3) / 2;
+                    desenhaTexto(texturaTexto3, xCentro, yCentro, larguraTexto3, alturaTexto3);
+                } else desenhaTexto(texturaTexto3, 400, 300, larguraTexto3, alturaTexto3);
+            }
         }
 
         if(primeira_pessoa) {
@@ -685,7 +676,7 @@ void loop_jogo(){
         // 2) desenhamos polígonos e máscaras e realizamos movimentos
         int i = 0;
         for (const auto& p : poligonos){
-            p->realiza_movimento(cores[i],dt,pause); i++;
+            p->realiza_movimento(cores_poligonos[i],dt,pause); i++;
             //p->desenha_mascara();
             //p->desenha_adesivo();
         }
@@ -815,7 +806,7 @@ int main(int argc, char* argv[]) {
 
     define_objetivos(rand() % (8 - 1 + 1) + 1);
 
-    cria_poligonos(7);
+    cria_poligonos(8);
 
     loop_jogo();
 

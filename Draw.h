@@ -14,19 +14,19 @@ enum F{
 };
 
 const float cores[13][3] = {
-    {1.0f,0.0f,0.0f}, //vermelho
-    {1.0f,0.5f,0.0f}, //laranja
-    {1.0f,1.0f,0.0f}, //amarelo
-    {0.0f,1.0f,0.0f}, //lima
-    {0.0f,0.5f,0.0f}, //verde
-    {0.0f,1.0f,1.0f}, //ciano
-    {0.0f,0.0f,1.0f}, //azul
-    {0.5f,0.0f,1.0f}, //roxo
-    {1.0f,0.0f,1.0f}, //rosa
-    {0.5f,0.25f,0.0f}, //marrom
-    {1.0f,1.0f,1.0f}, //branco
-    {0.5f,0.5f,0.5f}, //cinza
-    {0.0f,0.0f,0.0f} /*preto*/ };
+    {1.0f,0.0f,0.0f}, //vermelho = 0
+    {1.0f,0.5f,0.0f}, //laranja = 1
+    {1.0f,1.0f,0.0f}, //amarelo = 2
+    {0.0f,1.0f,0.0f}, //lima = 3
+    {0.0f,0.5f,0.0f}, //verde = 4
+    {0.0f,1.0f,1.0f}, //ciano = 5
+    {0.0f,0.0f,1.0f}, //azul = 6
+    {0.5f,0.0f,1.0f}, //roxo = 7
+    {1.0f,0.0f,1.0f}, //rosa = 8
+    {0.5f,0.25f,0.0f}, //marrom = 9
+    {1.0f,1.0f,1.0f}, //branco = 10
+    {0.5f,0.5f,0.5f}, //cinza = 11
+    {0.0f,0.0f,0.0f} /*preto = 12*/ };
 
 void muda_cor(int c);
 void desenha_cubo(float lado = 2.0f, int id = 3);
