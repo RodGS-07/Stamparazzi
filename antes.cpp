@@ -5,6 +5,7 @@
 #include "Jogador.h"
 #include "Linear.h"
 #include "Poligono.h"
+#include "Textura.h"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 #include <GL/glut.h>
@@ -14,10 +15,13 @@
 #include <iostream>
 #include <math.h>
 #include <vector>
+#include <set>
 #include <memory>
 #include <algorithm>
 #include <typeinfo>
 #include <time.h>
+#include <sstream>
+#include <iomanip>
 
 #define XBOUNDS 100.0f
 #define YBOUNDS 100.0f
@@ -29,6 +33,9 @@
 using namespace std;
 
 int teste = 0;
+int timer = 180;
+int minutos = timer / 60;
+int segundos = timer % 60;
 bool mouse_in = false;
 bool pause = false;
 bool tela_cheia = true;
@@ -39,10 +46,14 @@ bool rodando = true;
 Uint32 inicio, fim;
 float dt;
 const Uint8* state;
+GLuint texturaTexto1 = 0, texturaTexto2 = 0;
+int larguraTexto1 = 0, larguraTexto2 = 0, alturaTexto1 = 0, alturaTexto2 = 0;
 
 SDL_Window* window;
+SDL_Renderer* renderer;
 SDL_GLContext glContext;
 SDL_GameController* game_controller = NULL;
+TTF_Font* fonte;
 
 namespace NG{ //Namespace para Informações do Game/Jogo
 
@@ -94,12 +105,73 @@ namespace NC{ //Namespace para Controles e Comandos
     }
 };
 
-Adesivo a = Adesivo(-5.0f,5.0f,10.0f,{0,0,1});
+//Adesivo a = Adesivo(-5.0f,5.0f,10.0f,{0,0,1});
 
 vector<unique_ptr<Poligono>> poligonos;
-Cubo room = Cubo(0.0f,0.0f,0.0f,100.0f);
+vector<unique_ptr<Poligono>> limites;
+set<int> objetivos;
+//Cubo room (0.0f,0.0f,0.0f,nullptr,100.0f);
+//Cubo chao (0.0f,0.0f,0.0f,100.0f,0.1f,100.0f,nullptr,1.0f);
 
-Jogador jogador = Jogador(0.0f,1.0f,0.0f,0.0f,0.0f);
+Jogador jogador(0.0f,1.5f,0.0f,0.0f,0.0f);
+
+GLuint criaTexturaDoTexto(const char* texto, TTF_Font* fonte, SDL_Color cor, int &largura, int &altura) {
+    SDL_Surface* surface = TTF_RenderText_Blended(fonte, texto, cor);
+    if (!surface) {
+        std::cerr << "Erro ao renderizar texto: " << TTF_GetError() << std::endl;
+        return 0;
+    }
+
+    // Converte para formato RGBA conhecido
+    SDL_Surface* formattedSurface = SDL_ConvertSurfaceFormat(surface, SDL_PIXELFORMAT_RGBA32, 0);
+    SDL_FreeSurface(surface);
+
+    largura = formattedSurface->w;
+    altura = formattedSurface->h;
+
+    GLuint texturaID;
+    glGenTextures(1, &texturaID);
+    glBindTexture(GL_TEXTURE_2D, texturaID);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, formattedSurface->w, formattedSurface->h,
+                0, GL_RGBA, GL_UNSIGNED_BYTE, formattedSurface->pixels);
+
+    SDL_FreeSurface(formattedSurface);
+    return texturaID;
+}
+
+void desenhaTexto(GLuint textura, int x, int y, int largura, int altura) {
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, textura);
+
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    gluOrtho2D(0, 800, 600, 0); // Coordenadas em pixels (ajuste p/ sua janela)
+
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+
+    glColor3f(1.0f, 1.0f, 1.0f); // cor branca
+
+    glBegin(GL_QUADS);
+        glTexCoord2f(0, 0); glVertex2f(x, y);
+        glTexCoord2f(1, 0); glVertex2f(x + largura, y);
+        glTexCoord2f(1, 1); glVertex2f(x + largura, y + altura);
+        glTexCoord2f(0, 1); glVertex2f(x, y + altura);
+    glEnd();
+
+    glPopMatrix();
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+
+    glDisable(GL_TEXTURE_2D);
+}
 
 void inicializa_sdl(){
     // Inicializa SDL2
@@ -118,6 +190,8 @@ void inicializa_sdl(){
         SDL_Quit();
         teste = -1;
     }
+
+    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 
     glContext = SDL_GL_CreateContext(window);
     if (!glContext) {
@@ -160,6 +234,22 @@ void inicializa_opengl(int argc, char* argv[]){
     gluPerspective(45.0, aspect, 0.1, 300.0);
     glMatrixMode(GL_MODELVIEW);
 
+    // // 1. Luz ambiente global mais forte
+    // GLfloat globalAmbiente[] = { 0.4, 0.4, 0.4, 1.0 };
+    // glLightModelfv(GL_LIGHT_MODEL_AMBIENT, globalAmbiente);
+
+    // // 2. Luz direcional simulando lâmpada do teto
+    // GLfloat lightDir[] = { 0.0f, -1.0f, -0.3f, 0.0f };
+    // GLfloat white[] = { 1.0, 1.0, 1.0, 1.0 };
+    // glLightfv(GL_LIGHT0, GL_POSITION, lightDir);
+    // glLightfv(GL_LIGHT0, GL_DIFFUSE, white);
+    // glLightfv(GL_LIGHT0, GL_SPECULAR, white);
+
+    // // 3. Ativa luz e material
+    // glEnable(GL_LIGHTING);
+    // glEnable(GL_LIGHT0);
+    // glEnable(GL_COLOR_MATERIAL);
+    // glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
     // Iluminação da sala
     GLfloat globalAmbiente[] = { 0.2, 0.2, 0.2, 1.0};
     GLfloat white[] = { 1.0, 1.0, 1.0, 1.0 };
@@ -167,8 +257,14 @@ void inicializa_opengl(int argc, char* argv[]){
     glLightfv(GL_LIGHT0,GL_AMBIENT,globalAmbiente);
     glLightfv(GL_LIGHT0,GL_DIFFUSE,white);
     glLightfv(GL_LIGHT0,GL_SPECULAR,white);
+
+    glLightfv(GL_LIGHT1,GL_AMBIENT,globalAmbiente);
+    glLightfv(GL_LIGHT1,GL_DIFFUSE,white);
+    glLightfv(GL_LIGHT1,GL_SPECULAR,white);
+
     glEnable(GL_LIGHTING);
     glEnable(GL_LIGHT0);
+    glEnable(GL_LIGHT1);
 
     glEnable(GL_COLOR_MATERIAL);
     glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
@@ -182,26 +278,128 @@ void inicializa_opengl(int argc, char* argv[]){
     //glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, white);
     //glMaterialfv(GL_FRONT, GL_SPECULAR, white);
     //glMaterialf(GL_FRONT, GL_SHININESS, 30);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    CarregaTexturas();
+}
+
+void inicializa_ttf(){
+    if(TTF_Init() < 0){
+        cerr << "Erro ao inicializar SDL_ttf: " << TTF_GetError() << endl;
+        teste = -1;
+    }
+
+    // Carregar fonte
+    fonte = TTF_OpenFont("arial.ttf", 12); // precisa de um .ttf na mesma pasta
+    //cout << (fonte==NULL) << endl;
+    if (!fonte) {
+        std::cerr << "Erro ao carregar fonte: " << TTF_GetError() << std::endl;
+        teste = -1;
+    }
+
+    SDL_Color preto = {0, 0, 0, 255};
+    ostringstream oss;
+    oss << "Tempo restante - " 
+    << minutos << ":" << std::setw(2) << std::setfill('0') << segundos;
+
+    string str = oss.str();
+    const char* texto = str.c_str();
+    texturaTexto1 = criaTexturaDoTexto(texto, fonte, preto, larguraTexto1, alturaTexto1);
+
+    oss << "Adesivos faltando: ";
+    for(int n : objetivos) {
+        oss << n << " ";
+    }
+    str = oss.str();
+    texto = str.c_str();
+    texturaTexto2 = criaTexturaDoTexto(texto, fonte, preto, larguraTexto2, alturaTexto2);
 }
 
 void cria_poligonos(int n){
-    poligonos.push_back(make_unique<Cubo>(0.0f,0.0f,-20.0f,2.0f));
-    poligonos.push_back(make_unique<Piramide>(10.0f,0.0f,-20.0f,4.0f,4.0f));
-    poligonos.push_back(make_unique<Esfera>(20.0f,0.0f,-20.0f,2.0f));
-    poligonos.push_back(make_unique<Cilindro>(30.0f,0.0f,-30.0f,2.0f,4.0f));
-    poligonos.push_back(make_unique<Cone>(40.0f,0.0f,-20.0f,2.0f,4.0f));
+    //room
+    limites.push_back(make_unique<Cubo>(0.0f,0.0f,0.0f,nullptr,200.0f));
 
-    auto t1 = make_unique<Torus>(-20,0,0,1.0f,3.0f);
-    auto t2 = make_unique<Torus>(20,0,0,1.0f,3.0f);
+    //chao
+    limites.push_back(make_unique<Cubo>(0.0f,-1.0f,0.0f,100.0f,0.1f,100.0f,nullptr,2.0f));
+
+    poligonos.push_back(make_unique<Cubo>(
+        0.0f, 0.0f, -20.0f,
+        make_unique<Adesivo>(0.0f, 0.0f, -20.0f, 0, XYZ{0,0,1}),
+        2.0f
+    ));
+
+    poligonos.push_back(make_unique<Piramide>(
+        10.0f, 0.0f, -20.0f,
+        make_unique<Adesivo>(10.0f, 0.0f, -20.0f, 1, XYZ{0,0,1}),
+        4.0f, 4.0f
+    ));
+
+    poligonos.push_back(make_unique<Esfera>(
+        20.0f, 0.0f, -20.0f,
+        make_unique<Adesivo>(20.0f, 0.0f, -20.0f, 2, XYZ{0,0,1}),
+        2.0f
+    ));
+
+    poligonos.push_back(make_unique<Cilindro>(
+        30.0f, 0.0f, -30.0f,
+        make_unique<Adesivo>(30.0f, 0.0f, -30.0f, 3, XYZ{0,0,1}),
+        2.0f, 4.0f
+    ));
+
+    poligonos.push_back(make_unique<Cone>(
+        40.0f, 0.0f, -20.0f,
+        make_unique<Adesivo>(40.0f, 0.0f, -20.0f, 4, XYZ{0,0,1}),
+        2.0f, 4.0f
+    ));
+
+    auto t1 = make_unique<Torus>(
+        -20, -98.5, 0,
+        make_unique<Adesivo>(-20, -98.5, 0, 5, XYZ{0,0,1}),
+        1.0f, 3.0f
+    );
+
+    auto t2 = make_unique<Torus>(
+        20, 1.5, 0,
+        make_unique<Adesivo>(20, 1.5, 0, 6, XYZ{0,0,1}),
+        1.0f, 3.0f
+    );
 
     t1->setConjugado(t2.get());
     t2->setConjugado(t1.get());
 
     poligonos.push_back(move(t1));
     poligonos.push_back(move(t2));
+
+    poligonos.push_back(make_unique<Cubo>(
+        0.0f, -90.0f, -20.0f,
+        2.0f, 2.0f, 2.0f,
+        make_unique<Adesivo>(0.0f, -90.0f, -20.0f, 7, XYZ{0,0,1}),
+        2.0f
+    ));
+    // poligonos.push_back(make_unique<Cubo>(0.0f,0.0f,-20.0f,make_unique<Adesivo>(0.0f,0.0f,-19.0f,{0,0,1}),2.0f));
+    // poligonos.push_back(make_unique<Piramide>(10.0f,0.0f,-20.0f,make_unique<Adesivo>(10.0f,0.0f,-18.0f,{0,0,1}),4.0f,4.0f));
+    // poligonos.push_back(make_unique<Esfera>(20.0f,0.0f,-20.0f,make_unique<Adesivo>(20.0f,0.0f,-19.0f,{0,0,1}),2.0f));
+    // poligonos.push_back(make_unique<Cilindro>(30.0f,0.0f,-30.0f,make_unique<Adesivo>(30.0f,0.0f,-28.0f,{0,0,1}),2.0f,4.0f));
+    // poligonos.push_back(make_unique<Cone>(40.0f,0.0f,-20.0f,make_unique<Adesivo>(40.0f,0.0f,-18.0f,{0,0,1}),2.0f,4.0f));
+
+    // auto t1 = make_unique<Torus>(-20,0,0,make_unique<Adesivo>(-20.0f,0.0f,-18.5f,{0,0,1}),1.0f,3.0f);
+    // auto t2 = make_unique<Torus>(20,0,0,make_unique<Adesivo>(20.0f,0.0f,-18.5f,{0,0,1}),1.0f,3.0f);
+
+    // t1->setConjugado(t2.get());
+    // t2->setConjugado(t1.get());
+
+    // poligonos.push_back(move(t1));
+    // poligonos.push_back(move(t2));
     /*for(int i = 0; i < n; i++){
         poligonos.push_back();
     }*/
+}
+
+void define_objetivos(int n) {
+    while(objetivos.size() < n)
+        objetivos.insert((rand() % (8 - 1 + 1)) + 1);
 }
 
 void ajustaProjecao(int largura, int altura) {
@@ -213,6 +411,47 @@ void ajustaProjecao(int largura, int altura) {
     glLoadIdentity();
     gluPerspective(45.0, aspect, 0.1, 300.0);
     glMatrixMode(GL_MODELVIEW);
+}
+
+void atualizaTexto(const string& texto, GLuint& texturaTexto, int& larguraTexto, int& alturaTexto){
+    if (texturaTexto) {
+        glDeleteTextures(1, &texturaTexto); // libera a textura antiga
+        texturaTexto = 0;
+    }
+
+    SDL_Color cor = {0, 0, 0, 255}; // preto
+    texturaTexto = criaTexturaDoTexto(texto.c_str(), fonte, cor, larguraTexto, alturaTexto);
+}
+
+void atualiza_timer(float dt){
+    static float acumulador = 0.0f;
+
+    if (!pause) {
+        acumulador += dt;
+        if (acumulador >= 1.0f) { // passou 1 segundo
+            acumulador -= 1.0f;
+            if (timer > 0) {
+                timer--; minutos = timer/60; segundos = timer%60;
+                ostringstream oss;
+                oss << "Tempo restante - " 
+                << minutos << ":" << std::setw(2) << std::setfill('0') << segundos;
+
+                string str = oss.str();
+                atualizaTexto(str,texturaTexto1,larguraTexto1,alturaTexto1);
+            }
+        }
+    }
+}
+
+void atualiza_objetivos() {
+    ostringstream oss;
+    oss << "Adesivos faltando: ";
+    for(int n : objetivos) {
+        oss << n << " ";
+    }
+
+    string str = oss.str();
+    atualizaTexto(str,texturaTexto2,larguraTexto2,alturaTexto2);
 }
 
 void loop_jogo(){
@@ -230,6 +469,12 @@ void loop_jogo(){
         fim = SDL_GetTicks();
         dt = (fim - inicio) / 1000.0f;
         inicio = fim;
+
+        atualiza_timer(dt);
+        if(!timer) {rodando = false; cout << "Seu tempo acabou!" << endl; break;}
+
+        if(!objetivos.size()) {rodando = false; cout << "Voce venceu!" << endl; break;}
+        atualiza_objetivos();
 
         while (SDL_PollEvent(&evento)) {
             if (evento.type == SDL_QUIT) {
@@ -316,26 +561,43 @@ void loop_jogo(){
         }
 
         // Limpa tela
-        if(!game_controller and !pause) glClearColor(1.0f,0.0f,0.5f,1.0f);
-        else if(!game_controller and pause) glClearColor(0.5f,0.0f,0.25f,1.0f);
-        else if(!pause) glClearColor(0.5f,0.0f,0.5f,1.0f);
-        else glClearColor(0.25f,0.0f,0.5f,1.0f);
+        if(!pause) glClearColor(1.0f,1.0f,1.0f,1.0f);
+        else glClearColor(0.5f,0.5f,0.5f,1.0f);
+        // if(!game_controller and !pause) glClearColor(1.0f,0.0f,0.5f,1.0f);
+        // else if(!game_controller and pause) glClearColor(0.5f,0.0f,0.25f,1.0f);
+        // else if(!pause) glClearColor(0.5f,0.0f,0.5f,1.0f);
+        // else glClearColor(0.25f,0.0f,0.5f,1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glLoadIdentity();
+
+        // desenha texto
+        if(texturaTexto1 and texturaTexto2) {
+            desenhaTexto(texturaTexto1, 50, 50, larguraTexto1, alturaTexto1);
+            desenhaTexto(texturaTexto2, 50, 100, larguraTexto2, alturaTexto2);
+        }
 
         if(primeira_pessoa) {
             glRotatef(-jogador.getCamPitch(), 1.0, 0.0, 0.0); 
             glRotatef(-jogador.getCamYaw(), 0.0, 1.0, 0.0);
             glTranslatef(-(jogador.getX()),-(jogador.getY()),-(jogador.getZ()));        
         } else {
-            gluLookAt(jogador.getX(),jogador.getY()+5.0f,jogador.getZ()+25.0f,
-                jogador.getX(),jogador.getY(),jogador.getZ(),
-                0.0f,1.0f,0.0f);
+            if(jogador.getZ()+25.0f < 100.0f) {
+                gluLookAt(jogador.getX(),jogador.getY()+5.0f,jogador.getZ()+25.0f,
+                    jogador.getX(),jogador.getY(),jogador.getZ(),
+                    0.0f,1.0f,0.0f);
+            } else {
+                gluLookAt(jogador.getX(),jogador.getY()+5.0f,100.0f,
+                    jogador.getX(),jogador.getY(),jogador.getZ(),
+                    0.0f,1.0f,0.0f);
+            }
             jogador.desenha_mascara();
         }
 
-        GLfloat position[] = { 0.0, 100.0f, 0.0f, 1.0f};
-        glLightfv(GL_LIGHT0,GL_POSITION,position);
+        GLfloat position0[] = { 0.0, 100.0f, 0.0f, 1.0f};
+        glLightfv(GL_LIGHT0,GL_POSITION,position0);
+
+        GLfloat position1[] = { 0.0, -100.0f, 0.0f, 1.0f};
+        glLightfv(GL_LIGHT1,GL_POSITION,position1);
 
         jogador.desenha_mira();
 
@@ -363,10 +625,14 @@ void loop_jogo(){
         // }
 
         // Desenha máscara da room
-        room.desenha_mascara();
+        //room.desenha_mascara();
+        //limites[0]->desenha_mascara();
+        desenha_paredes();
+        //limites[1]->desenha_mascara();
+        //chao.desenha_mascara();
 
         // 1) guardamos posições antigas
-        std::vector<XYZ> prevPos;
+        vector<XYZ> prevPos;
         prevPos.reserve(poligonos.size());
         for (const auto &p : poligonos) {
             prevPos.push_back({ p->getX(), p->getY(), p->getZ() });
@@ -376,7 +642,8 @@ void loop_jogo(){
         int i = 0;
         for (const auto& p : poligonos){
             p->realiza_movimento(cores[i],dt,pause); i++;
-            p->desenha_mascara();
+            //p->desenha_mascara();
+            //p->desenha_adesivo();
         }
 
         // 3) para cada polígono, checamos swept collision contra jogador
@@ -444,60 +711,32 @@ void loop_jogo(){
             }
         }
 
-        a.desenha_adesivo();
-
         // Controla câmera
-        jogador.controle_camera(MOVE_VEL, CAMERA_SENS,dt,pause,window,game_controller,state,poligonos);
+        jogador.controle_camera(MOVE_VEL, CAMERA_SENS,dt,pause,window,game_controller,state,poligonos,limites);
+        //jogador.controle_camera(MOVE_VEL, CAMERA_SENS,dt,pause,window,game_controller,state,limites);
 
         for(const auto& p : poligonos){
             if(p->getSuperficie()==F::CONE)
                 p->aplica_efeito(jogador);
         }
-        // Checar colisões mesmo quando o jogador está parado
-        // AABB mask = jogador.getMascara();
-        // for (const auto& p : poligonos) {
-        //     if (p->colide_jogador(mask)) {
-        //         if (p->getSuperficie() != F::CONE) {
-        //             p->aplica_efeito(jogador);
-        //         }
-        //     }
-        // }
-        //AABB mascara = jogador.getMascara();
-        //cout << "Depois: " << mascara.min.x << " " << mascara.min.y << " " << mascara.min.z << " " << mascara.max.x << " " << mascara.max.y << " " << mascara.max.z << endl;
-
-        /*auto mask = jogador.getMascara();
-        for (const auto& p : poligonos) {
-            bool coll = p->colide_jogador(mask);
-            if (coll) {
-                std::cout << "COLLIDE: poly@" << p.get()
-                        << " tipo=" << p->getSuperficie()
-                        << " jogador_pos=("<< jogador.getX() << ","<< jogador.getY() << ","<< jogador.getZ() <<")"
-                        << " mask_min=("<<mask.min.x<<","<<mask.min.y<<","<<mask.min.z<<")"
-                        << " mask_max=("<<mask.max.x<<","<<mask.max.y<<","<<mask.max.z<<")\n";
-                p->aplica_efeito(jogador);
-            }
-        }*/
-        
-        /*for (const auto& p : poligonos){
-            //if(p->getSuperficie()==F::TORUS) cout << p->colide_jogador(jogador.getMascara()) << endl;
-            if(p->colide_jogador(jogador.getMascara()) and p->getSuperficie()!=F::CONE){
-                //cout << (p->getSuperficie()==F::TORUS) << endl;
-                p->aplica_efeito(jogador);
-            }
-            else if(p->getSuperficie()==F::CONE)
-                p->aplica_efeito(jogador);
-        }*/
 
         // Verifica morte do jogador
-        if(!jogador.estaVivo()) jogador.nasce_jogador(0.0f,1.0f,0.0f);
+        if(!jogador.estaVivo()) jogador.nasce_jogador(0.0f,1.5f,0.0f);
 
-        if(jogador.detecta_adesivo(a)){
-            glDisable(GL_DEPTH_TEST);   // ignora profundidade
-            marcax(a.getX(),a.getY(),a.getZ());
-            glEnable(GL_DEPTH_TEST);    // reativa para os próximos frames
+        for(const auto& p : poligonos){
+            Adesivo* ade = p->getAdesivo();
+            if(ade!=nullptr){
+                Adesivo a = *ade;
+                if(jogador.detecta_adesivo(a,poligonos)){
+                    glDisable(GL_DEPTH_TEST);   // ignora profundidade
+                    marcax(p->getX(),p->getY(),p->getZ(),jogador.getCamYaw(),jogador.getCamPitch());
+                    glEnable(GL_DEPTH_TEST);    // reativa para os próximos frames
+                }
+                jogador.tirou_foto(a,dt,flash_alpha,flash_ativo,poligonos,objetivos);
+            }  
         }
-
-        jogador.tirou_foto(a,dt,flash_alpha,flash_ativo);
+        
+        //jogador.tirou_foto(a,dt,flash_alpha,flash_ativo);
 
         // Atualiza tela
         SDL_GL_SwapWindow(window);
@@ -509,7 +748,11 @@ void finaliza_sdl(){
         SDL_GameControllerClose(game_controller);
         game_controller = NULL;
     }
+    glDeleteTextures(1, &texturaTexto1);
+    TTF_CloseFont(fonte);
+    TTF_Quit();
     SDL_GL_DeleteContext(glContext);
+    SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
 }
@@ -519,13 +762,16 @@ int main(int argc, char* argv[]) {
     srand(time(NULL));
 
     inicializa_sdl(); if(teste == -1) return teste;
-    TTF_Init();
 
     inicializa_opengl(argc, argv);
+
+    inicializa_ttf(); if(teste == -1) return teste;
 
 	SDL_ShowCursor(SDL_ENABLE);
 
     cria_poligonos(7);
+
+    define_objetivos(rand() % (8 - 1 + 1) + 1);
 
     loop_jogo();
 

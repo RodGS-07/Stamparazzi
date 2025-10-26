@@ -645,7 +645,7 @@ void Cone::aplica_efeito(Jogador& jogador) {
     // origem = ápice do cone
     XYZ origem = apex;
     // fim = ponto ao longo da direção do cone
-    XYZ fim = apex - axis * altura * 30.0f; // 30x altura, laser longo
+    XYZ fim = apex - axis * altura * 50.0f; // 50x altura, laser longo
 
     if (SegmentVsAABB(origem, fim, box)) {
         jogador.morre();
@@ -660,9 +660,9 @@ void Cone::desenha_poligono(int cor, bool pause) {
         glLineWidth(2.0f);
         glBegin(GL_LINES);
             glVertex3f(apex.x, apex.y, apex.z);
-            glVertex3f(apex.x - axis.x*altura*30,
-                    apex.y - axis.y*altura*30,
-                    apex.z - axis.z*altura*30);
+            glVertex3f(apex.x - axis.x*altura*50,
+                    apex.y - axis.y*altura*50,
+                    apex.z - axis.z*altura*50);
         glEnd();
         glLineWidth(1.0f);
         muda_cor(cor);

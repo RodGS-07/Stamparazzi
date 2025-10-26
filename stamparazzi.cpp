@@ -34,6 +34,7 @@ using namespace std;
 
 int teste = 0;
 int timer = 180;
+int renascer = 3;
 int minutos = timer / 60;
 int segundos = timer % 60;
 bool mouse_in = false;
@@ -46,8 +47,8 @@ bool rodando = true;
 Uint32 inicio, fim;
 float dt;
 const Uint8* state;
-GLuint texturaTexto1 = 0, texturaTexto2 = 0, texturaTexto3 = 0;
-int larguraTexto1 = 0, larguraTexto2 = 0, larguraTexto3 = 0, alturaTexto1 = 0, alturaTexto2 = 0, alturaTexto3 = 0;
+GLuint texturaTextoTempo = 0, texturaTextoObj = 0, texturaTextoPause = 0, texturaTextoMorto = 0;
+int larguraTextoTempo = 0, larguraTextoObj = 0, larguraTextoPause = 0, larguraTextoMorto = 0, alturaTextoTempo = 0, alturaTextoObj = 0, alturaTextoPause = 0, alturaTextoMorto = 0;
 vector<int> cores_poligonos;
 
 SDL_Window* window;
@@ -286,7 +287,7 @@ void inicializa_ttf(){
 
     string str = oss.str();
     const char* texto = str.c_str();
-    texturaTexto1 = criaTexturaDoTexto(texto, fonte, preto, larguraTexto1, alturaTexto1);
+    texturaTextoTempo = criaTexturaDoTexto(texto, fonte, preto, larguraTextoTempo, alturaTextoTempo);
 
     oss << "Adesivos faltando: ";
     for(int n : objetivos) {
@@ -294,13 +295,19 @@ void inicializa_ttf(){
     }
     str = oss.str();
     texto = str.c_str();
-    texturaTexto2 = criaTexturaDoTexto(texto, fonte, preto, larguraTexto2, alturaTexto2);
+    texturaTextoObj = criaTexturaDoTexto(texto, fonte, preto, larguraTextoObj, alturaTextoObj);
 
     ostringstream poss;
     poss << "PAUSE";
     str = poss.str();
     texto = str.c_str();
-    texturaTexto3 = criaTexturaDoTexto(texto, fonte, preto, larguraTexto3, alturaTexto3);
+    texturaTextoPause = criaTexturaDoTexto(texto, fonte, preto, larguraTextoPause, alturaTextoPause);
+
+    ostringstream moss;
+    moss << "Voce morreu, renascendo em 3";
+    str = moss.str();
+    texto = str.c_str();
+    texturaTextoMorto = criaTexturaDoTexto(texto, fonte, preto, larguraTextoMorto, alturaTextoMorto);
 }
 
 void cria_poligonos(int n){
@@ -363,8 +370,8 @@ void cria_poligonos(int n){
     advance(it, randomIndex);
     id = *it - 1;
     poligonos.push_back(make_unique<Cone>(
-        40.0f, 0.0f, -20.0f,
-        make_unique<Adesivo>(40.0f, 0.0f, -20.0f, id, XYZ{0,0,1}),
+        40.0f, 0.5f, -20.0f,
+        make_unique<Adesivo>(40.0f, 5.0f, -20.0f, id, XYZ{0,0,1}),
         2.0f, 4.0f
     ));
     copia.erase(it);
@@ -463,7 +470,7 @@ void atualiza_timer(float dt){
                 << minutos << ":" << std::setw(2) << std::setfill('0') << segundos;
 
                 string str = oss.str();
-                atualizaTexto(str,texturaTexto1,larguraTexto1,alturaTexto1);
+                atualizaTexto(str,texturaTextoTempo,larguraTextoTempo,alturaTextoTempo);
             }
         }
     }
@@ -477,7 +484,32 @@ void atualiza_objetivos() {
     }
 
     string str = oss.str();
-    atualizaTexto(str,texturaTexto2,larguraTexto2,alturaTexto2);
+    atualizaTexto(str,texturaTextoObj,larguraTextoObj,alturaTextoObj);
+}
+
+void atualiza_renascer(float dt) {
+    static float acumulador = 0.0f;
+
+    acumulador += dt;
+    if (acumulador >= 1.0f) { // passou 1 segundo
+        acumulador -= 1.0f;
+        if (renascer > 0) {
+            renascer--;
+            if (renascer == 0) {
+                jogador.nasce_jogador(0.0f,1.5f,0.0f);
+                renascer = 3;
+                ostringstream oss;
+                oss << "Voce morreu, renascendo em " << renascer;
+                string str = oss.str();
+                atualizaTexto(str,texturaTextoMorto,larguraTextoMorto,alturaTextoMorto);
+                return;
+            }
+            ostringstream oss;
+            oss << "Voce morreu, renascendo em " << renascer;
+            string str = oss.str();
+            atualizaTexto(str,texturaTextoMorto,larguraTextoMorto,alturaTextoMorto);
+        }
+    }
 }
 
 void loop_jogo(){
@@ -502,6 +534,8 @@ void loop_jogo(){
         if(!objetivos.size()) {rodando = false; cout << "Voce venceu!" << endl; break;}
         atualiza_objetivos();
 
+        if(!jogador.estaVivo()) atualiza_renascer(dt);
+
         while (SDL_PollEvent(&evento)) {
             if (evento.type == SDL_QUIT) {
                 rodando = false;
@@ -511,7 +545,7 @@ void loop_jogo(){
             
             if(!game_controller){
                 if(evento.type == SDL_KEYDOWN){
-                    if(evento.key.keysym.sym == SDLK_p){
+                    if(evento.key.keysym.sym == SDLK_p and jogador.estaVivo()){
                         pause = !pause;
                         SDL_SetRelativeMouseMode(pause ? SDL_FALSE : SDL_TRUE);
                         SDL_ShowCursor(pause ? SDL_ENABLE : SDL_DISABLE);
@@ -546,7 +580,7 @@ void loop_jogo(){
                 }
             } else {
                 if(evento.type == SDL_CONTROLLERBUTTONDOWN) {
-                    if(evento.cbutton.button == SDL_CONTROLLER_BUTTON_START)
+                    if(evento.cbutton.button == SDL_CONTROLLER_BUTTON_START and jogador.estaVivo())
                         pause = !pause;
                     else if(evento.cbutton.button == SDL_CONTROLLER_BUTTON_RIGHTSTICK) {
                         tela_cheia = !tela_cheia;
@@ -597,17 +631,26 @@ void loop_jogo(){
         glLoadIdentity();
 
         // desenha texto
-        if(texturaTexto1 and texturaTexto2 and texturaTexto3) {
-            desenhaTexto(texturaTexto1, 50, 50, larguraTexto1, alturaTexto1);
-            desenhaTexto(texturaTexto2, 50, 100, larguraTexto2, alturaTexto2);
+        if(texturaTextoTempo and texturaTextoObj and texturaTextoPause and texturaTextoMorto) {
+            desenhaTexto(texturaTextoTempo, 50, 50, larguraTextoTempo, alturaTextoTempo);
+            desenhaTexto(texturaTextoObj, 50, 100, larguraTextoObj, alturaTextoObj);
             if(pause) {
                 if(!tela_cheia){
                     int larguraJanela, alturaJanela;
                     SDL_GetWindowSize(window, &larguraJanela, &alturaJanela);
-                    int xCentro = (larguraJanela - larguraTexto3) / 2;
-                    int yCentro = (alturaJanela - alturaTexto3) / 2;
-                    desenhaTexto(texturaTexto3, xCentro, yCentro, larguraTexto3, alturaTexto3);
-                } else desenhaTexto(texturaTexto3, 400, 300, larguraTexto3, alturaTexto3);
+                    int xCentro = (larguraJanela - larguraTextoPause) / 2;
+                    int yCentro = (alturaJanela - alturaTextoPause) / 2;
+                    desenhaTexto(texturaTextoPause, xCentro, yCentro, larguraTextoPause, alturaTextoPause);
+                } else desenhaTexto(texturaTextoPause, 400, 300, larguraTextoPause, alturaTextoPause);
+            }
+            if(!jogador.estaVivo()){
+                if(!tela_cheia){
+                    int larguraJanela, alturaJanela;
+                    SDL_GetWindowSize(window, &larguraJanela, &alturaJanela);
+                    int xCentro = (larguraJanela - larguraTextoPause) / 2;
+                    int yCentro = (alturaJanela - alturaTextoPause) / 2;
+                    desenhaTexto(texturaTextoMorto, xCentro, yCentro, larguraTextoMorto, alturaTextoMorto);
+                } else desenhaTexto(texturaTextoMorto, 300, 300, larguraTextoMorto, alturaTextoMorto);
             }
         }
 
@@ -625,7 +668,7 @@ void loop_jogo(){
                     jogador.getX(),jogador.getY(),jogador.getZ(),
                     0.0f,1.0f,0.0f);
             }
-            jogador.desenha_mascara();
+            if(jogador.estaVivo()) {jogador.desenha_mascara(); jogador.desenha_mira();}
         }
 
         GLfloat position0[] = { 0.0, 100.0f, 0.0f, 1.0f};
@@ -633,8 +676,6 @@ void loop_jogo(){
 
         GLfloat position1[] = { 0.0, -100.0f, 0.0f, 1.0f};
         glLightfv(GL_LIGHT1,GL_POSITION,position1);
-
-        jogador.desenha_mira();
 
         // Desenha chão
 		glPushMatrix();
@@ -747,7 +788,7 @@ void loop_jogo(){
         }
 
         // Controla câmera
-        jogador.controle_camera(MOVE_VEL, CAMERA_SENS,dt,pause,window,game_controller,state,poligonos,limites);
+        if(jogador.estaVivo()) jogador.controle_camera(MOVE_VEL, CAMERA_SENS,dt,pause,window,game_controller,state,poligonos,limites);
         //jogador.controle_camera(MOVE_VEL, CAMERA_SENS,dt,pause,window,game_controller,state,limites);
 
         for(const auto& p : poligonos){
@@ -756,7 +797,7 @@ void loop_jogo(){
         }
 
         // Verifica morte do jogador
-        if(!jogador.estaVivo()) jogador.nasce_jogador(0.0f,1.5f,0.0f);
+        //if(!jogador.estaVivo() and !renascer) renascer = 3;
 
         for(const auto& p : poligonos){
             Adesivo* ade = p->getAdesivo();
@@ -783,7 +824,7 @@ void finaliza_sdl(){
         SDL_GameControllerClose(game_controller);
         game_controller = NULL;
     }
-    glDeleteTextures(1, &texturaTexto1);
+    glDeleteTextures(1, &texturaTextoTempo);
     TTF_CloseFont(fonte);
     TTF_Quit();
     SDL_GL_DeleteContext(glContext);
