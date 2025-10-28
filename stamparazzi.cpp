@@ -476,16 +476,123 @@ void atualiza_timer(float dt){
     }
 }
 
-void atualiza_objetivos() {
-    ostringstream oss;
-    oss << "Adesivos faltando: ";
-    for(int n : objetivos) {
-        oss << n << " ";
+void atualiza_objetivos(const set<int>& objetivos, const vector<int>& coresPoligonos) {
+    if (texturaTextoObj) {
+        glDeleteTextures(1, &texturaTextoObj);
+        texturaTextoObj = 0;
     }
 
-    string str = oss.str();
-    atualizaTexto(str,texturaTextoObj,larguraTextoObj,alturaTextoObj);
+    if (objetivos.empty()) return;
+
+    // Define fonte e cor base
+    SDL_Color corTexto = {0, 0, 0, 255}; // texto preto
+    TTF_Font* fonteLocal = fonte;        // usa a fonte global
+
+    // Monta o texto com blocos coloridos
+    int larguraTotal = 0;
+    int alturaMax = 0;
+    vector<SDL_Surface*> partes;
+
+    // Cria a superfície inicial com o prefixo
+    SDL_Surface* prefixo = TTF_RenderText_Blended(fonteLocal, "Adesivos faltando: ", corTexto);
+    partes.push_back(prefixo);
+    larguraTotal += prefixo->w;
+    alturaMax = prefixo->h;
+
+    // Iterador sobre o set (para preservar ordem e evitar acesso por índice)
+    int index = 0;
+    for (int n : objetivos) {
+        if (index >= (int)coresPoligonos.size()) break;
+
+        Cor cor = get_cor(coresPoligonos[index]);
+        SDL_Color corFundo = {
+            (Uint8)(cor.r * 255),
+            (Uint8)(cor.g * 255),
+            (Uint8)(cor.b * 255),
+            255
+        };
+
+        // Fundo colorido (quadrado)
+        SDL_Surface* bloco = SDL_CreateRGBSurface(
+            0, 40, prefixo->h, 32,
+            0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000
+        );
+        SDL_FillRect(bloco, nullptr, SDL_MapRGB(bloco->format, corFundo.r, corFundo.g, corFundo.b));
+
+        // Número do adesivo
+        string num = to_string(n);
+        SDL_Surface* numero = TTF_RenderText_Blended(fonteLocal, num.c_str(), {255,255,255,255});
+
+        SDL_Rect dst;
+        dst.x = (bloco->w - numero->w) / 2;
+        dst.y = (bloco->h - numero->h) / 2;
+        SDL_BlitSurface(numero, nullptr, bloco, &dst);
+        SDL_FreeSurface(numero);
+
+        partes.push_back(bloco);
+        larguraTotal += bloco->w + 5;
+        alturaMax = max(alturaMax, bloco->h);
+
+        index++;
+    }
+
+    // Junta tudo em uma única superfície final
+    SDL_Surface* finalSurf = SDL_CreateRGBSurface(
+        0, larguraTotal, alturaMax, 32,
+        0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000
+    );
+
+    int xOffset = 0;
+    for (SDL_Surface* s : partes) {
+        SDL_Rect dst = {xOffset, 0, s->w, s->h};
+        SDL_BlitSurface(s, nullptr, finalSurf, &dst);
+        xOffset += s->w + 5;
+        SDL_FreeSurface(s);
+    }
+
+    // --- Converte a superfície final em textura OpenGL ---
+    GLuint textura;
+    glGenTextures(1, &textura);
+    glBindTexture(GL_TEXTURE_2D, textura);
+
+    larguraTextoObj = finalSurf->w;
+    alturaTextoObj = finalSurf->h;
+
+    // Garante que a superfície está no formato esperado (RGBA)
+    SDL_Surface* formatted = SDL_ConvertSurfaceFormat(finalSurf, SDL_PIXELFORMAT_RGBA32, 0);
+
+    // Cria a textura OpenGL com os pixels da superfície
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, formatted->w, formatted->h, 0,
+                GL_RGBA, GL_UNSIGNED_BYTE, formatted->pixels);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    texturaTextoObj = textura;
+
+    // Libera superfícies temporárias
+    SDL_FreeSurface(formatted);
+    SDL_FreeSurface(finalSurf);
+    
+    // // Converte a superfície final em textura OpenGL
+    // texturaTextoObj = criaTexturaDoTexto(nullptr, fonteLocal, {0,0,0,255}, larguraTextoObj, alturaTextoObj);
+
+    // larguraTextoObj = finalSurf->w;
+    // alturaTextoObj = finalSurf->h;
+
+    // SDL_FreeSurface(finalSurf);
 }
+
+// void atualiza_objetivos() {
+//     ostringstream oss;
+//     oss << "Adesivos faltando: ";
+//     for(int n : objetivos) {
+//         oss << n << " ";
+//     }
+
+//     string str = oss.str();
+//     atualizaTexto(str,texturaTextoObj,larguraTextoObj,alturaTextoObj);
+// }
 
 void atualiza_renascer(float dt) {
     static float acumulador = 0.0f;
@@ -532,7 +639,7 @@ void loop_jogo(){
         if(!timer) {rodando = false; cout << "Seu tempo acabou!" << endl; break;}
 
         if(!objetivos.size()) {rodando = false; cout << "Voce venceu!" << endl; break;}
-        atualiza_objetivos();
+        atualiza_objetivos(objetivos, cores_poligonos);
 
         if(!jogador.estaVivo()) atualiza_renascer(dt);
 

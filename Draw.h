@@ -3,6 +3,8 @@
 
 #include "Linear.h"
 
+struct Cor {float r, g, b;};
+
 enum F{
     CUBO,
     PIRAMIDE,
@@ -29,6 +31,7 @@ const float cores[13][3] = {
     {0.0f,0.0f,0.0f} /*preto = 12*/ };
 
 void muda_cor(int c);
+Cor get_cor(int c);
 void desenha_cubo(float lado = 2.0f, int id = 3);
 void desenha_piramide(float base = 4.0f, float altura = 4.0f, int id = 3);
 void desenha_esfera(float raio = 2.0f, int fatias = 30, int stacks = 30, int id = 3);

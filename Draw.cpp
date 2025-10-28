@@ -12,6 +12,8 @@ void muda_cor(int c){
     glColor3f(cores[c][0],cores[c][1],cores[c][2]);
 }
 
+Cor get_cor(int c) {return {cores[c][0],cores[c][1],cores[c][2]};}
+
 void desenha_cubo(float lado, int id) {
     XYZ normal;
 
