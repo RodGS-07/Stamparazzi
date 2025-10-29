@@ -546,12 +546,13 @@ void atualiza_objetivos(const set<int>& objetivos, const vector<int>& coresPolig
             255
         };
 
+        
         // Cria o bloco de fundo colorido
         SDL_Surface* bloco = SDL_CreateRGBSurface(
             0, 20, prefixo->h, 32,
             0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000
         );
-        SDL_FillRect(bloco, nullptr, SDL_MapRGB(bloco->format, corFundo.r, corFundo.g, corFundo.b));
+        SDL_FillRect(bloco, nullptr, SDL_MapRGBA(bloco->format, corFundo.r, corFundo.g, corFundo.b, 255));
 
         // Número do adesivo
         string num = to_string(objetivo);
@@ -588,6 +589,12 @@ void atualiza_objetivos(const set<int>& objetivos, const vector<int>& coresPolig
     }
 
     // --- Converte a superfície final em textura OpenGL ---
+    glDisable(GL_LIGHTING);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+
     GLuint textura;
     glGenTextures(1, &textura);
     glBindTexture(GL_TEXTURE_2D, textura);
@@ -610,6 +617,8 @@ void atualiza_objetivos(const set<int>& objetivos, const vector<int>& coresPolig
     // Libera superfícies temporárias
     SDL_FreeSurface(formatted);
     SDL_FreeSurface(finalSurf);
+
+    glEnable(GL_LIGHTING);
 }
 
 void atualiza_renascer(float dt) {
