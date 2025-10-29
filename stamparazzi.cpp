@@ -425,6 +425,28 @@ void cria_poligonos(int n){
         }
     }
 
+    // Cria vetor de pares (polígono, cor)
+    vector<pair<unique_ptr<Poligono>, int>> combinados;
+    for (size_t i = 0; i < poligonos.size(); ++i) {
+        combinados.push_back({move(poligonos[i]), cores_poligonos[i]});
+    }
+
+    // Ordena pelo ID do adesivo
+    sort(combinados.begin(), combinados.end(),
+        [](const pair<unique_ptr<Poligono>, int>& a,
+            const pair<unique_ptr<Poligono>, int>& b) {
+            if (!a.first->getAdesivo() || !b.first->getAdesivo()) return false;
+            return a.first->getAdesivo()->getTexturaID() < b.first->getAdesivo()->getTexturaID();
+        });
+
+    // Reconstrói os vetores originais
+    poligonos.clear();
+    cores_poligonos.clear();
+    for (auto& par : combinados) {
+        poligonos.push_back(move(par.first));
+        cores_poligonos.push_back(par.second);
+    }
+
     /*for(int i = 0; i < n; i++){
         poligonos.push_back();
     }*/
@@ -477,6 +499,7 @@ void atualiza_timer(float dt){
 }
 
 void atualiza_objetivos(const set<int>& objetivos, const vector<int>& coresPoligonos) {
+    
     if (texturaTextoObj) {
         glDeleteTextures(1, &texturaTextoObj);
         texturaTextoObj = 0;
@@ -500,11 +523,22 @@ void atualiza_objetivos(const set<int>& objetivos, const vector<int>& coresPolig
     alturaMax = prefixo->h;
 
     // Iterador sobre o set (para preservar ordem e evitar acesso por índice)
-    int index = 0;
-    for (int n : objetivos) {
-        if (index >= (int)coresPoligonos.size()) break;
+    for (int objetivo : objetivos) {
+        int indicePoligono = -1;
 
-        Cor cor = get_cor(coresPoligonos[index]);
+        // procura qual polígono tem esse adesivo
+        for (size_t i = 0; i < poligonos.size(); ++i) {
+            auto adesivo = poligonos[i]->getAdesivo();
+            if (adesivo && adesivo->getTexturaID()-2 == objetivo) {
+                indicePoligono = (int)i;
+                break;
+            }
+        }
+
+        if (indicePoligono == -1) continue; // se não achou o polígono, ignora
+
+        // Obtém a cor correspondente ao polígono
+        Cor cor = get_cor(coresPoligonos[indicePoligono]);
         SDL_Color corFundo = {
             (Uint8)(cor.r * 255),
             (Uint8)(cor.g * 255),
@@ -512,17 +546,22 @@ void atualiza_objetivos(const set<int>& objetivos, const vector<int>& coresPolig
             255
         };
 
-        // Fundo colorido (quadrado)
+        // Cria o bloco de fundo colorido
         SDL_Surface* bloco = SDL_CreateRGBSurface(
-            0, 40, prefixo->h, 32,
+            0, 20, prefixo->h, 32,
             0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000
         );
         SDL_FillRect(bloco, nullptr, SDL_MapRGB(bloco->format, corFundo.r, corFundo.g, corFundo.b));
 
         // Número do adesivo
-        string num = to_string(n);
-        SDL_Surface* numero = TTF_RenderText_Blended(fonteLocal, num.c_str(), {255,255,255,255});
+        string num = to_string(objetivo);
+        SDL_Surface* numero;
+        if (!corFundo.r && !corFundo.g && !corFundo.b)
+            numero = TTF_RenderText_Blended(fonteLocal, num.c_str(), {255,255,255,255});
+        else
+            numero = TTF_RenderText_Blended(fonteLocal, num.c_str(), {0,0,0,255});
 
+        // Centraliza o número sobre o bloco
         SDL_Rect dst;
         dst.x = (bloco->w - numero->w) / 2;
         dst.y = (bloco->h - numero->h) / 2;
@@ -532,8 +571,6 @@ void atualiza_objetivos(const set<int>& objetivos, const vector<int>& coresPolig
         partes.push_back(bloco);
         larguraTotal += bloco->w + 5;
         alturaMax = max(alturaMax, bloco->h);
-
-        index++;
     }
 
     // Junta tudo em uma única superfície final
@@ -573,26 +610,7 @@ void atualiza_objetivos(const set<int>& objetivos, const vector<int>& coresPolig
     // Libera superfícies temporárias
     SDL_FreeSurface(formatted);
     SDL_FreeSurface(finalSurf);
-    
-    // // Converte a superfície final em textura OpenGL
-    // texturaTextoObj = criaTexturaDoTexto(nullptr, fonteLocal, {0,0,0,255}, larguraTextoObj, alturaTextoObj);
-
-    // larguraTextoObj = finalSurf->w;
-    // alturaTextoObj = finalSurf->h;
-
-    // SDL_FreeSurface(finalSurf);
 }
-
-// void atualiza_objetivos() {
-//     ostringstream oss;
-//     oss << "Adesivos faltando: ";
-//     for(int n : objetivos) {
-//         oss << n << " ";
-//     }
-
-//     string str = oss.str();
-//     atualizaTexto(str,texturaTextoObj,larguraTextoObj,alturaTextoObj);
-// }
 
 void atualiza_renascer(float dt) {
     static float acumulador = 0.0f;
@@ -676,7 +694,7 @@ void loop_jogo(){
                 if(evento.type == SDL_MOUSEBUTTONDOWN and pause){
                     pause = false;
                     SDL_ShowCursor(SDL_DISABLE);
-                } else if(evento.type == SDL_MOUSEBUTTONDOWN and !pause){
+                } else if(evento.type == SDL_MOUSEBUTTONDOWN and !pause and jogador.estaVivo()){
                     if(evento.button.button == SDL_BUTTON_LEFT){
                         flash_alpha = 1.0f;
                         flash_ativo = true;
@@ -706,7 +724,7 @@ void loop_jogo(){
                         if(pause) rodando = false;
                         else primeira_pessoa = !primeira_pessoa;
                 }
-                if(SDL_GameControllerGetAxis(game_controller,SDL_CONTROLLER_AXIS_TRIGGERRIGHT) > 16000){
+                if(SDL_GameControllerGetAxis(game_controller,SDL_CONTROLLER_AXIS_TRIGGERRIGHT) > 16000 and !pause and jogador.estaVivo()){
                     flash_alpha = 1.0f;
                     flash_ativo = true;
                 }
@@ -910,7 +928,7 @@ void loop_jogo(){
             Adesivo* ade = p->getAdesivo();
             if(ade!=nullptr){
                 Adesivo a = *ade;
-                if(jogador.detecta_adesivo(a,poligonos)){
+                if(jogador.detecta_adesivo(a,poligonos) and jogador.estaVivo()){
                     glDisable(GL_DEPTH_TEST);   // ignora profundidade
                     marcax(p->getX(),p->getY(),p->getZ(),jogador.getCamYaw(),jogador.getCamPitch());
                     glEnable(GL_DEPTH_TEST);    // reativa para os próximos frames
