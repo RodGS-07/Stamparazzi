@@ -15,7 +15,7 @@ GLuint texID[QTDTEXT];  // ID para as texturas
 
 const char* textureFileNames[QTDTEXT] = {   //nomes dos arquivos das texturas
     "chatgpt_chao.png",
-    "chatgpt_parede.png",
+    "chatgpt_parede3.png",
     "chatgpt_teto.png",
     "adesivo_photopea01.png",
     "adesivo_photopea02.png",
