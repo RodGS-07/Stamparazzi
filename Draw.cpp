@@ -3,6 +3,7 @@
 #include "Linear.h"
 #include "Textura.h"
 #include <GL/glut.h>
+#include <GL/glext.h>
 #include <cmath>
 #include <vector>
 
@@ -35,16 +36,16 @@ void desenha_cubo(float lado, int id_adesivo) {
     normal = Normal({-lado,-lado,-lado},{-lado,lado,-lado},{lado,lado,-lado});
     glNormal3f(normal.x,normal.y,normal.z);
     glVertex3f(-lado, -lado, -lado);
-    glVertex3f(-lado,  lado, -lado);
-    glVertex3f( lado,  lado, -lado);
-    glVertex3f( lado, -lado, -lado);
+    glVertex3f(lado, -lado, -lado);
+    glVertex3f(lado,  lado, -lado);
+    glVertex3f(-lado, lado, -lado);
 
     normal = Normal({-lado,-lado,-lado},{-lado,-lado,lado},{-lado,lado,lado});
     glNormal3f(normal.x,normal.y,normal.z);
     glVertex3f(-lado, -lado, -lado);
-    glVertex3f(-lado, -lado,  lado);
+    glVertex3f(-lado, lado,  -lado);
     glVertex3f(-lado,  lado,  lado);
-    glVertex3f(-lado,  lado, -lado);
+    glVertex3f(-lado,  -lado, lado);
 
     normal = Normal({lado,-lado,-lado},{lado,lado,-lado},{lado,lado,lado});
     glNormal3f(normal.x,normal.y,normal.z);
@@ -56,18 +57,21 @@ void desenha_cubo(float lado, int id_adesivo) {
     normal = Normal({-lado,lado,-lado},{-lado,lado,lado},{lado,lado,lado});
     glNormal3f(normal.x,normal.y,normal.z);
     glVertex3f(-lado, lado, -lado);
-    glVertex3f(-lado, lado,  lado);
+    glVertex3f(lado, lado, -lado);
     glVertex3f( lado, lado,  lado);
-    glVertex3f( lado, lado, -lado);
+    glVertex3f(-lado, lado, lado);
 
     normal = Normal({-lado,-lado,-lado},{lado,-lado,-lado},{lado,-lado,lado});
     glNormal3f(normal.x,normal.y,normal.z);
     glVertex3f(-lado, -lado, -lado);
-    glVertex3f( lado, -lado, -lado);
+    glVertex3f(lado, -lado, -lado);
     glVertex3f( lado, -lado,  lado);
     glVertex3f(-lado, -lado,  lado);
 
     glEnd();
+
+    glEnable(GL_POLYGON_OFFSET_FILL);
+    glPolygonOffset(-1.0f, -1.0f);
 
     float adesivoTamanho = lado * 0.3f; // 30% da face
     float offset = lado + 0.01f;       // ligeiramente à frente da face
@@ -92,26 +96,26 @@ void desenha_cubo(float lado, int id_adesivo) {
 
     // --- Trás ---
     glBegin(GL_QUADS);
-        glTexCoord2f(1, 0); glVertex3f(-simboloTamanho, -simboloTamanho, -offset);
-        glTexCoord2f(0, 0); glVertex3f( simboloTamanho, -simboloTamanho, -offset);
-        glTexCoord2f(0, 1); glVertex3f( simboloTamanho,  simboloTamanho, -offset);
-        glTexCoord2f(1, 1); glVertex3f(-simboloTamanho,  simboloTamanho, -offset);
+        glTexCoord2f(0, 0); glVertex3f(-simboloTamanho, -simboloTamanho, -offset);
+        glTexCoord2f(1, 0); glVertex3f( simboloTamanho, -simboloTamanho, -offset);
+        glTexCoord2f(1, 1); glVertex3f( simboloTamanho,  simboloTamanho, -offset);
+        glTexCoord2f(0, 1); glVertex3f(-simboloTamanho,  simboloTamanho, -offset);
     glEnd();
 
     // --- Esquerda ---
     glBegin(GL_QUADS);
-        glTexCoord2f(1, 0); glVertex3f(-offset, -simboloTamanho, -simboloTamanho);
-        glTexCoord2f(0, 0); glVertex3f(-offset, -simboloTamanho,  simboloTamanho);
-        glTexCoord2f(0, 1); glVertex3f(-offset,  simboloTamanho,  simboloTamanho);
-        glTexCoord2f(1, 1); glVertex3f(-offset,  simboloTamanho, -simboloTamanho);
+        glTexCoord2f(0, 0); glVertex3f(-offset, -simboloTamanho, -simboloTamanho);
+        glTexCoord2f(1, 0); glVertex3f(-offset, simboloTamanho,  -simboloTamanho);
+        glTexCoord2f(1, 1); glVertex3f(-offset,  simboloTamanho,  simboloTamanho);
+        glTexCoord2f(0, 1); glVertex3f(-offset,  -simboloTamanho, simboloTamanho);
     glEnd();
 
     // --- Direita ---
     glBegin(GL_QUADS);
         glTexCoord2f(0, 0); glVertex3f( offset, -simboloTamanho, -simboloTamanho);
-        glTexCoord2f(1, 0); glVertex3f( offset, -simboloTamanho,  simboloTamanho);
+        glTexCoord2f(1, 0); glVertex3f( offset, simboloTamanho,  -simboloTamanho);
         glTexCoord2f(1, 1); glVertex3f( offset,  simboloTamanho,  simboloTamanho);
-        glTexCoord2f(0, 1); glVertex3f( offset,  simboloTamanho, -simboloTamanho);
+        glTexCoord2f(0, 1); glVertex3f( offset,  -simboloTamanho, simboloTamanho);
     glEnd();
 
     // --- Topo ---
@@ -131,6 +135,7 @@ void desenha_cubo(float lado, int id_adesivo) {
     glEnd();
 
     glDisable(GL_TEXTURE_2D);
+    glDisable(GL_POLYGON_OFFSET_FILL);
 
     // Divisão entre textura do ColorADD e do adesivo
 
@@ -141,6 +146,8 @@ void desenha_cubo(float lado, int id_adesivo) {
     glBindTexture(GL_TEXTURE_2D, texID[id_adesivo]);
 
     glColor4f(1, 1, 1, 1); // mantém as cores originais da textura
+
+    offset += 0.001f;
 
     glBegin(GL_QUADS);
         glTexCoord2f(0, 0); glVertex3f(-adesivoTamanho, -adesivoTamanho, offset);
@@ -348,7 +355,8 @@ void desenha_piramide(float base, float altura, int id_adesivo) {
 // }
 
 void desenha_esfera(float raio, int fatias, int stacks, int id_adesivo){
-    int id_cor = get_cor_atual();
+    int id_cor = get_cor_atual() + 23;
+
     for (int i = 0; i < stacks; ++i) {
         float phi1 = M_PI / 2 - i * (M_PI / stacks);
         float phi2 = M_PI / 2 - (i + 1) * (M_PI / stacks);
@@ -387,6 +395,135 @@ void desenha_esfera(float raio, int fatias, int stacks, int id_adesivo){
         }
         glEnd();
     }
+
+    // --- Símbolo ColorADD nas laterais ---
+    glEnable(GL_POLYGON_OFFSET_FILL);
+    glPolygonOffset(-1.0f, -1.0f);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, texID[id_cor]);
+    glColor4f(1, 1, 1, 1);
+
+    float simboloRaio = raio * 1.0005f;
+    float simboloAltura = M_PI / 6;   // ~30° de altura (zona equatorial)
+    float simboloLargura = M_PI / 2;  // 90° em torno do equador
+    int subdiv = 40;
+
+    // --- Frente ---
+    for (int i = 0; i < subdiv; ++i) {
+        float phi1 = -simboloAltura / 2 + i * (simboloAltura / subdiv);
+        float phi2 = -simboloAltura / 2 + (i + 1) * (simboloAltura / subdiv);
+
+        glBegin(GL_QUAD_STRIP);
+        for (int j = 0; j <= subdiv; ++j) {
+            float theta = -simboloLargura / 2 + j * (simboloLargura / subdiv);
+
+            // Faixa no equador (em torno de Y = 0)
+            float x1 = simboloRaio * cos(phi2) * sin(theta);
+            float y1 = simboloRaio * sin(phi2);
+            float z1 = simboloRaio * cos(phi2) * cos(theta);
+
+            float x2 = simboloRaio * cos(phi1) * sin(theta);
+            float y2 = simboloRaio * sin(phi1);
+            float z2 = simboloRaio * cos(phi1) * cos(theta);
+
+            float u = (theta + simboloLargura / 2) / simboloLargura;
+            float v1 = (phi2 + simboloAltura / 2) / simboloAltura;
+            float v2 = (phi1 + simboloAltura / 2) / simboloAltura;
+
+            glTexCoord2f(u, v1); glVertex3f(x1, y1, z1);
+            glTexCoord2f(u, v2); glVertex3f(x2, y2, z2);
+        }
+        glEnd();
+    }
+
+    // --- Lateral esquerda ---
+    for (int i = 0; i < subdiv; ++i) {
+        float phi1 = -simboloAltura / 2 + i * (simboloAltura / subdiv);
+        float phi2 = -simboloAltura / 2 + (i + 1) * (simboloAltura / subdiv);
+
+        glBegin(GL_QUAD_STRIP);
+        for (int j = 0; j <= subdiv; ++j) {
+            float theta = -M_PI / 2 - simboloLargura / 2 + j * (simboloLargura / subdiv);
+
+            float x1 = simboloRaio * cos(phi2) * sin(theta);
+            float y1 = simboloRaio * sin(phi2);
+            float z1 = simboloRaio * cos(phi2) * cos(theta);
+
+            float x2 = simboloRaio * cos(phi1) * sin(theta);
+            float y2 = simboloRaio * sin(phi1);
+            float z2 = simboloRaio * cos(phi1) * cos(theta);
+
+            float u = (theta + simboloLargura / 2) / simboloLargura;
+            float v1 = (phi2 + simboloAltura / 2) / simboloAltura;
+            float v2 = (phi1 + simboloAltura / 2) / simboloAltura;
+
+            glTexCoord2f(u, v1); glVertex3f(x1, y1, z1);
+            glTexCoord2f(u, v2); glVertex3f(x2, y2, z2);
+        }
+        glEnd();
+    }
+
+    // --- Lateral direita ---
+    for (int i = 0; i < subdiv; ++i) {
+        float phi1 = -simboloAltura / 2 + i * (simboloAltura / subdiv);
+        float phi2 = -simboloAltura / 2 + (i + 1) * (simboloAltura / subdiv);
+
+        glBegin(GL_QUAD_STRIP);
+        for (int j = 0; j <= subdiv; ++j) {
+            float theta = M_PI / 2 - simboloLargura / 2 + j * (simboloLargura / subdiv);
+
+            float x1 = simboloRaio * cos(phi2) * sin(theta);
+            float y1 = simboloRaio * sin(phi2);
+            float z1 = simboloRaio * cos(phi2) * cos(theta);
+
+            float x2 = simboloRaio * cos(phi1) * sin(theta);
+            float y2 = simboloRaio * sin(phi1);
+            float z2 = simboloRaio * cos(phi1) * cos(theta);
+
+            float u = (theta + simboloLargura / 2) / simboloLargura;
+            float v1 = (phi2 + simboloAltura / 2) / simboloAltura;
+            float v2 = (phi1 + simboloAltura / 2) / simboloAltura;
+
+            glTexCoord2f(u, v1); glVertex3f(x1, y1, z1);
+            glTexCoord2f(u, v2); glVertex3f(x2, y2, z2);
+        }
+        glEnd();
+    }
+
+    // --- Traseira ---
+    for (int i = 0; i < subdiv; ++i) {
+        float phi1 = -simboloAltura / 2 + i * (simboloAltura / subdiv);
+        float phi2 = -simboloAltura / 2 + (i + 1) * (simboloAltura / subdiv);
+
+        glBegin(GL_QUAD_STRIP);
+        for (int j = 0; j <= subdiv; ++j) {
+            float theta = M_PI - simboloLargura / 2 + j * (simboloLargura / subdiv);
+
+            float x1 = simboloRaio * cos(phi2) * sin(theta);
+            float y1 = simboloRaio * sin(phi2);
+            float z1 = simboloRaio * cos(phi2) * cos(theta);
+
+            float x2 = simboloRaio * cos(phi1) * sin(theta);
+            float y2 = simboloRaio * sin(phi1);
+            float z2 = simboloRaio * cos(phi1) * cos(theta);
+
+            float u = (theta + simboloLargura / 2) / simboloLargura;
+            float v1 = (phi2 + simboloAltura / 2) / simboloAltura;
+            float v2 = (phi1 + simboloAltura / 2) / simboloAltura;
+
+            glTexCoord2f(u, v1); glVertex3f(x1, y1, z1);
+            glTexCoord2f(u, v2); glVertex3f(x2, y2, z2);
+        }
+        glEnd();
+    }
+
+    glDisable(GL_TEXTURE_2D);
+    //glDisable(GL_BLEND);
+
+    // --- Adesivo na frente da esfera ---
 
     glEnable(GL_POLYGON_OFFSET_FILL);
     glPolygonOffset(-1.0f, -1.0f);
@@ -437,7 +574,7 @@ void desenha_esfera(float raio, int fatias, int stacks, int id_adesivo){
 void desenha_cilindro(float raio, float altura, int fatias, int stacks, bool tampas, int id_adesivo){
     float half = altura / 2.0f;
     XYZ normal;
-    int id_cor = get_cor_atual();
+    int id_cor = get_cor_atual() + 23;
 
     // Superfície lateral
     for (int i = 0; i < stacks; ++i) {
@@ -489,9 +626,99 @@ void desenha_cilindro(float raio, float altura, int fatias, int stacks, bool tam
         }
         glEnd();
 
+        // =======================================================
+        // SÍMBOLO COLORADD NAS TAMPAS (atrás do adesivo)
+        // =======================================================
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glEnable(GL_TEXTURE_2D);
+        glBindTexture(GL_TEXTURE_2D, texID[id_cor]);
+        glColor4f(1, 1, 1, 1);
+
+        float simboloRaio = raio * 0.6f;  // maior que o adesivo
+        float offsetSimbolo = half + 0.008f; // ligeiramente abaixo do adesivo
+
+        // --- Tampa superior ---
+        glBegin(GL_TRIANGLE_FAN);
+            glNormal3f(0, 0, 1);
+            glTexCoord2f(0.5f, 0.5f);
+            glVertex3f(0, 0, offsetSimbolo);
+            for (int j = 0; j <= fatias; ++j) {
+                float theta = j * (2 * M_PI / fatias);
+                float x = simboloRaio * cos(theta);
+                float y = simboloRaio * sin(theta);
+                float u = 0.5f + 0.5f * cos(theta);
+                float v = 0.5f + 0.5f * sin(theta);
+                glTexCoord2f(u, v);
+                glVertex3f(x, y, offsetSimbolo);
+            }
+        glEnd();
+
+        // --- Tampa inferior ---
+        glBegin(GL_TRIANGLE_FAN);
+            glNormal3f(0, 0, -1);
+            glTexCoord2f(0.5f, 0.5f);
+            glVertex3f(0, 0, -half - 0.008f);
+            for (int j = 0; j <= fatias; ++j) {
+                float theta = j * (2 * M_PI / fatias);
+                float x = simboloRaio * cos(theta);
+                float y = simboloRaio * sin(theta);
+                float u = 0.5f + 0.5f * cos(theta);
+                float v = 0.5f + 0.5f * sin(theta);
+                glTexCoord2f(u, v);
+                glVertex3f(x, y, -half - 0.008f);
+            }
+        glEnd();
+
+        // =======================================================
+        // SÍMBOLO COLORADD NA LATERAL  (corrigido: sem repeat)
+        // =======================================================
+        float simboloAltura = altura * 0.4f;   // ocupa 40% da altura
+        float simboloAngulo = M_PI / 4;        // cobre 45° da lateral
+
+        float z1 = -simboloAltura / 2;
+        float z2 =  simboloAltura / 2;
+        float r = raio * 1.01f;
+
+        // Antes de bind: força CLAMP para evitar repetição nas bordas
+        glEnable(GL_TEXTURE_2D);
+        glBindTexture(GL_TEXTURE_2D, texID[id_cor]);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+        glBegin(GL_QUADS);
+            int segments = max(1, fatias / 8); // continue usando ~45° de arco
+            for (int j = 0; j < segments; ++j) { // note: use < segments (não <=)
+                float theta1 = -simboloAngulo / 2 + j * (simboloAngulo / segments);
+                float theta2 = -simboloAngulo / 2 + (j + 1) * (simboloAngulo / segments);
+
+                float x1 = r * cos(theta1);
+                float y1 = r * sin(theta1);
+                float x2 = r * cos(theta2);
+                float y2 = r * sin(theta2);
+
+                // mapear u estritamente entre 0 e 1 para cada segmento
+                float u1 = (float)j / (float)segments;
+                float u2 = (float)(j+1) / (float)segments;
+
+                glTexCoord2f(u1, 0); glVertex3f(x1, y1, z1);
+                glTexCoord2f(u2, 0); glVertex3f(x2, y2, z1);
+                glTexCoord2f(u2, 1); glVertex3f(x2, y2, z2);
+                glTexCoord2f(u1, 1); glVertex3f(x1, y1, z2);
+            }
+        glEnd();
+
+        // (opcional) restaurar wrap para o estado anterior (se quiser)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+        glDisable(GL_TEXTURE_2D);
+
+        // --- Adesivo na tampa superior ---
         glEnable(GL_POLYGON_OFFSET_FILL);
         glPolygonOffset(-1.0f, -1.0f);
-        // --- Adesivo na tampa superior ---
+        
         float adesivoRaio = raio * 0.4f; // menor que o raio da tampa
         float offset = half + 0.01f;    // um pouquinho acima da tampa
 
@@ -528,7 +755,7 @@ void desenha_cilindro(float raio, float altura, int fatias, int stacks, bool tam
 void desenha_cone(float raio, float altura, int fatias, int id_adesivo){
     float half = altura / 2.0f;
     XYZ normal;
-    int id_cor = get_cor_atual();
+    int id_cor = get_cor_atual() + 23;
 
     // Superfície lateral
     glBegin(GL_TRIANGLES);
@@ -583,17 +810,78 @@ void desenha_cone(float raio, float altura, int fatias, int id_adesivo){
 
     glEnable(GL_POLYGON_OFFSET_FILL);
     glPolygonOffset(-1.0f, -1.0f);
-    // ---------------- Adesivo na lateral ----------------
-    // O adesivo será colado no lado "frontal" do cone (direção +Z)
-    float adesivoAltura = altura * 0.3f;  // fração da altura
-    float adesivoLargura = raio * 0.8f;   // fração da largura
-    float zOffset = half - adesivoAltura * 0.8f; // mais próximo do ápice
-    float rOffset = raio * 0.98f;         // quase colado à lateral
 
-    // Calcula ângulo médio da frente (+Z)
+    // ==========================================================
+    // SÍMBOLO COLORADD (base e lateral inferior)
+    // ==========================================================
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, texID[id_cor]);
+    glColor4f(1, 1, 1, 1);
+
+    // --- Base circular (como tampa inferior) ---
+    float simboloRaio = raio * 0.75f;
+    float offsetBase = -half - 0.008f; // um pouco abaixo da base
+    glBegin(GL_TRIANGLE_FAN);
+        glNormal3f(0, 0, -1);
+        glTexCoord2f(0.5f, 0.5f);
+        glVertex3f(0, 0, offsetBase);
+        for (int j = 0; j <= fatias; ++j) {
+            float theta = j * (2 * M_PI / fatias);
+            float x = simboloRaio * cos(theta);
+            float y = simboloRaio * sin(theta);
+            float u = 0.5f + 0.5f * cos(theta);
+            float v = 0.5f + 0.5f * sin(theta);
+            glTexCoord2f(u, v);
+            glVertex3f(x, y, offsetBase);
+        }
+    glEnd();
+
+    // --- Lateral: símbolo abaixo do adesivo ---
+    float adesivoAltura = altura * 0.2f;
+    float adesivoLargura = raio * 0.8f;
+    float rOffset = raio * 0.97f; // um pouco mais dentro que o adesivo
+    float zSimbolo = half - adesivoAltura * 0.8f; //-half + (altura * 0.25f); // abaixo do adesivo
     float theta = 0.0f; // direção frontal (Z positivo)
+
     float xDir = rOffset * sin(theta);
     float yDir = rOffset * cos(theta);
+
+    glPushMatrix();
+        glTranslatef(xDir, yDir - 1.7f, zSimbolo);
+
+        // Mesmo ângulo de inclinação da lateral
+        float slopeAngle = 63.75f;
+        glRotatef(-slopeAngle, 1, 0, 0);
+
+        float s = adesivoLargura * 0.6f; // menor que o adesivo
+        float h = adesivoAltura * 0.4f;  // menor também
+
+        glBegin(GL_QUADS);
+            glTexCoord2f(0, 0); glVertex3f(-s, -h, 0);
+            glTexCoord2f(1, 0); glVertex3f( s, -h, 0);
+            glTexCoord2f(1, 1); glVertex3f( s,  h, 0);
+            glTexCoord2f(0, 1); glVertex3f(-s,  h, 0);
+        glEnd();
+    glPopMatrix();
+
+    glDisable(GL_TEXTURE_2D);
+
+    glEnable(GL_POLYGON_OFFSET_FILL);
+    glPolygonOffset(-1.0f, -1.0f);
+
+    // ---------------- Adesivo na lateral ----------------
+    // O adesivo será colado no lado "frontal" do cone (direção +Z)
+    adesivoAltura = altura * 0.3f;  // fração da altura
+    adesivoLargura = raio * 0.8f;   // fração da largura
+    float zOffset = half - adesivoAltura * 0.8f; // mais próximo do ápice
+    rOffset = raio * 0.98f;         // quase colado à lateral
+
+    // Calcula ângulo médio da frente (+Z)
+    theta = 0.0f; // direção frontal (Z positivo)
+    xDir = rOffset * sin(theta);
+    yDir = rOffset * cos(theta);
 
     // Posição média do adesivo na superfície
     float adesivoZ = -half + adesivoAltura * 0.5f;
@@ -610,7 +898,7 @@ void desenha_cone(float raio, float altura, int fatias, int id_adesivo){
         glTranslatef(xDir, yDir - 0.26f, adesivoZ);
 
         // Calcula ângulo de inclinação da superfície do cone
-        float slopeAngle = 63.75f; //atan(raio / altura) * 180.0f / M_PI + 36.5f;
+        slopeAngle = 63.75f; //atan(raio / altura) * 180.0f / M_PI + 36.5f;
 
         // Rotaciona o adesivo para acompanhar a inclinação do cone
         glRotatef(-slopeAngle, 1, 0, 0);
@@ -618,8 +906,8 @@ void desenha_cone(float raio, float altura, int fatias, int id_adesivo){
         // Rotaciona para ficar de frente (+Z)
         //glRotatef(90, 0, 1, 0);
 
-        float s = adesivoLargura * 0.5f;
-        float h = adesivoAltura * 0.5f;
+        s = adesivoLargura * 0.5f;
+        h = adesivoAltura * 0.5f;
 
         glBegin(GL_QUADS);
             glTexCoord2f(0, 0); glVertex3f(-s, -h, 0);
