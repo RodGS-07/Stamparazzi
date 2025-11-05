@@ -36,7 +36,20 @@ const char* textureFileNames[QTDTEXT] = {   //nomes dos arquivos das texturas
     "adesivo_photopea17.png",
     "adesivo_photopea18.png",
     "adesivo_photopea19.png",
-    "adesivo_photopea20.png"
+    "adesivo_photopea20.png",
+    "ColorADD_vermelho.png",
+    "ColorADD_laranja.png",
+    "ColorADD_amarelo.png",
+    "ColorADD_lima.png",
+    "ColorADD_verde.png",
+    "ColorADD_ciano.png",
+    "ColorADD_azul.png",
+    "ColorADD_roxo.png",
+    "ColorADD_rosa.png",
+    "ColorADD_marrom.png",
+    "ColorADD_branco.png",
+    "ColorADD_cinza.png",
+    "ColorADD_preto.png"
 };
 
 void drawSquare(XYZ s,XYZ t){

@@ -6,7 +6,7 @@
 #include <GL/glut.h>
 #include <cmath>
 
-#define QTDTEXT 23 // quantidade de texturas
+#define QTDTEXT 36 // quantidade de texturas
 
 extern GLuint texID[QTDTEXT]; // ID para as texturas
 

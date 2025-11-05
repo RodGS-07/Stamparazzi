@@ -538,7 +538,7 @@ void atualiza_objetivos(const set<int>& objetivos, const vector<int>& coresPolig
         if (indicePoligono == -1) continue; // se não achou o polígono, ignora
 
         // Obtém a cor correspondente ao polígono
-        Cor cor = get_cor(coresPoligonos[indicePoligono]);
+        Cor cor = get_cor_struct(coresPoligonos[indicePoligono]);
         SDL_Color corFundo = {
             (Uint8)(cor.r * 255),
             (Uint8)(cor.g * 255),

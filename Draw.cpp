@@ -8,14 +8,20 @@
 
 using namespace std;
 
+int cor_atual;
+
 void muda_cor(int c){
     glColor3f(cores[c][0],cores[c][1],cores[c][2]);
+    cor_atual = c;
 }
 
-Cor get_cor(int c) {return {cores[c][0],cores[c][1],cores[c][2]};}
+int get_cor_atual() {return cor_atual;}
 
-void desenha_cubo(float lado, int id) {
+Cor get_cor_struct(int c) {return {cores[c][0],cores[c][1],cores[c][2]};}
+
+void desenha_cubo(float lado, int id_adesivo) {
     XYZ normal;
+    int id_cor = get_cor_atual() + 23;
 
     glBegin(GL_QUADS);
 
@@ -63,14 +69,76 @@ void desenha_cubo(float lado, int id) {
 
     glEnd();
 
-    glEnable(GL_POLYGON_OFFSET_FILL);
-    glPolygonOffset(-1.0f, -1.0f);
-
     float adesivoTamanho = lado * 0.3f; // 30% da face
     float offset = lado + 0.01f;       // ligeiramente à frente da face
 
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, texID[id]);
+    glBindTexture(GL_TEXTURE_2D, texID[id_cor]);
+
+    glColor4f(1, 1, 1, 1);
+
+    float simboloTamanho = lado * 0.85f; // cobre ~85% da face
+    offset = lado + 0.002f;        // ligeiramente à frente da superfície
+
+    // --- Frente ---
+    glBegin(GL_QUADS);
+        glTexCoord2f(0, 0); glVertex3f(-simboloTamanho, -simboloTamanho,  offset);
+        glTexCoord2f(1, 0); glVertex3f( simboloTamanho, -simboloTamanho,  offset);
+        glTexCoord2f(1, 1); glVertex3f( simboloTamanho,  simboloTamanho,  offset);
+        glTexCoord2f(0, 1); glVertex3f(-simboloTamanho,  simboloTamanho,  offset);
+    glEnd();
+
+    // --- Trás ---
+    glBegin(GL_QUADS);
+        glTexCoord2f(1, 0); glVertex3f(-simboloTamanho, -simboloTamanho, -offset);
+        glTexCoord2f(0, 0); glVertex3f( simboloTamanho, -simboloTamanho, -offset);
+        glTexCoord2f(0, 1); glVertex3f( simboloTamanho,  simboloTamanho, -offset);
+        glTexCoord2f(1, 1); glVertex3f(-simboloTamanho,  simboloTamanho, -offset);
+    glEnd();
+
+    // --- Esquerda ---
+    glBegin(GL_QUADS);
+        glTexCoord2f(1, 0); glVertex3f(-offset, -simboloTamanho, -simboloTamanho);
+        glTexCoord2f(0, 0); glVertex3f(-offset, -simboloTamanho,  simboloTamanho);
+        glTexCoord2f(0, 1); glVertex3f(-offset,  simboloTamanho,  simboloTamanho);
+        glTexCoord2f(1, 1); glVertex3f(-offset,  simboloTamanho, -simboloTamanho);
+    glEnd();
+
+    // --- Direita ---
+    glBegin(GL_QUADS);
+        glTexCoord2f(0, 0); glVertex3f( offset, -simboloTamanho, -simboloTamanho);
+        glTexCoord2f(1, 0); glVertex3f( offset, -simboloTamanho,  simboloTamanho);
+        glTexCoord2f(1, 1); glVertex3f( offset,  simboloTamanho,  simboloTamanho);
+        glTexCoord2f(0, 1); glVertex3f( offset,  simboloTamanho, -simboloTamanho);
+    glEnd();
+
+    // --- Topo ---
+    glBegin(GL_QUADS);
+        glTexCoord2f(0, 0); glVertex3f(-simboloTamanho,  offset, -simboloTamanho);
+        glTexCoord2f(1, 0); glVertex3f( simboloTamanho,  offset, -simboloTamanho);
+        glTexCoord2f(1, 1); glVertex3f( simboloTamanho,  offset,  simboloTamanho);
+        glTexCoord2f(0, 1); glVertex3f(-simboloTamanho,  offset,  simboloTamanho);
+    glEnd();
+
+    // --- Base ---
+    glBegin(GL_QUADS);
+        glTexCoord2f(0, 0); glVertex3f(-simboloTamanho, -offset, -simboloTamanho);
+        glTexCoord2f(1, 0); glVertex3f( simboloTamanho, -offset, -simboloTamanho);
+        glTexCoord2f(1, 1); glVertex3f( simboloTamanho, -offset,  simboloTamanho);
+        glTexCoord2f(0, 1); glVertex3f(-simboloTamanho, -offset,  simboloTamanho);
+    glEnd();
+
+    glDisable(GL_TEXTURE_2D);
+
+    // Divisão entre textura do ColorADD e do adesivo
+
+    glEnable(GL_POLYGON_OFFSET_FILL);
+    glPolygonOffset(-1.0f, -1.0f);
+
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, texID[id_adesivo]);
 
     glColor4f(1, 1, 1, 1); // mantém as cores originais da textura
 
@@ -82,18 +150,19 @@ void desenha_cubo(float lado, int id) {
     glEnd();
 
     glDisable(GL_TEXTURE_2D);
-
     glDisable(GL_POLYGON_OFFSET_FILL);
 }
 
-void desenha_piramide(float base, float altura, int id){
+void desenha_piramide(float base, float altura, int id_adesivo) {
     XYZ normal;
+    int id_cor = get_cor_atual() + 23;
+
     float h = altura;
     float b = base / 2.0f; // metade do tamanho da base
 
-    // --- Base (quadrado no plano y=0) ---
+    // --- Base (quadrado no plano y = -b) ---
     normal = Normal({-b,-b,-b},{b,-b,-b},{b,-b,b});
-    glNormal3f(normal.x,normal.y,normal.z);
+    glNormal3f(normal.x, normal.y, normal.z);
     glBegin(GL_QUADS);
         glVertex3f(-b, -b, -b);
         glVertex3f( b, -b, -b);
@@ -132,30 +201,154 @@ void desenha_piramide(float base, float altura, int id){
         glVertex3f( 0.0f,  h-b , 0.0f);
     glEnd();
 
-    glDisable(GL_TEXTURE_2D);
-
-    glEnable(GL_POLYGON_OFFSET_FILL);
-    glPolygonOffset(-1.0f, -1.0f);
-
-    float offset = 0.001f;                // leve afastamento da superfície
-
+    // ---------------------------------------------------------
+    // 1️⃣ Símbolo ColorADD - DESENHADO PRIMEIRO (atrás)
+    // ---------------------------------------------------------
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, texID[id]);
-
+    glBindTexture(GL_TEXTURE_2D, texID[id_cor]);
     glColor4f(1, 1, 1, 1);
 
-    glBegin(GL_TRIANGLES);
-        glTexCoord2f(0, 0); glVertex3f(-(b/2) * 0.5f, (-b + offset) * 0.25f,  b*0.65f);
-        glTexCoord2f(1, 0); glVertex3f( (b/2) * 0.5f, (-b + offset) * 0.25f,  b*0.65f);
-        glTexCoord2f(0.5, 1); glVertex3f( 0,  (h*0.4f) * 0.15f,      b*0.4375f);
+    float offset_symbol = 0.001f; // levemente acima da superfície
+    float qsize = b * 0.6f;       // tamanho do quadrado do símbolo
+
+    // --- Frente ---
+    glBegin(GL_QUADS);
+        glTexCoord2f(0, 0); glVertex3f(-(b/2) * 0.6f, (-b + offset_symbol) * 0.25f,  b * 0.65f);
+        glTexCoord2f(1, 0); glVertex3f( (b/2) * 0.6f, (-b + offset_symbol) * 0.25f,  b * 0.65f);
+        glTexCoord2f(1, 1); glVertex3f( (b/2) * 0.4f,  (h * 0.4f) * 0.20f,  b * 0.42f);
+        glTexCoord2f(0, 1); glVertex3f(-(b/2) * 0.4f,  (h * 0.4f) * 0.20f,  b * 0.42f);
+    glEnd();
+
+    // --- Trás ---
+    glBegin(GL_QUADS);
+        glTexCoord2f(0, 0); glVertex3f(-(b/2) * 0.6f, (-b + offset_symbol) * 0.25f, -b * 0.65f);
+        glTexCoord2f(1, 0); glVertex3f( (b/2) * 0.6f, (-b + offset_symbol) * 0.25f, -b * 0.65f);
+        glTexCoord2f(1, 1); glVertex3f( (b/2) * 0.4f,  (h * 0.4f) * 0.20f, -b * 0.42f);
+        glTexCoord2f(0, 1); glVertex3f(-(b/2) * 0.4f,  (h * 0.4f) * 0.20f, -b * 0.42f);
+    glEnd();
+
+    // --- Direita ---
+    glBegin(GL_QUADS);
+        glTexCoord2f(0, 0); glVertex3f( b * 0.65f, (-b + offset_symbol) * 0.25f,  (b/2) * 0.6f);
+        glTexCoord2f(1, 0); glVertex3f( b * 0.65f, (-b + offset_symbol) * 0.25f, -(b/2) * 0.6f);
+        glTexCoord2f(1, 1); glVertex3f( b * 0.42f,  (h * 0.4f) * 0.20f, -(b/2) * 0.4f);
+        glTexCoord2f(0, 1); glVertex3f( b * 0.42f,  (h * 0.4f) * 0.20f,  (b/2) * 0.4f);
+    glEnd();
+
+    // --- Esquerda ---
+    glBegin(GL_QUADS);
+        glTexCoord2f(0, 0); glVertex3f(-b * 0.65f, (-b + offset_symbol) * 0.25f,  (b/2) * 0.6f);
+        glTexCoord2f(1, 0); glVertex3f(-b * 0.65f, (-b + offset_symbol) * 0.25f, -(b/2) * 0.6f);
+        glTexCoord2f(1, 1); glVertex3f(-b * 0.42f,  (h * 0.4f) * 0.20f, -(b/2) * 0.4f);
+        glTexCoord2f(0, 1); glVertex3f(-b * 0.42f,  (h * 0.4f) * 0.20f,  (b/2) * 0.4f);
+    glEnd();
+
+    // --- Base ---
+    glBegin(GL_QUADS);
+        glTexCoord2f(0, 0); glVertex3f(-(b/2) * 0.5f, (-b + offset_symbol) * 0.25f, -b * 0.5f);
+        glTexCoord2f(1, 0); glVertex3f( (b/2) * 0.5f, (-b + offset_symbol) * 0.25f, -b * 0.5f);
+        glTexCoord2f(1, 1); glVertex3f( (b/2) * 0.5f, (-b + offset_symbol) * 0.25f,  b * 0.5f);
+        glTexCoord2f(0, 1); glVertex3f(-(b/2) * 0.5f, (-b + offset_symbol) * 0.25f,  b * 0.5f);
     glEnd();
 
     glDisable(GL_TEXTURE_2D);
+    //glDisable(GL_BLEND);
 
+    // ---------------------------------------------------------
+    // 2️⃣ Adesivo - DESENHADO DEPOIS (na frente)
+    // ---------------------------------------------------------
+    glEnable(GL_POLYGON_OFFSET_FILL);
+    glPolygonOffset(-1.0f, -1.0f);
+
+    float offset_adesivo = 0.003f; // maior que o do símbolo → fica na frente
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, texID[id_adesivo]);
+    glColor4f(1, 1, 1, 1);
+
+    glBegin(GL_TRIANGLES);
+        glTexCoord2f(0, 0); glVertex3f(-(b/2) * 0.5f, (-b + offset_adesivo) * 0.25f,  b*0.65f);
+        glTexCoord2f(1, 0); glVertex3f( (b/2) * 0.5f, (-b + offset_adesivo) * 0.25f,  b*0.65f);
+        glTexCoord2f(0.5, 1); glVertex3f( 0,  (h*0.4f) * 0.15f,  b*0.45f);
+    glEnd();
+
+    glDisable(GL_TEXTURE_2D);
     glDisable(GL_POLYGON_OFFSET_FILL);
 }
 
-void desenha_esfera(float raio, int fatias, int stacks, int id){
+// void desenha_piramide(float base, float altura, int id_adesivo){
+//     XYZ normal;
+//     int id_cor = get_cor_atual();
+//     float h = altura;
+//     float b = base / 2.0f; // metade do tamanho da base
+
+//     // --- Base (quadrado no plano y=0) ---
+//     normal = Normal({-b,-b,-b},{b,-b,-b},{b,-b,b});
+//     glNormal3f(normal.x,normal.y,normal.z);
+//     glBegin(GL_QUADS);
+//         glVertex3f(-b, -b, -b);
+//         glVertex3f( b, -b, -b);
+//         glVertex3f( b, -b,  b);
+//         glVertex3f(-b, -b,  b);
+//     glEnd();
+
+//     // --- Faces laterais (4 triângulos) ---
+//     glBegin(GL_TRIANGLES);
+//         // Frente
+//         normal = Normal({-b,-b,b},{b,-b,b},{0,h-b,0});
+//         glNormal3f(normal.x,normal.y,normal.z);
+//         glVertex3f(-b, -b,  b);
+//         glVertex3f( b, -b,  b);
+//         glVertex3f( 0.0f,  h-b , 0.0f);
+
+//         // Direita
+//         normal = Normal({b,-b,b},{b,-b,-b},{0,h-b,0});
+//         glNormal3f(normal.x,normal.y,normal.z);
+//         glVertex3f( b, -b,  b);
+//         glVertex3f( b, -b, -b);
+//         glVertex3f( 0.0f,  h-b , 0.0f);
+
+//         // Trás
+//         normal = Normal({b,-b,-b},{-b,-b,-b},{0,h-b,0});
+//         glNormal3f(normal.x,normal.y,normal.z);
+//         glVertex3f( b, -b, -b);
+//         glVertex3f(-b, -b, -b);
+//         glVertex3f( 0.0f,  h-b , 0.0f);
+
+//         // Esquerda
+//         normal = Normal({-b,-b,-b},{-b,-b,b},{0,h-b,0});
+//         glNormal3f(normal.x,normal.y,normal.z);
+//         glVertex3f(-b, -b, -b);
+//         glVertex3f(-b, -b,  b);
+//         glVertex3f( 0.0f,  h-b , 0.0f);
+//     glEnd();
+
+//     glDisable(GL_TEXTURE_2D);
+
+//     glEnable(GL_POLYGON_OFFSET_FILL);
+//     glPolygonOffset(-1.0f, -1.0f);
+
+//     float offset = 0.001f;                // leve afastamento da superfície
+
+//     glEnable(GL_TEXTURE_2D);
+//     glBindTexture(GL_TEXTURE_2D, texID[id_adesivo]);
+
+//     glColor4f(1, 1, 1, 1);
+
+//     glBegin(GL_TRIANGLES);
+//         glTexCoord2f(0, 0); glVertex3f(-(b/2) * 0.5f, (-b + offset) * 0.25f,  b*0.65f);
+//         glTexCoord2f(1, 0); glVertex3f( (b/2) * 0.5f, (-b + offset) * 0.25f,  b*0.65f);
+//         glTexCoord2f(0.5, 1); glVertex3f( 0,  (h*0.4f) * 0.15f,      b*0.4375f);
+//     glEnd();
+
+//     glDisable(GL_TEXTURE_2D);
+
+//     glDisable(GL_POLYGON_OFFSET_FILL);
+// }
+
+void desenha_esfera(float raio, int fatias, int stacks, int id_adesivo){
+    int id_cor = get_cor_atual();
     for (int i = 0; i < stacks; ++i) {
         float phi1 = M_PI / 2 - i * (M_PI / stacks);
         float phi2 = M_PI / 2 - (i + 1) * (M_PI / stacks);
@@ -203,7 +396,7 @@ void desenha_esfera(float raio, int fatias, int stacks, int id){
     float fatiasAdesivo = 20;          // resolução do adesivo
 
     glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, texID[id]);
+    glBindTexture(GL_TEXTURE_2D, texID[id_adesivo]);
 
     glColor4f(1, 1, 1, 1);
 
@@ -241,9 +434,10 @@ void desenha_esfera(float raio, int fatias, int stacks, int id){
     glDisable(GL_POLYGON_OFFSET_FILL);
 }
 
-void desenha_cilindro(float raio, float altura, int fatias, int stacks, bool tampas, int id){
+void desenha_cilindro(float raio, float altura, int fatias, int stacks, bool tampas, int id_adesivo){
     float half = altura / 2.0f;
     XYZ normal;
+    int id_cor = get_cor_atual();
 
     // Superfície lateral
     for (int i = 0; i < stacks; ++i) {
@@ -302,7 +496,7 @@ void desenha_cilindro(float raio, float altura, int fatias, int stacks, bool tam
         float offset = half + 0.01f;    // um pouquinho acima da tampa
 
         glEnable(GL_TEXTURE_2D);
-        glBindTexture(GL_TEXTURE_2D, texID[id]);
+        glBindTexture(GL_TEXTURE_2D, texID[id_adesivo]);
 
         glColor4f(1, 1, 1, 1); // mantém a cor da textura
 
@@ -331,9 +525,10 @@ void desenha_cilindro(float raio, float altura, int fatias, int stacks, bool tam
     }
 }
 
-void desenha_cone(float raio, float altura, int fatias, int id){
+void desenha_cone(float raio, float altura, int fatias, int id_adesivo){
     float half = altura / 2.0f;
     XYZ normal;
+    int id_cor = get_cor_atual();
 
     // Superfície lateral
     glBegin(GL_TRIANGLES);
@@ -405,7 +600,7 @@ void desenha_cone(float raio, float altura, int fatias, int id){
 
     // Configura textura
     glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, texID[id]);
+    glBindTexture(GL_TEXTURE_2D, texID[id_adesivo]);
 
     glColor4f(1, 1, 1, 1); // mantém cores da textura
 
@@ -439,8 +634,10 @@ void desenha_cone(float raio, float altura, int fatias, int id){
     glDisable(GL_POLYGON_OFFSET_FILL);
 }
 
-void desenha_torus(float R, float r, int fatias, int stacks, int id){
+void desenha_torus(float R, float r, int fatias, int stacks, int id_adesivo){
     vector<vector<float>> mat(3,vector<float> (3));
+    int id_cor = get_cor_atual();
+
     for (int i = 0; i < stacks; ++i) {
         float phi1 = i * (2 * M_PI / stacks);
         float phi2 = (i + 1) * (2 * M_PI / stacks);
@@ -497,7 +694,7 @@ void desenha_torus(float R, float r, int fatias, int stacks, int id){
 
     // ---------- Desenha o adesivo ----------
     glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, texID[id]);
+    glBindTexture(GL_TEXTURE_2D, texID[id_adesivo]);
 
     glColor4f(1, 1, 1, 1);
 
