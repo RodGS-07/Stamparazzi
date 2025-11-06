@@ -685,6 +685,7 @@ void loop_jogo(){
                         SDL_ShowCursor(pause ? SDL_ENABLE : SDL_DISABLE);
                     } else if(evento.key.keysym.sym == SDLK_F11) {
                         tela_cheia = !tela_cheia;
+                        if (!pause) pause = true;
                         if (tela_cheia) {
                             SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
                             int w, h;
@@ -718,6 +719,7 @@ void loop_jogo(){
                         pause = !pause;
                     else if(evento.cbutton.button == SDL_CONTROLLER_BUTTON_RIGHTSTICK) {
                         tela_cheia = !tela_cheia;
+                        if (!pause) pause = true;
                         if (tela_cheia) {
                             SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
                             int w, h;

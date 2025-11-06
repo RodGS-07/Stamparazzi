@@ -849,7 +849,7 @@ void desenha_cone(float raio, float altura, int fatias, int id_adesivo){
     float yDir = rOffset * cos(theta);
 
     glPushMatrix();
-        glTranslatef(xDir, yDir - 1.7f, zSimbolo);
+        glTranslatef(xDir, yDir - 1.6f, zSimbolo);
 
         // Mesmo ângulo de inclinação da lateral
         float slopeAngle = 63.75f;
@@ -924,7 +924,7 @@ void desenha_cone(float raio, float altura, int fatias, int id_adesivo){
 
 void desenha_torus(float R, float r, int fatias, int stacks, int id_adesivo){
     vector<vector<float>> mat(3,vector<float> (3));
-    int id_cor = get_cor_atual();
+    int id_cor = get_cor_atual() + 23;
 
     for (int i = 0; i < stacks; ++i) {
         float phi1 = i * (2 * M_PI / stacks);
@@ -977,8 +977,52 @@ void desenha_torus(float R, float r, int fatias, int stacks, int id_adesivo){
     float yAdesivo = R * sin(angulo);
     float zAdesivo = 0.0f;
 
-    float offset = 0.002f; // evita z-fighting
-    float tamanho = r * 1.2f; // tamanho relativo do adesivo
+    // ==========================================================
+    // SÍMBOLOS COLORADD NAS LATERAIS
+    // ==========================================================
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, texID[id_cor]);
+    glColor4f(1, 1, 1, 1);
+
+    float offset = 0.003f;      // deslocamento para fora
+    float tamanho = r * 1.4f;   // tamanho do símbolo
+    float s = tamanho * 0.5f;
+
+    // Posições: direita (+X) e esquerda (-X)
+    float posicoes[2] = {0.0f, M_PI};
+
+    for (int i = 0; i < 2; ++i) {
+        float phi = posicoes[i];
+        float x = R * cos(phi);
+        float y = R * sin(phi);
+
+        glPushMatrix();
+            // Move o símbolo para o lado do torus
+            glTranslatef(x, y, 0.0f);
+
+            // Rotaciona para tangenciar a curvatura lateral
+            glRotatef(phi * 180.0f / M_PI, 0, 0, 1);  // acompanha lado (+X / -X)
+            glRotatef(90, 0, 1, 0);                   // plano voltado para fora
+
+            // Desloca levemente para fora da superfície
+            glTranslatef(0, 0, r + offset);
+
+            // Desenha o quadrado do símbolo
+            glBegin(GL_QUADS);
+                glTexCoord2f(0, 0); glVertex3f(-s, -s, 0);
+                glTexCoord2f(1, 0); glVertex3f( s, -s, 0);
+                glTexCoord2f(1, 1); glVertex3f( s,  s, 0);
+                glTexCoord2f(0, 1); glVertex3f(-s,  s, 0);
+            glEnd();
+        glPopMatrix();
+    }
+
+    glDisable(GL_TEXTURE_2D);
+
+    offset = 0.002f; // evita z-fighting
+    tamanho = r * 1.2f; // tamanho relativo do adesivo
 
     // ---------- Desenha o adesivo ----------
     glEnable(GL_TEXTURE_2D);
@@ -996,7 +1040,7 @@ void desenha_torus(float R, float r, int fatias, int stacks, int id_adesivo){
 
         glTranslatef(0, R, r + offset); // move ligeiramente para fora
 
-        float s = tamanho * 0.5f;
+        s = tamanho * 0.5f;
         glBegin(GL_QUADS);
             glTexCoord2f(0, 0); glVertex3f(-s, -s, 0);
             glTexCoord2f(1, 0); glVertex3f( s, -s, 0);
