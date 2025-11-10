@@ -408,18 +408,18 @@ void cria_poligonos(int n){
     it = copia.begin();
     advance(it, randomIndex);
     id = *it - 1;
-    poligonos.push_back(make_unique<Piramide>(
+    poligonos.push_back(make_unique<Cubo>(
         0.0f, -90.0f, -20.0f,
         2.0f, 2.0f, 2.0f,
         make_unique<Adesivo>(0.0f, -90.0f, -20.0f, id, XYZ{0,0,1}),
-        2.0f, 2.0f
+        2.0f
     ));
     copia.erase(it);
     
     cores_poligonos.resize(n);
 
     for(int i = 0; i < n; i++){
-        cores_poligonos[i] = 9; //rand() % (12+1);
+        cores_poligonos[i] = rand() % (12+1);
         if(poligonos[i]->getSuperficie()==F::TORUS) {
             cores_poligonos[i+1]=cores_poligonos[i]; i++;
         }

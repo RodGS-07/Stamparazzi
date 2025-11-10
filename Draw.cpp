@@ -182,6 +182,8 @@ void desenha_piramide(float base, float altura, int id_adesivo) {
     float h = altura;
     float b = base / 2.0f; // metade do tamanho da base
 
+    static float acumulador1 = 0.0f, acumulador2 = 0.0f;
+
     // --- Base (quadrado no plano y = -b) ---
     normal = Normal({-b,-b,-b},{b,-b,-b},{b,-b,b});
     glNormal3f(normal.x, normal.y, normal.z);
@@ -247,12 +249,45 @@ void desenha_piramide(float base, float altura, int id_adesivo) {
     glEnd();
 
     // --- Trás ---
-    glBegin(GL_QUADS);
-        glTexCoord2f(0, 0); glVertex3f(-(b/2) * 0.6f, (-b + offset_symbol) * 0.25f, -b * 0.65f);
-        glTexCoord2f(1, 0); glVertex3f( (b/2) * 0.6f, (-b + offset_symbol) * 0.25f, -b * 0.65f);
-        glTexCoord2f(1, 1); glVertex3f( (b/2) * 0.4f,  (h * 0.4f) * 0.20f, -b * 0.42f);
-        glTexCoord2f(0, 1); glVertex3f(-(b/2) * 0.4f,  (h * 0.4f) * 0.20f, -b * 0.42f);
-    glEnd();
+    // centro aproximado da área onde o símbolo deve ficar
+    float centerX = 0.0f;
+    float centerY = ((-b + offset_symbol) * 0.25f + (h * 0.4f) * 0.20f) * 0.5f;
+    float centerZ = -b * 0.535f;
+
+    float sW = (b/2) * 0.4f; // meio-largura do quad (x local positivo)
+    float sH = (h * 0.4f) * 0.20f - ((-b + offset_symbol) * 0.25f); // altura local aproximada
+    if (sH <= 0.0f) sH = qsize * 0.5f; // fallback
+
+    glPushMatrix();
+        // move para o centro da face traseira
+        glTranslatef(centerX, centerY, centerZ + 0.01f);
+
+        // gira para que o quad olhe para -Z (face traseira)
+        glRotatef(180.0f, 0.0f, 1.0f, 0.0f);
+
+        // ajuste para manter o símbolo "em pé" - altere se necessário
+        glRotatef(0.0f, 0.0f, 0.0f, 1.0f); // geralmente 0 funciona; use 180 para inverter, 90/-90 se estiver rotacionado
+
+        glRotatef(-25.0f, 1.0f, 0.0f, 0.0f);
+
+        // desenha o quad no plano local (z = 0)
+        float sx = (b/2) * 0.6f * 0.5f; // metade da largura local do símbolo
+        float sy = ( (h * 0.4f) * 0.20f - ((-b + offset_symbol) * 0.25f) ) * 0.5f;
+        if (sy <= 0.0f) sy = qsize * 0.5f;
+
+        glBegin(GL_QUADS);
+            glTexCoord2f(0.0f, 0.0f); glVertex3f(-sx, -sy, 0.0f);
+            glTexCoord2f(1.0f, 0.0f); glVertex3f( sx, -sy, 0.0f);
+            glTexCoord2f(1.0f, 1.0f); glVertex3f( sx,  sy, 0.0f);
+            glTexCoord2f(0.0f, 1.0f); glVertex3f(-sx,  sy, 0.0f);
+        glEnd();
+    glPopMatrix();
+    // glBegin(GL_QUADS);
+    //     glTexCoord2f(0, 0); glVertex3f(-(b/2) * 0.6f, (-b + offset_symbol) * 0.25f, -b * 0.65f);
+    //     glTexCoord2f(1, 0); glVertex3f( (b/2) * 0.6f, (-b + offset_symbol) * 0.25f, -b * 0.65f);
+    //     glTexCoord2f(1, 1); glVertex3f( (b/2) * 0.4f,  (h * 0.4f) * 0.20f, -b * 0.42f);
+    //     glTexCoord2f(0, 1); glVertex3f(-(b/2) * 0.4f,  (h * 0.4f) * 0.20f, -b * 0.42f);
+    // glEnd();
 
     // --- Direita ---
     glBegin(GL_QUADS);
@@ -263,12 +298,43 @@ void desenha_piramide(float base, float altura, int id_adesivo) {
     glEnd();
 
     // --- Esquerda ---
-    glBegin(GL_QUADS);
-        glTexCoord2f(0, 0); glVertex3f(-b * 0.65f, (-b + offset_symbol) * 0.25f,  (b/2) * 0.6f);
-        glTexCoord2f(1, 0); glVertex3f(-b * 0.65f, (-b + offset_symbol) * 0.25f, -(b/2) * 0.6f);
-        glTexCoord2f(1, 1); glVertex3f(-b * 0.42f,  (h * 0.4f) * 0.20f, -(b/2) * 0.4f);
-        glTexCoord2f(0, 1); glVertex3f(-b * 0.42f,  (h * 0.4f) * 0.20f,  (b/2) * 0.4f);
-    glEnd();
+    // Posição central aproximada do símbolo
+    centerX = -b * 0.535f;
+    centerY = ((-b + offset_symbol) * 0.25f + (h * 0.4f) * 0.20f) * 0.5f;
+    centerZ = 0.0f;
+
+    // Dimensões locais do símbolo
+    sx = (b/2) * 0.6f * 0.5f;
+    sy = ((h * 0.4f) * 0.20f - ((-b + offset_symbol) * 0.25f)) * 0.5f;
+    if (sy <= 0.0f) sy = qsize * 0.5f;
+
+    glPushMatrix();
+        // move até o centro da face esquerda
+        glTranslatef(centerX - 0.01f, centerY, centerZ);
+
+        // gira para o símbolo olhar para -X
+        glRotatef(90.0f, 0.0f, 1.0f, 0.0f);
+
+        // ligeira inclinação igual à face traseira
+        glRotatef(25.0f, 1.0f, 0.0f, 0.0f);
+
+        // mantém o símbolo "em pé"
+        glRotatef(-90.0f, 0.0f, 0.0f, 1.0f);
+
+        // desenha o símbolo plano
+        glBegin(GL_QUADS);
+            glTexCoord2f(0.0f, 0.0f); glVertex3f(-sx, -sy, 0.0f);
+            glTexCoord2f(1.0f, 0.0f); glVertex3f( sx, -sy, 0.0f);
+            glTexCoord2f(1.0f, 1.0f); glVertex3f( sx,  sy, 0.0f);
+            glTexCoord2f(0.0f, 1.0f); glVertex3f(-sx,  sy, 0.0f);
+        glEnd();
+    glPopMatrix();
+    // glBegin(GL_QUADS);
+    //     glTexCoord2f(0, 0); glVertex3f(-b * 0.65f, (-b + offset_symbol) * 0.25f,  (b/2) * 0.6f);
+    //     glTexCoord2f(1, 0); glVertex3f(-b * 0.65f, (-b + offset_symbol) * 0.25f, -(b/2) * 0.6f);
+    //     glTexCoord2f(1, 1); glVertex3f(-b * 0.42f,  (h * 0.4f) * 0.20f, -(b/2) * 0.4f);
+    //     glTexCoord2f(0, 1); glVertex3f(-b * 0.42f,  (h * 0.4f) * 0.20f,  (b/2) * 0.4f);
+    // glEnd();
 
     // --- Base ---
     glBegin(GL_QUADS);
@@ -771,20 +837,23 @@ void desenha_cone(float raio, float altura, int fatias, int id_adesivo){
     // --- Base circular (como tampa inferior) ---
     float simboloRaio = raio * 0.75f;
     float offsetBase = -half - 0.008f; // um pouco abaixo da base
-    glBegin(GL_TRIANGLE_FAN);
-        glNormal3f(0, 0, -1);
-        glTexCoord2f(0.5f, 0.5f);
-        glVertex3f(0, 0, offsetBase);
-        for (int j = 0; j <= fatias; ++j) {
-            float theta = j * (2 * M_PI / fatias);
-            float x = simboloRaio * cos(theta);
-            float y = simboloRaio * sin(theta);
-            float u = 0.5f + 0.5f * cos(theta);
-            float v = 0.5f + 0.5f * sin(theta);
-            glTexCoord2f(u, v);
-            glVertex3f(x, y, offsetBase);
-        }
-    glEnd();
+    glPushMatrix();
+        glRotatef(90, 0, 0, 1);
+        glBegin(GL_TRIANGLE_FAN);
+            glNormal3f(0, 0, -1);
+            glTexCoord2f(0.5f, 0.5f);
+            glVertex3f(0, 0, offsetBase);
+            for (int j = 0; j <= fatias; ++j) {
+                float theta = j * (2 * M_PI / fatias);
+                float x = simboloRaio * cos(theta);
+                float y = simboloRaio * sin(theta);
+                float u = 0.5f + 0.5f * cos(theta);
+                float v = 0.5f + 0.5f * sin(theta);
+                glTexCoord2f(u, v);
+                glVertex3f(x, y, offsetBase);
+            }
+        glEnd();
+    glPopMatrix();
 
     // --- Lateral: símbolo abaixo do adesivo ---
     float adesivoAltura = altura * 0.2f;
