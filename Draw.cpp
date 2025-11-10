@@ -26,6 +26,7 @@ void desenha_cubo(float lado, int id_adesivo) {
 
     glBegin(GL_QUADS);
 
+    // Frente
     normal = Normal({-lado,-lado,lado},{lado,-lado,lado},{lado,lado,lado});
     glNormal3f(normal.x,normal.y,normal.z);
     glVertex3f(-lado, -lado,  lado);
@@ -33,6 +34,7 @@ void desenha_cubo(float lado, int id_adesivo) {
     glVertex3f( lado,  lado,  lado);
     glVertex3f(-lado,  lado,  lado);
 
+    // Trás
     normal = Normal({-lado,-lado,-lado},{-lado,lado,-lado},{lado,lado,-lado});
     glNormal3f(normal.x,normal.y,normal.z);
     glVertex3f(-lado, -lado, -lado);
@@ -40,13 +42,15 @@ void desenha_cubo(float lado, int id_adesivo) {
     glVertex3f(lado,  lado, -lado);
     glVertex3f(-lado, lado, -lado);
 
+    // Esquerda
     normal = Normal({-lado,-lado,-lado},{-lado,-lado,lado},{-lado,lado,lado});
     glNormal3f(normal.x,normal.y,normal.z);
     glVertex3f(-lado, -lado, -lado);
-    glVertex3f(-lado, lado,  -lado);
+    glVertex3f(-lado,  lado, -lado);
     glVertex3f(-lado,  lado,  lado);
-    glVertex3f(-lado,  -lado, lado);
+    glVertex3f(-lado, -lado,  lado);
 
+    // Direita
     normal = Normal({lado,-lado,-lado},{lado,lado,-lado},{lado,lado,lado});
     glNormal3f(normal.x,normal.y,normal.z);
     glVertex3f(lado, -lado, -lado);
@@ -54,18 +58,20 @@ void desenha_cubo(float lado, int id_adesivo) {
     glVertex3f(lado,  lado,  lado);
     glVertex3f(lado, -lado,  lado);
 
+    // Topo
     normal = Normal({-lado,lado,-lado},{-lado,lado,lado},{lado,lado,lado});
     glNormal3f(normal.x,normal.y,normal.z);
     glVertex3f(-lado, lado, -lado);
-    glVertex3f(lado, lado, -lado);
-    glVertex3f( lado, lado,  lado);
-    glVertex3f(-lado, lado, lado);
+    glVertex3f(lado,  lado, -lado);
+    glVertex3f(lado,  lado,  lado);
+    glVertex3f(-lado, lado,  lado);
 
+    // Base
     normal = Normal({-lado,-lado,-lado},{lado,-lado,-lado},{lado,-lado,lado});
     glNormal3f(normal.x,normal.y,normal.z);
     glVertex3f(-lado, -lado, -lado);
-    glVertex3f(lado, -lado, -lado);
-    glVertex3f( lado, -lado,  lado);
+    glVertex3f(lado,  -lado, -lado);
+    glVertex3f(lado,  -lado,  lado);
     glVertex3f(-lado, -lado,  lado);
 
     glEnd();
@@ -88,51 +94,60 @@ void desenha_cubo(float lado, int id_adesivo) {
 
     // --- Frente ---
     glBegin(GL_QUADS);
-        glTexCoord2f(0, 0); glVertex3f(-simboloTamanho, -simboloTamanho,  offset);
-        glTexCoord2f(1, 0); glVertex3f( simboloTamanho, -simboloTamanho,  offset);
-        glTexCoord2f(1, 1); glVertex3f( simboloTamanho,  simboloTamanho,  offset);
-        glTexCoord2f(0, 1); glVertex3f(-simboloTamanho,  simboloTamanho,  offset);
+        glTexCoord2f(0, 0); glVertex3f(-simboloTamanho, -simboloTamanho, offset);
+        glTexCoord2f(1, 0); glVertex3f( simboloTamanho, -simboloTamanho, offset);
+        glTexCoord2f(1, 1); glVertex3f( simboloTamanho,  simboloTamanho, offset);
+        glTexCoord2f(0, 1); glVertex3f(-simboloTamanho,  simboloTamanho, offset);
     glEnd();
 
-    // --- Trás ---
+    // --- Trás (rotacionada 180° para alinhar) ---
+    glPushMatrix();
+        glRotatef(90, 0, 0, 1);
+        glBegin(GL_QUADS);
+            glTexCoord2f(1, 1); glVertex3f(-simboloTamanho, -simboloTamanho, -offset);
+            glTexCoord2f(0, 1); glVertex3f( simboloTamanho, -simboloTamanho, -offset);
+            glTexCoord2f(0, 0); glVertex3f( simboloTamanho,  simboloTamanho, -offset);
+            glTexCoord2f(1, 0); glVertex3f(-simboloTamanho,  simboloTamanho, -offset);
+        glEnd();
+    glPopMatrix();
+
+    // --- Esquerda (rotacionada 90° CW) ---
+    glPushMatrix();
+        glRotatef(90, 1, 0, 0);
+        glBegin(GL_QUADS);
+            glTexCoord2f(0, 1); glVertex3f(-offset, -simboloTamanho, -simboloTamanho);
+            glTexCoord2f(1, 1); glVertex3f(-offset, -simboloTamanho,  simboloTamanho);
+            glTexCoord2f(1, 0); glVertex3f(-offset,  simboloTamanho,  simboloTamanho);
+            glTexCoord2f(0, 0); glVertex3f(-offset,  simboloTamanho, -simboloTamanho);
+        glEnd();
+    glPopMatrix();
+
+    // --- Direita (rotacionada 90° CCW) ---
     glBegin(GL_QUADS);
-        glTexCoord2f(0, 0); glVertex3f(-simboloTamanho, -simboloTamanho, -offset);
-        glTexCoord2f(1, 0); glVertex3f( simboloTamanho, -simboloTamanho, -offset);
-        glTexCoord2f(1, 1); glVertex3f( simboloTamanho,  simboloTamanho, -offset);
-        glTexCoord2f(0, 1); glVertex3f(-simboloTamanho,  simboloTamanho, -offset);
+        glTexCoord2f(1, 0); glVertex3f(offset, -simboloTamanho, -simboloTamanho);
+        glTexCoord2f(0, 0); glVertex3f(offset, -simboloTamanho,  simboloTamanho);
+        glTexCoord2f(0, 1); glVertex3f(offset,  simboloTamanho,  simboloTamanho);
+        glTexCoord2f(1, 1); glVertex3f(offset,  simboloTamanho, -simboloTamanho);
     glEnd();
 
-    // --- Esquerda ---
+    // --- Topo (rotacionada 90° CW) ---
     glBegin(GL_QUADS);
-        glTexCoord2f(0, 0); glVertex3f(-offset, -simboloTamanho, -simboloTamanho);
-        glTexCoord2f(1, 0); glVertex3f(-offset, simboloTamanho,  -simboloTamanho);
-        glTexCoord2f(1, 1); glVertex3f(-offset,  simboloTamanho,  simboloTamanho);
-        glTexCoord2f(0, 1); glVertex3f(-offset,  -simboloTamanho, simboloTamanho);
+        glTexCoord2f(0, 1); glVertex3f(-simboloTamanho, offset, -simboloTamanho);
+        glTexCoord2f(1, 1); glVertex3f( simboloTamanho, offset, -simboloTamanho);
+        glTexCoord2f(1, 0); glVertex3f( simboloTamanho, offset,  simboloTamanho);
+        glTexCoord2f(0, 0); glVertex3f(-simboloTamanho, offset,  simboloTamanho);
     glEnd();
 
-    // --- Direita ---
-    glBegin(GL_QUADS);
-        glTexCoord2f(0, 0); glVertex3f( offset, -simboloTamanho, -simboloTamanho);
-        glTexCoord2f(1, 0); glVertex3f( offset, simboloTamanho,  -simboloTamanho);
-        glTexCoord2f(1, 1); glVertex3f( offset,  simboloTamanho,  simboloTamanho);
-        glTexCoord2f(0, 1); glVertex3f( offset,  -simboloTamanho, simboloTamanho);
-    glEnd();
-
-    // --- Topo ---
-    glBegin(GL_QUADS);
-        glTexCoord2f(0, 0); glVertex3f(-simboloTamanho,  offset, -simboloTamanho);
-        glTexCoord2f(1, 0); glVertex3f( simboloTamanho,  offset, -simboloTamanho);
-        glTexCoord2f(1, 1); glVertex3f( simboloTamanho,  offset,  simboloTamanho);
-        glTexCoord2f(0, 1); glVertex3f(-simboloTamanho,  offset,  simboloTamanho);
-    glEnd();
-
-    // --- Base ---
-    glBegin(GL_QUADS);
-        glTexCoord2f(0, 0); glVertex3f(-simboloTamanho, -offset, -simboloTamanho);
-        glTexCoord2f(1, 0); glVertex3f( simboloTamanho, -offset, -simboloTamanho);
-        glTexCoord2f(1, 1); glVertex3f( simboloTamanho, -offset,  simboloTamanho);
-        glTexCoord2f(0, 1); glVertex3f(-simboloTamanho, -offset,  simboloTamanho);
-    glEnd();
+    // --- Base (rotacionada 90° CCW) ---
+    glPushMatrix();
+        glRotatef(90, 0, 1, 0);
+        glBegin(GL_QUADS);
+            glTexCoord2f(1, 0); glVertex3f(-simboloTamanho, -offset, -simboloTamanho);
+            glTexCoord2f(0, 0); glVertex3f( simboloTamanho, -offset, -simboloTamanho);
+            glTexCoord2f(0, 1); glVertex3f( simboloTamanho, -offset,  simboloTamanho);
+            glTexCoord2f(1, 1); glVertex3f(-simboloTamanho, -offset,  simboloTamanho);
+        glEnd();
+    glPopMatrix();
 
     glDisable(GL_TEXTURE_2D);
     glDisable(GL_POLYGON_OFFSET_FILL);
@@ -209,13 +224,16 @@ void desenha_piramide(float base, float altura, int id_adesivo) {
     glEnd();
 
     // ---------------------------------------------------------
-    // 1️⃣ Símbolo ColorADD - DESENHADO PRIMEIRO (atrás)
+    // Símbolo ColorADD - DESENHADO PRIMEIRO (atrás)
     // ---------------------------------------------------------
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, texID[id_cor]);
     glColor4f(1, 1, 1, 1);
+
+    glEnable(GL_POLYGON_OFFSET_FILL);
+    glPolygonOffset(-1.0f, -1.0f);
 
     float offset_symbol = 0.001f; // levemente acima da superfície
     float qsize = b * 0.6f;       // tamanho do quadrado do símbolo
@@ -254,17 +272,17 @@ void desenha_piramide(float base, float altura, int id_adesivo) {
 
     // --- Base ---
     glBegin(GL_QUADS);
-        glTexCoord2f(0, 0); glVertex3f(-(b/2) * 0.5f, (-b + offset_symbol) * 0.25f, -b * 0.5f);
-        glTexCoord2f(1, 0); glVertex3f( (b/2) * 0.5f, (-b + offset_symbol) * 0.25f, -b * 0.5f);
-        glTexCoord2f(1, 1); glVertex3f( (b/2) * 0.5f, (-b + offset_symbol) * 0.25f,  b * 0.5f);
-        glTexCoord2f(0, 1); glVertex3f(-(b/2) * 0.5f, (-b + offset_symbol) * 0.25f,  b * 0.5f);
+        glTexCoord2f(0, 0); glVertex3f(-b*0.5f, -b - offset_symbol, -b*0.5f);
+        glTexCoord2f(1, 0); glVertex3f( b*0.5f, -b - offset_symbol, -b*0.5f);
+        glTexCoord2f(1, 1); glVertex3f( b*0.5f, -b - offset_symbol,  b*0.5f);
+        glTexCoord2f(0, 1); glVertex3f(-b*0.5f, -b - offset_symbol,  b*0.5f);
     glEnd();
 
     glDisable(GL_TEXTURE_2D);
-    //glDisable(GL_BLEND);
+    glDisable(GL_POLYGON_OFFSET_FILL);
 
     // ---------------------------------------------------------
-    // 2️⃣ Adesivo - DESENHADO DEPOIS (na frente)
+    // Adesivo - DESENHADO DEPOIS (na frente)
     // ---------------------------------------------------------
     glEnable(GL_POLYGON_OFFSET_FILL);
     glPolygonOffset(-1.0f, -1.0f);
@@ -283,76 +301,6 @@ void desenha_piramide(float base, float altura, int id_adesivo) {
     glDisable(GL_TEXTURE_2D);
     glDisable(GL_POLYGON_OFFSET_FILL);
 }
-
-// void desenha_piramide(float base, float altura, int id_adesivo){
-//     XYZ normal;
-//     int id_cor = get_cor_atual();
-//     float h = altura;
-//     float b = base / 2.0f; // metade do tamanho da base
-
-//     // --- Base (quadrado no plano y=0) ---
-//     normal = Normal({-b,-b,-b},{b,-b,-b},{b,-b,b});
-//     glNormal3f(normal.x,normal.y,normal.z);
-//     glBegin(GL_QUADS);
-//         glVertex3f(-b, -b, -b);
-//         glVertex3f( b, -b, -b);
-//         glVertex3f( b, -b,  b);
-//         glVertex3f(-b, -b,  b);
-//     glEnd();
-
-//     // --- Faces laterais (4 triângulos) ---
-//     glBegin(GL_TRIANGLES);
-//         // Frente
-//         normal = Normal({-b,-b,b},{b,-b,b},{0,h-b,0});
-//         glNormal3f(normal.x,normal.y,normal.z);
-//         glVertex3f(-b, -b,  b);
-//         glVertex3f( b, -b,  b);
-//         glVertex3f( 0.0f,  h-b , 0.0f);
-
-//         // Direita
-//         normal = Normal({b,-b,b},{b,-b,-b},{0,h-b,0});
-//         glNormal3f(normal.x,normal.y,normal.z);
-//         glVertex3f( b, -b,  b);
-//         glVertex3f( b, -b, -b);
-//         glVertex3f( 0.0f,  h-b , 0.0f);
-
-//         // Trás
-//         normal = Normal({b,-b,-b},{-b,-b,-b},{0,h-b,0});
-//         glNormal3f(normal.x,normal.y,normal.z);
-//         glVertex3f( b, -b, -b);
-//         glVertex3f(-b, -b, -b);
-//         glVertex3f( 0.0f,  h-b , 0.0f);
-
-//         // Esquerda
-//         normal = Normal({-b,-b,-b},{-b,-b,b},{0,h-b,0});
-//         glNormal3f(normal.x,normal.y,normal.z);
-//         glVertex3f(-b, -b, -b);
-//         glVertex3f(-b, -b,  b);
-//         glVertex3f( 0.0f,  h-b , 0.0f);
-//     glEnd();
-
-//     glDisable(GL_TEXTURE_2D);
-
-//     glEnable(GL_POLYGON_OFFSET_FILL);
-//     glPolygonOffset(-1.0f, -1.0f);
-
-//     float offset = 0.001f;                // leve afastamento da superfície
-
-//     glEnable(GL_TEXTURE_2D);
-//     glBindTexture(GL_TEXTURE_2D, texID[id_adesivo]);
-
-//     glColor4f(1, 1, 1, 1);
-
-//     glBegin(GL_TRIANGLES);
-//         glTexCoord2f(0, 0); glVertex3f(-(b/2) * 0.5f, (-b + offset) * 0.25f,  b*0.65f);
-//         glTexCoord2f(1, 0); glVertex3f( (b/2) * 0.5f, (-b + offset) * 0.25f,  b*0.65f);
-//         glTexCoord2f(0.5, 1); glVertex3f( 0,  (h*0.4f) * 0.15f,      b*0.4375f);
-//     glEnd();
-
-//     glDisable(GL_TEXTURE_2D);
-
-//     glDisable(GL_POLYGON_OFFSET_FILL);
-// }
 
 void desenha_esfera(float raio, int fatias, int stacks, int id_adesivo){
     int id_cor = get_cor_atual() + 23;
