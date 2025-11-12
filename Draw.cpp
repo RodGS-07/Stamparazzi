@@ -701,27 +701,31 @@ void desenha_cilindro(float raio, float altura, int fatias, int stacks, bool tam
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-        glBegin(GL_QUADS);
-            int segments = max(1, fatias / 8); // continue usando ~45° de arco
-            for (int j = 0; j < segments; ++j) { // note: use < segments (não <=)
-                float theta1 = -simboloAngulo / 2 + j * (simboloAngulo / segments);
-                float theta2 = -simboloAngulo / 2 + (j + 1) * (simboloAngulo / segments);
+        glPushMatrix();
+            glRotatef(180, 0, 1, 0);
+            glRotatef(90, 0, 0, 1);
+            glBegin(GL_QUADS);
+                int segments = max(1, fatias / 8); // continue usando ~45° de arco
+                for (int j = 0; j < segments; ++j) { // note: use < segments (não <=)
+                    float theta1 = -simboloAngulo / 2 + j * (simboloAngulo / segments);
+                    float theta2 = -simboloAngulo / 2 + (j + 1) * (simboloAngulo / segments);
 
-                float x1 = r * cos(theta1);
-                float y1 = r * sin(theta1);
-                float x2 = r * cos(theta2);
-                float y2 = r * sin(theta2);
+                    float x1 = r * cos(theta1);
+                    float y1 = r * sin(theta1);
+                    float x2 = r * cos(theta2);
+                    float y2 = r * sin(theta2);
 
-                // mapear u estritamente entre 0 e 1 para cada segmento
-                float u1 = (float)j / (float)segments;
-                float u2 = (float)(j+1) / (float)segments;
+                    // mapear u estritamente entre 0 e 1 para cada segmento
+                    float u1 = (float)j / (float)segments;
+                    float u2 = (float)(j+1) / (float)segments;
 
-                glTexCoord2f(u1, 0); glVertex3f(x1, y1, z1);
-                glTexCoord2f(u2, 0); glVertex3f(x2, y2, z1);
-                glTexCoord2f(u2, 1); glVertex3f(x2, y2, z2);
-                glTexCoord2f(u1, 1); glVertex3f(x1, y1, z2);
-            }
-        glEnd();
+                    glTexCoord2f(u1, 0); glVertex3f(x1, y1, z1);
+                    glTexCoord2f(u2, 0); glVertex3f(x2, y2, z1);
+                    glTexCoord2f(u2, 1); glVertex3f(x2, y2, z2);
+                    glTexCoord2f(u1, 1); glVertex3f(x1, y1, z2);
+                }
+            glEnd();
+        glPopMatrix();
 
         // (opcional) restaurar wrap para o estado anterior (se quiser)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -838,7 +842,7 @@ void desenha_cone(float raio, float altura, int fatias, int id_adesivo){
     float simboloRaio = raio * 0.75f;
     float offsetBase = -half - 0.008f; // um pouco abaixo da base
     glPushMatrix();
-        glRotatef(90, 0, 0, 1);
+        glRotatef(-90, 0, 0, 1);
         glBegin(GL_TRIANGLE_FAN);
             glNormal3f(0, 0, -1);
             glTexCoord2f(0.5f, 0.5f);
@@ -1020,8 +1024,12 @@ void desenha_torus(float R, float r, int fatias, int stacks, int id_adesivo){
             glTranslatef(x, y, 0.0f);
 
             // Rotaciona para tangenciar a curvatura lateral
-            glRotatef(phi * 180.0f / M_PI, 0, 0, 1);  // acompanha lado (+X / -X)
-            glRotatef(90, 0, 1, 0);                   // plano voltado para fora
+            if(!i) {
+                glRotatef(phi * 180.0f / M_PI, 0, 0, 1);  // acompanha lado (+X / -X)
+                glRotatef(90, 0, 1, 0);                   // plano voltado para fora
+            } else {
+                glRotatef(-90, 0, 1, 0);
+            }
 
             // Desloca levemente para fora da superfície
             glTranslatef(0, 0, r + offset);
