@@ -140,7 +140,7 @@ void desenha_cubo(float lado, int id_adesivo) {
 
     // --- Base (rotacionada 90° CCW) ---
     glPushMatrix();
-        glRotatef(90, 0, 1, 0);
+        glRotatef(-90, 0, 1, 0);
         glBegin(GL_QUADS);
             glTexCoord2f(1, 0); glVertex3f(-simboloTamanho, -offset, -simboloTamanho);
             glTexCoord2f(0, 0); glVertex3f( simboloTamanho, -offset, -simboloTamanho);
@@ -299,6 +299,8 @@ void desenha_piramide(float base, float altura, int id_adesivo) {
 
     // --- Esquerda ---
     // Posição central aproximada do símbolo
+    static float acum_x = 0.0f;
+
     centerX = -b * 0.535f;
     centerY = ((-b + offset_symbol) * 0.25f + (h * 0.4f) * 0.20f) * 0.5f;
     centerZ = 0.0f;
@@ -312,14 +314,9 @@ void desenha_piramide(float base, float altura, int id_adesivo) {
         // move até o centro da face esquerda
         glTranslatef(centerX - 0.01f, centerY, centerZ);
 
-        // gira para o símbolo olhar para -X
-        glRotatef(90.0f, 0.0f, 1.0f, 0.0f);
-
-        // ligeira inclinação igual à face traseira
-        glRotatef(25.0f, 1.0f, 0.0f, 0.0f);
-
-        // mantém o símbolo "em pé"
-        glRotatef(-90.0f, 0.0f, 0.0f, 1.0f);
+        glRotatef(-25.0f, 0.0f, 0.0f, 1.0f);
+        
+        glRotatef(-90.0f, 0.0f, 1.0f, 0.0f);
 
         // desenha o símbolo plano
         glBegin(GL_QUADS);
