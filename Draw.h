@@ -33,12 +33,12 @@ const float cores[13][3] = {
 void muda_cor(int c);
 int get_cor_atual();
 Cor get_cor_struct(int c);
-void desenha_cubo(float lado = 2.0f, int id_adesivo = 3);
-void desenha_piramide(float base = 4.0f, float altura = 4.0f, int id_adesivo = 3);
-void desenha_esfera(float raio = 2.0f, int fatias = 30, int stacks = 30, int id_adesivo = 3);
-void desenha_cilindro(float raio = 2.0f, float altura = 4.0f, int fatias = 30, int stacks = 30, bool tampas = true, int id_adesivo = 3);
-void desenha_cone(float raio = 2.0f, float altura = 4.0f, int fatias = 30, int id_adesivo = 3);
-void desenha_torus(float R = 3.0f, float r = 1.0f, int fatias = 30, int stacks = 30, int id_adesivo = 3);
+void desenha_cubo(float lado = 2.0f, int id_adesivo = 3, bool modo_daltonico = false);
+void desenha_piramide(float base = 4.0f, float altura = 4.0f, int id_adesivo = 3, bool modo_daltonico = false);
+void desenha_esfera(float raio = 2.0f, int fatias = 30, int stacks = 30, int id_adesivo = 3, bool modo_daltonico = false);
+void desenha_cilindro(float raio = 2.0f, float altura = 4.0f, int fatias = 30, int stacks = 30, bool tampas = true, int id_adesivo = 3, bool modo_daltonico = false);
+void desenha_cone(float raio = 2.0f, float altura = 4.0f, int fatias = 30, int id_adesivo = 3, bool modo_daltonico = false);
+void desenha_torus(float R = 3.0f, float r = 1.0f, int fatias = 30, int stacks = 30, int id_adesivo = 3, bool modo_daltonico = false);
 void desenha_superficie(int formato);
 void marcax(float x, float y, float z, float cy, float cp);
 

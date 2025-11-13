@@ -33,10 +33,10 @@ class Poligono : public Entidade{
         void setAdesivo(unique_ptr<Adesivo> a);
         void desenha_adesivo_no_poligono(const Adesivo& adesivo, float offset);
         virtual AABB getAABB() const = 0;
-        virtual void realiza_movimento(int cor, float dt, bool pause)= 0;
+        virtual void realiza_movimento(int cor, float dt, bool pause, bool modo_daltonico)= 0;
         virtual bool colide_jogador(const AABB& s) const = 0;
         virtual void aplica_efeito(Jogador& jogador) = 0;
-        virtual void desenha_poligono(int cor, bool pause) = 0;
+        virtual void desenha_poligono(int cor, bool pause, bool modo_daltonico) = 0;
         //virtual void desenha_adesivo() = 0;
         virtual void desenha_mascara() = 0;
         virtual ~Poligono() = default;
@@ -53,10 +53,10 @@ class Cubo : public Poligono{
 
         AABB getAABB() const override;
         float getLado() const;
-        void realiza_movimento(int cor, float dt, bool pause) override;
+        void realiza_movimento(int cor, float dt, bool pause, bool modo_daltonico) override;
         bool colide_jogador(const AABB& s) const override;
         void aplica_efeito(Jogador& jogador) override;
-        void desenha_poligono(int cor, bool pause) override;
+        void desenha_poligono(int cor, bool pause, bool modo_daltonico) override;
         //void desenha_adesivo() override;
         void desenha_mascara();
 };
@@ -72,10 +72,10 @@ class Piramide : public Poligono{
 
         AABB getAABB() const override;
         float getAltura() const;
-        void realiza_movimento(int cor, float dt, bool pause) override;
+        void realiza_movimento(int cor, float dt, bool pause, bool modo_daltonico) override;
         bool colide_jogador(const AABB& s) const override;
         void aplica_efeito(Jogador& jogador) override;
-        void desenha_poligono(int cor, bool pause) override;
+        void desenha_poligono(int cor, bool pause, bool modo_daltonico) override;
         //void desenha_adesivo() override;
         void desenha_mascara();
 };
@@ -91,10 +91,10 @@ class Esfera : public Poligono{
 
         AABB getAABB() const override;
         float getRaio() const;
-        void realiza_movimento(int cor, float dt, bool pause) override;
+        void realiza_movimento(int cor, float dt, bool pause, bool modo_daltonico) override;
         bool colide_jogador(const AABB& s) const override;
         void aplica_efeito(Jogador& jogador) override;
-        void desenha_poligono(int cor, bool pause) override;
+        void desenha_poligono(int cor, bool pause, bool modo_daltonico) override;
         //void desenha_adesivo() override;
         void desenha_mascara();
 };
@@ -112,10 +112,10 @@ class Cilindro : public Poligono{
         AABB getAABB() const override;
         float getRaio() const;
         float getAltura() const;
-        void realiza_movimento(int cor, float dt, bool pause) override;
+        void realiza_movimento(int cor, float dt, bool pause, bool modo_daltonico) override;
         bool colide_jogador(const AABB& s) const override;
         void aplica_efeito(Jogador& jogador) override;
-        void desenha_poligono(int cor, bool pause) override;
+        void desenha_poligono(int cor, bool pause, bool modo_daltonico) override;
         //void desenha_adesivo() override;
         void desenha_mascara();
 };
@@ -133,10 +133,10 @@ class Cone : public Poligono{
         AABB getAABB() const override;
         float getRaio() const;
         float getAltura() const;
-        void realiza_movimento(int cor, float dt, bool pause) override;
+        void realiza_movimento(int cor, float dt, bool pause, bool modo_daltonico) override;
         bool colide_jogador(const AABB& s) const override;
         void aplica_efeito(Jogador& jogador) override;
-        void desenha_poligono(int cor, bool pause) override;
+        void desenha_poligono(int cor, bool pause, bool modo_daltonico) override;
         //void desenha_adesivo() override;
         void desenha_mascara();
 };
@@ -154,10 +154,10 @@ class Torus : public Poligono{
         Torus* getConjugado() const;
         void setConjugado(Torus* t);
         AABB getAABB() const override;
-        void realiza_movimento(int cor, float dt, bool pause) override;
+        void realiza_movimento(int cor, float dt, bool pause, bool modo_daltonico) override;
         bool colide_jogador(const AABB& s) const override;
         void aplica_efeito(Jogador& jogador) override;
-        void desenha_poligono(int cor, bool pause) override;
+        void desenha_poligono(int cor, bool pause, bool modo_daltonico) override;
         //void desenha_adesivo() override;
         void desenha_mascara();
 };

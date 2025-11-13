@@ -32,7 +32,10 @@
 
 using namespace std;
 
+enum DIFICULDADE {FACIL, MEDIO, DIFICIL};
+
 int teste = 0;
+int dif = MEDIO;
 int timer = 180;
 int renascer = 3;
 int minutos = timer / 60;
@@ -41,6 +44,7 @@ bool mouse_in = false;
 bool pause = false;
 bool tela_cheia = true;
 bool primeira_pessoa = true;
+bool modo_daltonico = false;
 bool flash_ativo = false;
 float flash_alpha = 0.0f;
 bool rodando = true;
@@ -853,7 +857,7 @@ void loop_jogo(){
         // 2) desenhamos polígonos e máscaras e realizamos movimentos
         int i = 0;
         for (const auto& p : poligonos){
-            p->realiza_movimento(cores_poligonos[i],dt,pause); i++;
+            p->realiza_movimento(cores_poligonos[i],dt,pause,modo_daltonico); i++;
             //p->desenha_mascara();
             //p->desenha_adesivo();
         }

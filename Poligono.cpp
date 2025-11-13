@@ -71,8 +71,8 @@ AABB Cubo::getAABB() const {
 
 float Cubo::getLado() const {return this->lado;}
 
-void Cubo::realiza_movimento(int cor, float dt, bool pause) {
-    desenha_poligono(cor, pause);
+void Cubo::realiza_movimento(int cor, float dt, bool pause, bool modo_daltonico) {
+    desenha_poligono(cor, pause, modo_daltonico);
 }
 
 bool Cubo::colide_jogador(const AABB& s) const {
@@ -84,12 +84,12 @@ void Cubo::aplica_efeito(Jogador& jogador) {
     return;
 }
 
-void Cubo::desenha_poligono(int cor, bool pause) {
+void Cubo::desenha_poligono(int cor, bool pause, bool modo_daltonico) {
     if(cor >= 0 and cor <= 12) muda_cor(cor);
     glPushMatrix();
     glTranslatef(this->getX(), this->getY(), this->getZ());
     // aqui `lado` é tratado como meio-extent (compatível com sua desenha_cubo)
-    desenha_cubo(this->lado,this->getAdesivo()->getTexturaID());
+    desenha_cubo(this->lado,this->getAdesivo()->getTexturaID(), modo_daltonico);
     // Desenha adesivo colado na face +Z
     // if (this->getAdesivo()) {
     //     glPushMatrix();
@@ -167,8 +167,8 @@ AABB Piramide::getAABB() const {
 
 float Piramide::getAltura() const {return this->altura;}
 
-void Piramide::realiza_movimento(int cor, float dt, bool pause) {
-    desenha_poligono(cor, pause);
+void Piramide::realiza_movimento(int cor, float dt, bool pause, bool modo_daltonico) {
+    desenha_poligono(cor, pause, modo_daltonico);
 }
 
 bool Piramide::colide_jogador(const AABB& s) const {
@@ -207,11 +207,11 @@ void Piramide::aplica_efeito(Jogador& jogador) {
     jogador.morre();
 }
 
-void Piramide::desenha_poligono(int cor, bool pause) {
+void Piramide::desenha_poligono(int cor, bool pause, bool modo_daltonico) {
     if(cor >= 0 and cor <= 12) muda_cor(cor);
     glPushMatrix();
     glTranslatef(this->getX(), this->getY(), this->getZ());
-    desenha_piramide(this->base, this->altura,this->getAdesivo()->getTexturaID());
+    desenha_piramide(this->base, this->altura,this->getAdesivo()->getTexturaID(), modo_daltonico);
     // if(this->getAdesivo()){
     //     glPushMatrix();
     //     glTranslatef(0.0f, this->getAltura()/2.0f, 1.0f);
@@ -310,7 +310,7 @@ AABB Esfera::getAABB() const {
 
 float Esfera::getRaio() const {return this->raio;}
 
-void Esfera::realiza_movimento(int cor, float dt, bool pause) {
+void Esfera::realiza_movimento(int cor, float dt, bool pause, bool modo_daltonico) {
 
     if(!pause){
         // Atualiza velocidade com gravidade
@@ -333,7 +333,7 @@ void Esfera::realiza_movimento(int cor, float dt, bool pause) {
             this->getAdesivo()->setZ(this->getZ());
         }
     }
-    desenha_poligono(cor, pause);
+    desenha_poligono(cor, pause, modo_daltonico);
 }
 
 bool Esfera::colide_jogador(const AABB& s) const {
@@ -349,11 +349,11 @@ void Esfera::aplica_efeito(Jogador& jogador) {
     if(jogador.getMascara().max.y <= this->getY()) jogador.morre();
 }
 
-void Esfera::desenha_poligono(int cor, bool pause) {
+void Esfera::desenha_poligono(int cor, bool pause, bool modo_daltonico) {
     if(cor >= 0 and cor <= 12) muda_cor(cor);
     glPushMatrix();
     glTranslatef(this->getX(), this->getY(), this->getZ());
-    desenha_esfera(this->raio, 30, 30, this->getAdesivo()->getTexturaID());
+    desenha_esfera(this->raio, 30, 30, this->getAdesivo()->getTexturaID(), modo_daltonico);
     // if(this->getAdesivo()){
     //     glPushMatrix();
     //     glTranslatef(0.0f, 0.0f, this->getRaio()/2.0f + 0.01f);
@@ -441,7 +441,7 @@ float Cilindro::getRaio() const {return this->raio;}
 
 float Cilindro::getAltura() const {return this->altura;}
 
-void Cilindro::realiza_movimento(int cor, float dt, bool pause) {
+void Cilindro::realiza_movimento(int cor, float dt, bool pause, bool modo_daltonico) {
     float novaX = this->getX() + dt * 10.0f * x_vel;
 
     // Verifica se ultrapassou a borda
@@ -472,7 +472,7 @@ void Cilindro::realiza_movimento(int cor, float dt, bool pause) {
     //     this->getAdesivo()->setNormal({nx, n.y, nz});
     // }
 
-    desenha_poligono(cor, pause);
+    desenha_poligono(cor, pause, modo_daltonico);
 }
 
 bool Cilindro::colide_jogador(const AABB& s) const {
@@ -498,13 +498,13 @@ void Cilindro::aplica_efeito(Jogador& jogador) {
     if(jogador.getMascara().max.y <= this->getY()) jogador.morre();
 }
 
-void Cilindro::desenha_poligono(int cor, bool pause) {
+void Cilindro::desenha_poligono(int cor, bool pause, bool modo_daltonico) {
     if(!pause) ang -= x_vel;
     if(cor >= 0 and cor <= 12) muda_cor(cor);
     glPushMatrix();
     glTranslatef(this->getX(), this->getY(), this->getZ());
     /*if(!pause)*/ glRotatef(ang,0,0,1);
-    desenha_cilindro(this->raio, this->altura, 30, 30, true, this->getAdesivo()->getTexturaID());
+    desenha_cilindro(this->raio, this->altura, 30, 30, true, this->getAdesivo()->getTexturaID(), modo_daltonico);
     // if(this->getAdesivo()){
     //     glPushMatrix();
     //     glTranslatef(0.0f, 0.0f, this->getAltura()/2.0f + 0.01f);
@@ -599,7 +599,7 @@ float Cone::getRaio() const {return this->raio;}
 
 float Cone::getAltura() const {return this->altura;}
 
-void Cone::realiza_movimento(int cor, float dt, bool pause) {
+void Cone::realiza_movimento(int cor, float dt, bool pause, bool modo_daltonico) {
     if(!pause){
         ang += 10.0f * dt;
 
@@ -620,7 +620,7 @@ void Cone::realiza_movimento(int cor, float dt, bool pause) {
                                             apex.z - axis.z*altura - apex.z});
         }
     }
-    desenha_poligono(cor, pause);
+    desenha_poligono(cor, pause, modo_daltonico);
 }
 
 bool Cone::colide_jogador(const AABB& s) const {
@@ -652,7 +652,7 @@ void Cone::aplica_efeito(Jogador& jogador) {
     }
 }
 
-void Cone::desenha_poligono(int cor, bool pause) {
+void Cone::desenha_poligono(int cor, bool pause, bool modo_daltonico) {
     if(cor >= 0 and cor <= 12) muda_cor(cor);
     glPushMatrix();
 
@@ -669,7 +669,7 @@ void Cone::desenha_poligono(int cor, bool pause) {
 
         glTranslatef(this->getX(), this->getY(), this->getZ());
         glRotatef(ang,0,1,0);
-        desenha_cone(this->raio, this->altura, 30, this->getAdesivo()->getTexturaID());
+        desenha_cone(this->raio, this->altura, 30, this->getAdesivo()->getTexturaID(), modo_daltonico);
         // if(this->getAdesivo()){
         //     glPushMatrix();
         //     glTranslatef(0.0f, this->getAltura()/2.0f+0.01f, 0.0f);
@@ -771,8 +771,8 @@ AABB Torus::getAABB() const {
     };
 }
 
-void Torus::realiza_movimento(int cor, float dt, bool pause) {
-    desenha_poligono(cor, pause);
+void Torus::realiza_movimento(int cor, float dt, bool pause, bool modo_daltonico) {
+    desenha_poligono(cor, pause, modo_daltonico);
 }
 
 bool Torus::colide_jogador(const AABB& s) const{
@@ -828,11 +828,11 @@ void Torus::aplica_efeito(Jogador& jogador) {
     }*/
 }
 
-void Torus::desenha_poligono(int cor, bool pause) {
+void Torus::desenha_poligono(int cor, bool pause, bool modo_daltonico) {
     if(cor >= 0 and cor <= 12) muda_cor(cor);
     glPushMatrix();
     glTranslatef(p.c.x, p.c.y, p.c.z);
-    desenha_torus(p.raio_maior, p.raio_menor, 40, 40, this->getAdesivo()->getTexturaID());
+    desenha_torus(p.raio_maior, p.raio_menor, 40, 40, this->getAdesivo()->getTexturaID(), modo_daltonico);
     // if(this->getAdesivo()){
     //     glPushMatrix();
     //     //glTranslatef(getX(), getY(), getZ());
