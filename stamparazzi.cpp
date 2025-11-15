@@ -467,6 +467,30 @@ void cria_poligonos(int n){
         2.0f
     ));
     copia.erase(it);
+
+    // randomIndex = rand() % copia.size();
+    // it = copia.begin();
+    // advance(it, randomIndex);
+    // id = *it - 1;
+    // poligonos.push_back(make_unique<Cubo>(
+    //     5.0f, -90.0f, -20.0f,
+    //     2.0f, 2.0f, 2.0f,
+    //     make_unique<Adesivo>(5.0f, -90.0f, -20.0f, id, XYZ{0,0,1}),
+    //     2.0f
+    // ));
+    // copia.erase(it);
+
+    // randomIndex = rand() % copia.size();
+    // it = copia.begin();
+    // advance(it, randomIndex);
+    // id = *it - 1;
+    // poligonos.push_back(make_unique<Cubo>(
+    //     10.0f, -90.0f, -20.0f,
+    //     2.0f, 2.0f, 2.0f,
+    //     make_unique<Adesivo>(10.0f, -90.0f, -20.0f, id, XYZ{0,0,1}),
+    //     2.0f
+    // ));
+    // copia.erase(it);
     
     cores_poligonos.resize(n);
 
@@ -839,8 +863,12 @@ void loop_jogo(){
 
     SDL_Event evento;
     inicio = SDL_GetTicks();
+    bool overlay_antes = show_overlay;
 
     while (rodando) {
+
+        if(pause) show_overlay = false;
+        else show_overlay = overlay_antes;
 
         fim = SDL_GetTicks();
         dt = (fim - inicio) / 1000.0f;
@@ -889,7 +917,7 @@ void loop_jogo(){
                         // pause = show_overlay;
                         //SDL_SetRelativeMouseMode(show_overlay ? SDL_FALSE : SDL_TRUE);
                         //SDL_ShowCursor(show_overlay ? SDL_ENABLE : SDL_DISABLE);
-                        if(!pause and jogador.estaVivo()) show_overlay = !show_overlay;
+                        if(!pause and jogador.estaVivo()) {show_overlay = !show_overlay; overlay_antes = show_overlay;}
                         else if(pause) rodando = false;
                 }
                 if(evento.type == SDL_MOUSEBUTTONDOWN and pause){
@@ -923,7 +951,7 @@ void loop_jogo(){
                             ajustaProjecao(800, 600);
                         }
                     } else if(evento.cbutton.button == SDL_CONTROLLER_BUTTON_BACK) {
-                        if(!pause and jogador.estaVivo()) show_overlay = !show_overlay;
+                        if(!pause and jogador.estaVivo()) {show_overlay = !show_overlay; overlay_antes = show_overlay;}
                         else if(pause) rodando = false;
                     }
                 }
