@@ -46,7 +46,7 @@ bool pause = false;
 bool tela_cheia = true;
 bool show_overlay = false;
 bool primeira_pessoa = true;
-bool modo_daltonico = false;
+bool modo_daltonico = true;
 bool flash_ativo = false;
 float flash_alpha = 0.0f;
 bool rodando = true;
@@ -559,7 +559,8 @@ void atualiza_objetivos(const set<int>& objetivos, const vector<int>& coresPolig
     TTF_Font* fonteLocal = fonte;
 
     std::ostringstream oss;
-    oss << "Adesivos faltando: " << objetivos.size() << " restantes";
+    if(objetivos.size() != 1) oss << "Adesivos faltando: " << objetivos.size() << " restantes";
+    else oss << "Adesivos faltando: 1 restante";
     std::string textoStr = oss.str();
 
     SDL_Surface* s = TTF_RenderText_Blended(fonteLocal, textoStr.c_str(), corTexto);
@@ -657,7 +658,8 @@ void desenha_blocos_overlay(const set<int>& objetivos, const vector<int>& coresP
     // Texto: "Adesivos faltando: X restantes"
     // -----------------------
     std::ostringstream oss;
-    oss << "Adesivos faltando: " << objetivos.size() << " restantes";
+    if(objetivos.size() != 1) oss << "Adesivos faltando: " << objetivos.size() << " restantes";
+    else oss << "Adesivos faltando: 1 restante";
     string texto = oss.str();
 
     SDL_Color preto = {0,0,0,255};
@@ -766,6 +768,31 @@ void desenha_blocos_overlay(const set<int>& objetivos, const vector<int>& coresP
         SDL_FreeSurface(numSurf);
         SDL_FreeSurface(num32);
         glDeleteTextures(1, &texNum);
+
+        if (modo_daltonico) {
+            GLuint texSimbolo = coresPoligonos[indicePoligono] + 23;
+            // ajuste conforme seu mapeamento real ↑
+
+            float simLarg = blocoTam * 0.55f;
+            float simAlt  = simLarg;
+
+            float sx = bx + blocoTam/2 - simLarg/2;
+            float sy = by + blocoTam + 12;  // aparece logo abaixo
+
+            glBindTexture(GL_TEXTURE_2D, texID[texSimbolo]);
+            glColor4f(1,1,1,1);
+
+            glBegin(GL_QUADS);
+                glTexCoord2f(0,1); glVertex2f(sx, sy);
+                glTexCoord2f(0,0); glVertex2f(sx+simLarg, sy);
+                glTexCoord2f(1,0); glVertex2f(sx+simLarg, sy+simAlt);
+                glTexCoord2f(1,1); glVertex2f(sx, sy+simAlt);
+                // glTexCoord2f(0,0); glVertex2f(sx, sy);
+                // glTexCoord2f(0,1); glVertex2f(sx, sy+simAlt);
+                // glTexCoord2f(1,1); glVertex2f(sx+simLarg, sy+simAlt);
+                // glTexCoord2f(1,0); glVertex2f(sx+simLarg, sy);
+            glEnd();
+        }
 
         bx += blocoTam + espaco;
     }
