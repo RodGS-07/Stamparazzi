@@ -38,7 +38,7 @@ enum DIFICULDADE {FACIL, MEDIO, DIFICIL};
 int teste = 0;
 int dif = MEDIO;
 int timer = 120 + 30 * dif;
-int renascer = 3;
+int renascer = 3 + 2 * dif;
 int minutos = timer / 60;
 int segundos = timer % 60;
 bool mouse_in = false;
@@ -586,134 +586,7 @@ void atualiza_objetivos(const set<int>& objetivos, const vector<int>& coresPolig
     SDL_FreeSurface(s);
 }
 
-// void atualiza_objetivos(const set<int>& objetivos, const vector<int>& coresPoligonos) {
-    
-//     if (texturaTextoObj) {
-//         glDeleteTextures(1, &texturaTextoObj);
-//         texturaTextoObj = 0;
-//     }
-
-//     if (objetivos.empty()) return;
-
-//     // Define fonte e cor base
-//     SDL_Color corTexto = {0, 0, 0, 255}; // texto preto
-//     TTF_Font* fonteLocal = fonte;        // usa a fonte global
-
-//     // Monta o texto com blocos coloridos
-//     int larguraTotal = 0;
-//     int alturaMax = 0;
-//     vector<SDL_Surface*> partes;
-
-//     // Cria a superfície inicial com o prefixo
-//     std::ostringstream osspref;
-//     osspref << "Adesivos faltando: " << objetivos.size() << " restantes";
-//     std::string prefstr = osspref.str();
-//     SDL_Surface* prefixo = TTF_RenderText_Blended(fonteLocal, prefstr.c_str(), corTexto);
-//     partes.push_back(prefixo);
-//     larguraTotal += prefixo->w;
-//     alturaMax = prefixo->h;
-
-//     // Iterador sobre o set (para preservar ordem e evitar acesso por índice)
-//     for (int objetivo : objetivos) {
-//         int indicePoligono = -1;
-
-//         // procura qual polígono tem esse adesivo
-//         for (size_t i = 0; i < poligonos.size(); ++i) {
-//             auto adesivo = poligonos[i]->getAdesivo();
-//             if (adesivo && adesivo->getTexturaID()-2 == objetivo) {
-//                 indicePoligono = (int)i;
-//                 break;
-//             }
-//         }
-
-//         if (indicePoligono == -1) continue; // se não achou o polígono, ignora
-
-//         // Obtém a cor correspondente ao polígono
-//         Cor cor = get_cor_struct(coresPoligonos[indicePoligono]);
-//         SDL_Color corFundo = {
-//             (Uint8)(cor.r * 255),
-//             (Uint8)(cor.g * 255),
-//             (Uint8)(cor.b * 255),
-//             255
-//         };
-
-        
-//         // Cria o bloco de fundo colorido
-//         SDL_Surface* bloco = SDL_CreateRGBSurface(
-//             0, 20, prefixo->h, 32,
-//             0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000
-//         );
-//         SDL_FillRect(bloco, nullptr, SDL_MapRGBA(bloco->format, corFundo.r, corFundo.g, corFundo.b, 255));
-
-//         // Número do adesivo
-//         string num = to_string(objetivo);
-//         SDL_Surface* numero;
-//         if (!corFundo.r && !corFundo.g && !corFundo.b)
-//             numero = TTF_RenderText_Blended(fonteLocal, num.c_str(), {255,255,255,255});
-//         else
-//             numero = TTF_RenderText_Blended(fonteLocal, num.c_str(), {0,0,0,255});
-
-//         // Centraliza o número sobre o bloco
-//         SDL_Rect dst;
-//         dst.x = (bloco->w - numero->w) / 2;
-//         dst.y = (bloco->h - numero->h) / 2;
-//         SDL_BlitSurface(numero, nullptr, bloco, &dst);
-//         SDL_FreeSurface(numero);
-
-//         partes.push_back(bloco);
-//         larguraTotal += bloco->w + 5;
-//         alturaMax = max(alturaMax, bloco->h);
-//     }
-
-//     // Junta tudo em uma única superfície final
-//     SDL_Surface* finalSurf = SDL_CreateRGBSurface(
-//         0, larguraTotal, alturaMax, 32,
-//         0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000
-//     );
-
-//     int xOffset = 0;
-//     for (SDL_Surface* s : partes) {
-//         SDL_Rect dst = {xOffset, 0, s->w, s->h};
-//         SDL_BlitSurface(s, nullptr, finalSurf, &dst);
-//         xOffset += s->w + 5;
-//         SDL_FreeSurface(s);
-//     }
-
-//     // --- Converte a superfície final em textura OpenGL ---
-//     glDisable(GL_LIGHTING);
-//     glEnable(GL_BLEND);
-//     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-//     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-//     glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-
-//     GLuint textura;
-//     glGenTextures(1, &textura);
-//     glBindTexture(GL_TEXTURE_2D, textura);
-
-//     larguraTextoObj = finalSurf->w;
-//     alturaTextoObj = finalSurf->h;
-
-//     // Garante que a superfície está no formato esperado (RGBA)
-//     SDL_Surface* formatted = SDL_ConvertSurfaceFormat(finalSurf, SDL_PIXELFORMAT_RGBA32, 0);
-
-//     // Cria a textura OpenGL com os pixels da superfície
-//     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, formatted->w, formatted->h, 0,
-//                 GL_RGBA, GL_UNSIGNED_BYTE, formatted->pixels);
-
-//     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-//     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-//     texturaTextoObj = textura;
-
-//     // Libera superfícies temporárias
-//     SDL_FreeSurface(formatted);
-//     SDL_FreeSurface(finalSurf);
-
-//     glEnable(GL_LIGHTING);
-// }
-
-void desenha_bloco(float x, float y, float tamanho,
-                   Cor corFundo, GLuint texNumero) 
+void desenha_bloco(float x, float y, float tamanho, Cor corFundo, GLuint texNumero) 
 {
     glEnable(GL_TEXTURE_2D);
     glDisable(GL_LIGHTING);
@@ -753,6 +626,8 @@ void desenha_blocos_overlay(const set<int>& objetivos, const vector<int>& coresP
     int larguraTela, alturaTela;
     SDL_GetWindowSize(window, &larguraTela, &alturaTela);
 
+    TTF_Font* fnt = TTF_OpenFont("arial.ttf", 48);
+
     // ----- Projeção 2D -----
     glDisable(GL_LIGHTING);
     glDisable(GL_DEPTH_TEST);
@@ -786,7 +661,7 @@ void desenha_blocos_overlay(const set<int>& objetivos, const vector<int>& coresP
     string texto = oss.str();
 
     SDL_Color preto = {0,0,0,255};
-    SDL_Surface* surfTxt = TTF_RenderText_Blended(fonte, texto.c_str(), preto);
+    SDL_Surface* surfTxt = TTF_RenderText_Blended(fnt, texto.c_str(), preto);
     SDL_Surface* surfTxt32 = SDL_ConvertSurfaceFormat(surfTxt, SDL_PIXELFORMAT_RGBA32, 0);
 
     GLuint texTexto;
@@ -862,7 +737,7 @@ void desenha_blocos_overlay(const set<int>& objetivos, const vector<int>& coresP
         SDL_Color corNum = {0,0,0,255};
         if (cor.r==0 && cor.g==0 && cor.b==0) corNum = {255,255,255,255};
 
-        SDL_Surface* numSurf = TTF_RenderText_Blended(fonte, num.c_str(), corNum);
+        SDL_Surface* numSurf = TTF_RenderText_Blended(fnt, num.c_str(), corNum);
         SDL_Surface* num32 = SDL_ConvertSurfaceFormat(numSurf, SDL_PIXELFORMAT_RGBA32, 0);
 
         GLuint texNum;
@@ -895,6 +770,8 @@ void desenha_blocos_overlay(const set<int>& objetivos, const vector<int>& coresP
         bx += blocoTam + espaco;
     }
 
+    TTF_CloseFont(fnt);
+
     // ----- Restaurar matriz original -----
     glPopMatrix();
     glMatrixMode(GL_PROJECTION);
@@ -903,149 +780,6 @@ void desenha_blocos_overlay(const set<int>& objetivos, const vector<int>& coresP
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_LIGHTING);
-    // int larguraTela, alturaTela;
-    // SDL_GetWindowSize(window, &larguraTela, &alturaTela);
-    
-    // glDisable(GL_DEPTH_TEST);
-    // glDisable(GL_LIGHTING);
-
-    // glMatrixMode(GL_PROJECTION);
-    // glPushMatrix();
-    // glLoadIdentity();
-    // glOrtho(0, larguraTela, alturaTela, 0, -1, 1);
-
-    // glMatrixMode(GL_MODELVIEW);
-    // glPushMatrix();
-    // glLoadIdentity();
-
-    // // fundo branco translúcido
-    // glDisable(GL_TEXTURE_2D);
-    // glColor4f(1,1,1,0.5f);
-    // glBegin(GL_QUADS);
-    //     glVertex2f(0,0);
-    //     glVertex2f(larguraTela,0);
-    //     glVertex2f(larguraTela,alturaTela);
-    //     glVertex2f(0,alturaTela);
-    // glEnd();
-
-    // // blocos maiores, centrados
-    // float tamanho = 120;
-    // float x = larguraTela * 0.1f;
-    // float y = alturaTela * 0.2f;
-
-    // for (int obj : objetivos) {
-    //     int ind = -1;
-    //     for (size_t p = 0; p < poligonos.size(); ++p) {
-    //         auto ad = poligonos[p]->getAdesivo();
-    //         if (ad && ad->getTexturaID()-2 == obj) {
-    //             ind = p;
-    //             break;
-    //         }
-    //     }
-    //     if (ind < 0) continue;
-    //     Cor cor = get_cor_struct(coresPoligonos[ind]);
-
-    //     if (!texNumero.count(obj))
-    //         texNumero[obj] = cria_textura_numero(obj, fonte);
-
-    //     desenha_bloco(x, y, tamanho, cor, texNumero[obj]);
-    //     x += tamanho + 40; 
-    // }
-
-    // glPopMatrix();
-    // glMatrixMode(GL_PROJECTION);
-    // glPopMatrix();
-    // glMatrixMode(GL_MODELVIEW);
-
-    // glEnable(GL_DEPTH_TEST);
-    // glEnable(GL_LIGHTING);
-    // int w, h;
-    // SDL_GetWindowSize(window, &w, &h);
-
-    // const int blocoW = 80;
-    // const int blocoH = 80;
-    // const int espaco = 20;
-
-    // int total = objetivos.size();
-    // int larguraTotal = total * blocoW + (total - 1) * espaco;
-
-    // int x0 = (w - larguraTotal) / 2;
-    // int y0 = h / 2 - blocoH / 2;
-
-    // int i = 0;
-    // for (int obj : objetivos) {
-
-    //     int ind = -1;
-    //     for (size_t p = 0; p < poligonos.size(); ++p) {
-    //         auto ad = poligonos[p]->getAdesivo();
-    //         if (ad && ad->getTexturaID()-2 == obj) {
-    //             ind = p;
-    //             break;
-    //         }
-    //     }
-    //     if (ind < 0) continue;
-
-    //     Cor c = get_cor_struct(coresPoligonos[ind]);
-
-    //     float r = c.r;
-    //     float g = c.g;
-    //     float b = c.b;
-
-    //     int x = x0 + i * (blocoW + espaco);
-    //     int y = y0;
-
-    //     glDisable(GL_LIGHTING);
-    //     glEnable(GL_BLEND);
-    //     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    //     glColor4f(r, g, b, 1.0f);
-
-    //     glBegin(GL_QUADS);
-    //         glVertex2i(x, y);
-    //         glVertex2i(x + blocoW, y);
-    //         glVertex2i(x + blocoW, y + blocoH);
-    //         glVertex2i(x, y + blocoH);
-    //     glEnd();
-
-    //     // Número do adesivo em preto ou branco
-    //     SDL_Color corTexto = (r+g+b < 0.3f ? SDL_Color{255,255,255,255}
-    //                                        : SDL_Color{0,0,0,255});
-
-    //     TTF_Font* f = fonte;
-    //     std::string num = std::to_string(obj);
-    //     SDL_Surface* ns = TTF_RenderText_Blended(f, num.c_str(), corTexto);
-
-    //     GLuint texN;
-    //     glGenTextures(1, &texN);
-    //     glBindTexture(GL_TEXTURE_2D, texN);
-
-    //     SDL_Surface* fmt = SDL_ConvertSurfaceFormat(ns, SDL_PIXELFORMAT_RGBA32, 0);
-
-    //     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, fmt->w, fmt->h, 0,
-    //                  GL_RGBA, GL_UNSIGNED_BYTE, fmt->pixels);
-
-    //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    //     int nx = x + blocoW/2 - fmt->w/2;
-    //     int ny = y + blocoH/2 - fmt->h/2;
-
-    //     glEnable(GL_TEXTURE_2D);
-    //     glColor4f(1,1,1,1);
-    //     glBegin(GL_QUADS);
-    //         glTexCoord2f(0,0); glVertex2i(nx, ny);
-    //         glTexCoord2f(1,0); glVertex2i(nx+fmt->w, ny);
-    //         glTexCoord2f(1,1); glVertex2i(nx+fmt->w, ny+fmt->h);
-    //         glTexCoord2f(0,1); glVertex2i(nx, ny+fmt->h);
-    //     glEnd();
-    //     glDisable(GL_TEXTURE_2D);
-
-    //     glDeleteTextures(1, &texN);
-    //     SDL_FreeSurface(fmt);
-    //     SDL_FreeSurface(ns);
-
-    //     i++;
-    // }
 }
 
 void atualiza_renascer(float dt) {
@@ -1078,11 +812,6 @@ void loop_jogo(){
     SDL_Event evento;
     inicio = SDL_GetTicks();
 
-    // int cores[7]; for(int i = 0; i < 7; i++){
-    //     if(i < 6) cores[i] = rand() % (12+1);
-    //     else cores[i] = cores[i-1];
-    // }
-
     while (rodando) {
 
         fim = SDL_GetTicks();
@@ -1095,7 +824,7 @@ void loop_jogo(){
         if(!objetivos.size()) {rodando = false; cout << "Voce venceu!" << endl; break;}
         atualiza_objetivos(objetivos, cores_poligonos);
 
-        if(!jogador.estaVivo()) atualiza_renascer(dt);
+        if(!jogador.estaVivo()) {show_overlay = false; atualiza_renascer(dt);}
 
         while (SDL_PollEvent(&evento)) {
             if (evento.type == SDL_QUIT) {
@@ -1132,13 +861,13 @@ void loop_jogo(){
                         // pause = show_overlay;
                         //SDL_SetRelativeMouseMode(show_overlay ? SDL_FALSE : SDL_TRUE);
                         //SDL_ShowCursor(show_overlay ? SDL_ENABLE : SDL_DISABLE);
-                        if(!pause) show_overlay = !show_overlay;
-                        else rodando = false;
+                        if(!pause and jogador.estaVivo()) show_overlay = !show_overlay;
+                        else if(pause) rodando = false;
                 }
                 if(evento.type == SDL_MOUSEBUTTONDOWN and pause){
                     pause = false;
                     SDL_ShowCursor(SDL_DISABLE);
-                } else if(evento.type == SDL_MOUSEBUTTONDOWN and !pause and jogador.estaVivo()){
+                } else if(evento.type == SDL_MOUSEBUTTONDOWN and !pause and !show_overlay and jogador.estaVivo()){
                     if(evento.button.button == SDL_BUTTON_LEFT){
                         flash_alpha = 1.0f;
                         flash_ativo = true;
@@ -1166,11 +895,11 @@ void loop_jogo(){
                             ajustaProjecao(800, 600);
                         }
                     } else if(evento.cbutton.button == SDL_CONTROLLER_BUTTON_BACK) {
-                        if(!pause) show_overlay = !show_overlay;
-                        else rodando = false;
+                        if(!pause and jogador.estaVivo()) show_overlay = !show_overlay;
+                        else if(pause) rodando = false;
                     }
                 }
-                if(SDL_GameControllerGetAxis(game_controller,SDL_CONTROLLER_AXIS_TRIGGERRIGHT) > 16000 and !pause and jogador.estaVivo()){
+                if(SDL_GameControllerGetAxis(game_controller,SDL_CONTROLLER_AXIS_TRIGGERRIGHT) > 16000 and !pause and !show_overlay and jogador.estaVivo()){
                     flash_alpha = 1.0f;
                     flash_ativo = true;
                 }
@@ -1441,7 +1170,7 @@ void loop_jogo(){
             Adesivo* ade = p->getAdesivo();
             if(ade!=nullptr){
                 Adesivo a = *ade;
-                if(jogador.detecta_adesivo(a,poligonos) and jogador.estaVivo()){
+                if(jogador.detecta_adesivo(a,poligonos) and !pause and !show_overlay and jogador.estaVivo()){
                     glDisable(GL_DEPTH_TEST);   // ignora profundidade
                     marcax(p->getX(),p->getY(),p->getZ(),jogador.getCamYaw(),jogador.getCamPitch());
                     glEnable(GL_DEPTH_TEST);    // reativa para os próximos frames
@@ -1450,7 +1179,7 @@ void loop_jogo(){
             }  
         }
 
-        if(show_overlay) desenha_blocos_overlay(objetivos, cores_poligonos);
+        if(show_overlay and !pause and jogador.estaVivo()) desenha_blocos_overlay(objetivos, cores_poligonos);
         
         //jogador.tirou_foto(a,dt,flash_alpha,flash_ativo);
 
