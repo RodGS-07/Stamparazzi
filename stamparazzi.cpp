@@ -783,14 +783,15 @@ void desenha_blocos_overlay(const set<int>& objetivos, const vector<int>& coresP
             glColor4f(1,1,1,1);
 
             glBegin(GL_QUADS);
-                glTexCoord2f(0,1); glVertex2f(sx, sy);
+                if(texSimbolo != 34)
+                {glTexCoord2f(0,1); glVertex2f(sx, sy);
                 glTexCoord2f(0,0); glVertex2f(sx+simLarg, sy);
                 glTexCoord2f(1,0); glVertex2f(sx+simLarg, sy+simAlt);
-                glTexCoord2f(1,1); glVertex2f(sx, sy+simAlt);
-                // glTexCoord2f(0,0); glVertex2f(sx, sy);
-                // glTexCoord2f(0,1); glVertex2f(sx, sy+simAlt);
-                // glTexCoord2f(1,1); glVertex2f(sx+simLarg, sy+simAlt);
-                // glTexCoord2f(1,0); glVertex2f(sx+simLarg, sy);
+                glTexCoord2f(1,1); glVertex2f(sx, sy+simAlt);}
+                else{glTexCoord2f(0,0); glVertex2f(sx, sy);
+                glTexCoord2f(0,1); glVertex2f(sx, sy+simAlt);
+                glTexCoord2f(1,1); glVertex2f(sx+simLarg, sy+simAlt);
+                glTexCoord2f(1,0); glVertex2f(sx+simLarg, sy);}
             glEnd();
         }
 
