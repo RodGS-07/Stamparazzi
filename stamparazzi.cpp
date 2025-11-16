@@ -34,9 +34,11 @@
 using namespace std;
 
 enum DIFICULDADE {FACIL, MEDIO, DIFICIL};
+enum ESTADO {MENU_PRINCIPAL, JOGO_PRINCIPAL, SAINDO, PAUSE, VITORIA, DERROTA};
 
 int teste = 0;
 int dif = MEDIO;
+int estado_atual = MENU_PRINCIPAL;
 int timer = 120 + 30 * dif;
 int renascer = 3 + 2 * dif;
 int minutos = timer / 60;
@@ -46,7 +48,7 @@ bool pause = false;
 bool tela_cheia = true;
 bool show_overlay = false;
 bool primeira_pessoa = true;
-bool modo_daltonico = true;
+bool modo_daltonico = false;
 bool flash_ativo = false;
 float flash_alpha = 0.0f;
 bool rodando = true;
@@ -64,16 +66,12 @@ SDL_GLContext glContext;
 SDL_GameController* game_controller = NULL;
 TTF_Font* fonte;
 
-namespace NG{ //Namespace para Informações do Game/Jogo
+// namespace NG{ //Namespace para Informações do Game/Jogo
 
-    enum STATE{
-        MENU_PRINCIPAL,
-        JOGO_PRINCIPAL,
-        PAUSE,
-        VITORIA,
-        DERROTA
-    };
-};
+//     enum STATE{
+        
+//     };
+// };
 
 //Adesivo a = Adesivo(-5.0f,5.0f,10.0f,{0,0,1});
 
@@ -859,8 +857,203 @@ void atualiza_renascer(float dt) {
     }
 }
 
+void desenha_menu() {
+
+    int w, h;
+    SDL_GetWindowSize(window, &w, &h);
+
+    glDisable(GL_LIGHTING);
+    glDisable(GL_DEPTH_TEST);
+
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    gluOrtho2D(0, w, h, 0);
+
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    // fundo
+    glColor4f(1,1,1,1);
+    glBegin(GL_QUADS);
+        glVertex2i(0,0);
+        glVertex2i(w,0);
+        glVertex2i(w,h);
+        glVertex2i(0,h);
+    glEnd();
+
+    // --- Textos ---
+    SDL_Color preto = {0,0,0,255};
+
+    TTF_Font* fontTitle = TTF_OpenFont("arial.ttf", 64);
+    TTF_Font* fontOpt   = TTF_OpenFont("arial.ttf", 38);
+
+    int lw, lh;
+
+    // Título
+    GLuint texTitulo = criaTexturaDoTexto("STAMPARAZZI", fontTitle, preto, lw, lh);
+    desenhaTexto(texTitulo, w/2 - lw/2, h*0.15f, lw, lh);
+    glDeleteTextures(1, &texTitulo);
+
+    // Dificuldade
+    string difStr = "Dificuldade: ";
+    if (dif == FACIL) difStr += "FACIL";
+    else if (dif == MEDIO) difStr += "MEDIO";
+    else difStr += "DIFICIL";
+
+    GLuint texDif = criaTexturaDoTexto(difStr.c_str(), fontOpt, preto, lw, lh);
+    desenhaTexto(texDif, w/2 - lw/2, h*0.40f, lw, lh);
+    glDeleteTextures(1, &texDif);
+
+    // Modo daltônico
+    string dalStr = string("Modo daltonico: ") + (modo_daltonico ? "ON" : "OFF");
+
+    GLuint texDal = criaTexturaDoTexto(dalStr.c_str(), fontOpt, preto, lw, lh);
+    desenhaTexto(texDal, w/2 - lw/2, h*0.50f, lw, lh);
+    glDeleteTextures(1, &texDal);
+
+    // Start
+    GLuint texStart = criaTexturaDoTexto("Pressione ENTER para iniciar", fontOpt, preto, lw, lh);
+    desenhaTexto(texStart, w/2 - lw/2, h*0.70f, lw, lh);
+    glDeleteTextures(1, &texStart);
+
+    TTF_CloseFont(fontTitle);
+    TTF_CloseFont(fontOpt);
+
+    // restaurar
+    glPopMatrix();
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+
+    glEnable(GL_LIGHTING);
+    glEnable(GL_DEPTH_TEST);
+}
+
+void loop_menu() {
+
+    SDL_Event e;
+
+    while (estado_atual == MENU_PRINCIPAL) {
+
+        while (SDL_PollEvent(&e)) {
+            if (e.type == SDL_QUIT) {estado_atual = SAINDO; break;}
+
+            atualiza_controller(e);
+
+            if(!game_controller){    
+                
+                if (e.type == SDL_KEYDOWN) {
+
+                    if (e.key.keysym.sym == SDLK_UP) {
+                        dif++;
+                        if (dif > DIFICIL) dif = FACIL;
+                    }
+
+                    if (e.key.keysym.sym == SDLK_DOWN) {
+                        dif--;
+                        if (dif < FACIL) dif = DIFICIL;
+                    }
+
+                    if (e.key.keysym.sym == SDLK_LEFT ||
+                        e.key.keysym.sym == SDLK_RIGHT) {
+                        modo_daltonico = !modo_daltonico;
+                    }
+
+                        if(e.key.keysym.sym == SDLK_F11) {
+                            tela_cheia = !tela_cheia;
+                            //if (!pause) pause = true;
+                            if (tela_cheia) {
+                                SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
+                                int w, h;
+                                SDL_GetWindowSize(window, &w, &h);
+                                ajustaProjecao(w, h);
+                            } else {
+                                SDL_SetWindowFullscreen(window, 0);
+                                SDL_SetWindowSize(window, 800, 600);
+                                SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+                                ajustaProjecao(800, 600);
+                            }
+                        }
+
+                    if (e.key.keysym.sym == SDLK_RETURN) {
+                        estado_atual = JOGO_PRINCIPAL;
+                    }
+
+                    if(e.key.keysym.sym == SDLK_ESCAPE) {
+                        estado_atual = SAINDO;
+                    }
+                }
+            } else {
+                if (e.type == SDL_CONTROLLERBUTTONDOWN) {
+                    // --- D-Pad Cima ---
+                    if (e.cbutton.button == SDL_CONTROLLER_BUTTON_DPAD_UP) {
+                        dif++;
+                        if (dif > DIFICIL) dif = FACIL;
+                    }
+
+                    // --- D-Pad Baixo ---
+                    if (e.cbutton.button == SDL_CONTROLLER_BUTTON_DPAD_DOWN) {
+                        dif--;
+                        if (dif < FACIL) dif = DIFICIL;
+                    }
+
+                    // --- D-Pad Esquerda / Direita (modo daltônico) ---
+                    if (e.cbutton.button == SDL_CONTROLLER_BUTTON_DPAD_LEFT ||
+                        e.cbutton.button == SDL_CONTROLLER_BUTTON_DPAD_RIGHT) {
+                        modo_daltonico = !modo_daltonico;
+                    }
+
+                    // --- Toggle fullscreen (LB + RB juntos) ---
+                    if (SDL_GameControllerGetButton(game_controller, SDL_CONTROLLER_BUTTON_LEFTSHOULDER) &&
+                        SDL_GameControllerGetButton(game_controller, SDL_CONTROLLER_BUTTON_RIGHTSHOULDER)) {
+
+                        tela_cheia = !tela_cheia;
+
+                        if (tela_cheia) {
+                            SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
+                            int w, h;
+                            SDL_GetWindowSize(window, &w, &h);
+                            ajustaProjecao(w, h);
+                        } else {
+                            SDL_SetWindowFullscreen(window, 0);
+                            SDL_SetWindowSize(window, 800, 600);
+                            SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+                            ajustaProjecao(800, 600);
+                        }
+                    }
+
+                    // --- Botão A ou Start: iniciar jogo ---
+                    if (e.cbutton.button == SDL_CONTROLLER_BUTTON_A ||
+                        e.cbutton.button == SDL_CONTROLLER_BUTTON_START) {
+                        estado_atual = JOGO_PRINCIPAL;
+                    }
+
+                    // --- Botão B ou Back: sair ---
+                    if (e.cbutton.button == SDL_CONTROLLER_BUTTON_B ||
+                        e.cbutton.button == SDL_CONTROLLER_BUTTON_BACK) {
+                        estado_atual = SAINDO;
+                    }
+                }
+            }
+        }
+
+        glClearColor(1,1,1,1);
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        desenha_menu();
+
+        SDL_GL_SwapWindow(window);
+    }
+}
+
 void loop_jogo(){
 
+    rodando = true;
     SDL_Event evento;
     inicio = SDL_GetTicks();
     bool overlay_antes = show_overlay;
@@ -1242,6 +1435,7 @@ void loop_jogo(){
         // Atualiza tela
         SDL_GL_SwapWindow(window);
     }
+    //estado_atual = MENU_PRINCIPAL;
 }
 
 void finaliza_sdl(){
@@ -1270,11 +1464,23 @@ int main(int argc, char* argv[]) {
 
 	SDL_ShowCursor(SDL_ENABLE);
 
-    define_objetivos(rand() % (8 - 1 + 1) + 1);
+    while(estado_atual != SAINDO) {
 
-    cria_poligonos(8);
+        loop_menu();
+        if(estado_atual == SAINDO) break;
+        else if(estado_atual == JOGO_PRINCIPAL){
+            define_objetivos(rand() % (8 - 1 + 1) + 1);
+            cria_poligonos(8);
+            loop_jogo();
+        }
 
-    loop_jogo();
+        objetivos.clear();
+        poligonos.clear();
+        cores_poligonos.clear();
+        jogador.nasce_jogador(0.0f,1.5f,0.0f);
+
+        estado_atual = MENU_PRINCIPAL;
+    }
 
     finaliza_sdl();
 
