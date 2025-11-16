@@ -175,25 +175,33 @@ void cria_textura_bloco_base() {
 }
 
 void desenhaTexto(GLuint textura, int x, int y, int largura, int altura) {
+    if (!textura) return;
+
+    int w, h;
+    SDL_GetWindowSize(window, &w, &h);
+
     glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, textura);
+
+    glViewport(0, 0, w, h);
 
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
     glLoadIdentity();
-    gluOrtho2D(0, 800, 600, 0); // Coordenadas em pixels (ajuste p/ sua janela)
+    glOrtho(0, w, h, 0, -1, 1); // Coordenadas em pixels (ajuste p/ sua janela)
 
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
     glLoadIdentity();
 
-    glColor3f(1.0f, 1.0f, 1.0f); // cor branca
+    // assume-se que a projeção/modelview 2D já estão configuradas pelo chamador
+    glColor3f(1.0f, 1.0f, 1.0f);
 
     glBegin(GL_QUADS);
-        glTexCoord2f(0, 0); glVertex2f(x, y);
-        glTexCoord2f(1, 0); glVertex2f(x + largura, y);
-        glTexCoord2f(1, 1); glVertex2f(x + largura, y + altura);
-        glTexCoord2f(0, 1); glVertex2f(x, y + altura);
+        glTexCoord2f(0, 0); glVertex2f((float)x,         (float)y);
+        glTexCoord2f(1, 0); glVertex2f((float)x + largura,(float)y);
+        glTexCoord2f(1, 1); glVertex2f((float)x + largura,(float)y + altura);
+        glTexCoord2f(0, 1); glVertex2f((float)x,         (float)y + altura);
     glEnd();
 
     glPopMatrix();
@@ -203,6 +211,36 @@ void desenhaTexto(GLuint textura, int x, int y, int largura, int altura) {
 
     glDisable(GL_TEXTURE_2D);
 }
+
+// void desenhaTexto(GLuint textura, int x, int y, int largura, int altura) {
+//     glEnable(GL_TEXTURE_2D);
+//     glBindTexture(GL_TEXTURE_2D, textura);
+
+//     glMatrixMode(GL_PROJECTION);
+//     glPushMatrix();
+//     glLoadIdentity();
+//     gluOrtho2D(0, 800, 600, 0); // Coordenadas em pixels (ajuste p/ sua janela)
+
+//     glMatrixMode(GL_MODELVIEW);
+//     glPushMatrix();
+//     glLoadIdentity();
+
+//     glColor3f(1.0f, 1.0f, 1.0f); // cor branca
+
+//     glBegin(GL_QUADS);
+//         glTexCoord2f(0, 0); glVertex2f(x, y);
+//         glTexCoord2f(1, 0); glVertex2f(x + largura, y);
+//         glTexCoord2f(1, 1); glVertex2f(x + largura, y + altura);
+//         glTexCoord2f(0, 1); glVertex2f(x, y + altura);
+//     glEnd();
+
+//     glPopMatrix();
+//     glMatrixMode(GL_PROJECTION);
+//     glPopMatrix();
+//     glMatrixMode(GL_MODELVIEW);
+
+//     glDisable(GL_TEXTURE_2D);
+// }
 
 void inicializa_sdl(){
     // Inicializa SDL2
@@ -323,7 +361,15 @@ void inicializa_ttf(){
     }
 
     // Carregar fonte
-    fonte = TTF_OpenFont("arial.ttf", 12); // precisa de um .ttf na mesma pasta
+    int w, h;
+    SDL_GetWindowSize(window, &w, &h);
+
+    // resolução base = 600px de altura
+    float escala = (float)h / 600.0f;
+
+    int novo_tam = max(12, (int)(12 * escala));  
+
+    fonte = TTF_OpenFont("arial.ttf", novo_tam); // precisa de um .ttf na mesma pasta
     //cout << (fonte==NULL) << endl;
     if (!fonte) {
         std::cerr << "Erro ao carregar fonte: " << TTF_GetError() << std::endl;
@@ -358,6 +404,65 @@ void inicializa_ttf(){
     texturaTextoMorto = criaTexturaDoTexto(texto, fonte, preto, larguraTextoMorto, alturaTextoMorto);
 
     cria_textura_bloco_base();
+}
+
+void atualizaTexto(const string& texto, GLuint& texturaTexto, int& larguraTexto, int& alturaTexto){
+    if (texturaTexto) {
+        glDeleteTextures(1, &texturaTexto); // libera a textura antiga
+        texturaTexto = 0;
+    }
+
+    SDL_Color cor = {0, 0, 0, 255}; // preto
+    texturaTexto = criaTexturaDoTexto(texto.c_str(), fonte, cor, larguraTexto, alturaTexto);
+}
+
+void ajusta_tamanho_fonte() {
+
+    int w, h;
+    SDL_GetWindowSize(window, &w, &h);
+
+    // resolução base = 600px de altura
+    float escala = (float)h / 600.0f;
+
+    int novo_tam = max(12, (int)(12 * escala));   
+    // 12 é o tamanho original da sua fonte
+    // em fullscreen 1080p → novo_tam ≈ 21
+
+    // fecha fonte antiga
+    if (fonte) {
+        TTF_CloseFont(fonte);
+        fonte = nullptr;
+    }
+
+    // abre fonte nova no tamanho proporcional
+    fonte = TTF_OpenFont("arial.ttf", novo_tam);
+    if (!fonte) {
+        cerr << "Erro ao ajustar fonte: " << TTF_GetError() << endl;
+        return;
+    }
+
+    // recriar as texturas que dependem da fonte
+    SDL_Color preto = {0, 0, 0, 255};
+
+    // Tempo restante
+    ostringstream oss;
+    oss << "Tempo restante - "
+        << minutos << ":" << setw(2) << setfill('0') << segundos;
+    atualizaTexto(oss.str(), texturaTextoTempo, larguraTextoTempo, alturaTextoTempo);
+
+    // Adesivos faltando
+    oss.str(""); oss.clear();
+    if(objetivos.size() != 1) oss << "Adesivos faltando: " << objetivos.size() << " restantes";
+    else oss << "Adesivos faltando: 1 restante";
+    atualizaTexto(oss.str(), texturaTextoObj, larguraTextoObj, alturaTextoObj);
+
+    // Pause
+    atualizaTexto("PAUSE", texturaTextoPause, larguraTextoPause, alturaTextoPause);
+
+    // Renascer
+    oss.str(""); oss.clear();
+    oss << "Voce morreu, renascendo em " << renascer;
+    atualizaTexto(oss.str(), texturaTextoMorto, larguraTextoMorto, alturaTextoMorto);
 }
 
 void cria_poligonos(int n){
@@ -466,29 +571,29 @@ void cria_poligonos(int n){
     ));
     copia.erase(it);
 
-    // randomIndex = rand() % copia.size();
-    // it = copia.begin();
-    // advance(it, randomIndex);
-    // id = *it - 1;
-    // poligonos.push_back(make_unique<Cubo>(
-    //     5.0f, -90.0f, -20.0f,
-    //     2.0f, 2.0f, 2.0f,
-    //     make_unique<Adesivo>(5.0f, -90.0f, -20.0f, id, XYZ{0,0,1}),
-    //     2.0f
-    // ));
-    // copia.erase(it);
+    randomIndex = rand() % copia.size();
+    it = copia.begin();
+    advance(it, randomIndex);
+    id = *it - 1;
+    poligonos.push_back(make_unique<Cubo>(
+        5.0f, -90.0f, -20.0f,
+        2.0f, 2.0f, 2.0f,
+        make_unique<Adesivo>(5.0f, -90.0f, -20.0f, id, XYZ{0,0,1}),
+        2.0f
+    ));
+    copia.erase(it);
 
-    // randomIndex = rand() % copia.size();
-    // it = copia.begin();
-    // advance(it, randomIndex);
-    // id = *it - 1;
-    // poligonos.push_back(make_unique<Cubo>(
-    //     10.0f, -90.0f, -20.0f,
-    //     2.0f, 2.0f, 2.0f,
-    //     make_unique<Adesivo>(10.0f, -90.0f, -20.0f, id, XYZ{0,0,1}),
-    //     2.0f
-    // ));
-    // copia.erase(it);
+    randomIndex = rand() % copia.size();
+    it = copia.begin();
+    advance(it, randomIndex);
+    id = *it - 1;
+    poligonos.push_back(make_unique<Cubo>(
+        10.0f, -90.0f, -20.0f,
+        2.0f, 2.0f, 2.0f,
+        make_unique<Adesivo>(10.0f, -90.0f, -20.0f, id, XYZ{0,0,1}),
+        2.0f
+    ));
+    copia.erase(it);
     
     cores_poligonos.resize(n);
 
@@ -536,16 +641,6 @@ void ajustaProjecao(int largura, int altura) {
     glLoadIdentity();
     gluPerspective(45.0, aspect, 0.1, 300.0);
     glMatrixMode(GL_MODELVIEW);
-}
-
-void atualizaTexto(const string& texto, GLuint& texturaTexto, int& larguraTexto, int& alturaTexto){
-    if (texturaTexto) {
-        glDeleteTextures(1, &texturaTexto); // libera a textura antiga
-        texturaTexto = 0;
-    }
-
-    SDL_Color cor = {0, 0, 0, 255}; // preto
-    texturaTexto = criaTexturaDoTexto(texto.c_str(), fonte, cor, larguraTexto, alturaTexto);
 }
 
 void atualiza_timer(float dt){
@@ -644,12 +739,18 @@ void desenha_bloco(float x, float y, float tamanho, Cor corFundo, GLuint texNume
 }
 
 void desenha_blocos_overlay(const set<int>& objetivos, const vector<int>& coresPoligonos) {
+
     if (objetivos.empty()) return;
 
     int larguraTela, alturaTela;
     SDL_GetWindowSize(window, &larguraTela, &alturaTela);
 
-    TTF_Font* fnt = TTF_OpenFont("arial.ttf", 48);
+    // ===== ESCALA GLOBAL =====
+    float escala = (float)alturaTela / 600.0f;
+
+    // Fonte proporcional
+    int tamFonte = max(14, (int)(32 * escala));
+    TTF_Font* fnt = TTF_OpenFont("arial.ttf", tamFonte);
 
     // ----- Projeção 2D -----
     glDisable(GL_LIGHTING);
@@ -677,15 +778,18 @@ void desenha_blocos_overlay(const set<int>& objetivos, const vector<int>& coresP
     glEnd();
 
     // -----------------------
-    // Texto: "Adesivos faltando: X restantes"
+    // Texto: "Adesivos faltando"
     // -----------------------
     std::ostringstream oss;
-    if(objetivos.size() != 1) oss << "Adesivos faltando: " << objetivos.size() << " restantes";
-    else oss << "Adesivos faltando: 1 restante";
-    string texto = oss.str();
+    if (objetivos.size() != 1)
+        oss << "Adesivos faltando: " << objetivos.size() << " restantes";
+    else
+        oss << "Adesivos faltando: 1 restante";
 
+    string texto = oss.str();
     SDL_Color preto = {0,0,0,255};
-    SDL_Surface* surfTxt = TTF_RenderText_Blended(fnt, texto.c_str(), preto);
+
+    SDL_Surface* surfTxt  = TTF_RenderText_Blended(fnt, texto.c_str(), preto);
     SDL_Surface* surfTxt32 = SDL_ConvertSurfaceFormat(surfTxt, SDL_PIXELFORMAT_RGBA32, 0);
 
     GLuint texTexto;
@@ -701,8 +805,8 @@ void desenha_blocos_overlay(const set<int>& objetivos, const vector<int>& coresP
     glEnable(GL_TEXTURE_2D);
     glColor4f(1,1,1,1);
 
-    float tx = larguraTela/2 - surfTxt32->w/2;
-    float ty = alturaTela*0.15f;
+    float tx = larguraTela * 0.5f - surfTxt32->w * 0.5f;
+    float ty = alturaTela * (0.10f + 0.05f * escala);
 
     glBegin(GL_QUADS);
         glTexCoord2f(0,0); glVertex2f(tx, ty);
@@ -716,24 +820,39 @@ void desenha_blocos_overlay(const set<int>& objetivos, const vector<int>& coresP
     glDeleteTextures(1, &texTexto);
 
     // -----------------------
-    // Blocos coloridos grandes
+    // Blocos
     // -----------------------
+    // ===== NOVA ESCALA PARA OS BLOCOS =====
+    // Queremos que sempre caibam 10 blocos na horizontal.
+    int maxBlocos = 10;
 
-    float blocoTam = 110;
-    float espaco = 25;
+    // Espaçamento proporcional ao tamanho do bloco
+    float espacoFator = 0.25f; // 25% do tamanho do bloco
 
-    float totalLarg = objetivos.size() * blocoTam + (objetivos.size()-1) * espaco;
-    float bx = larguraTela/2 - totalLarg/2;
-    float by = alturaTela*0.35f;
+    // Cálculo automático do maior bloco possível dentro da janela
+    float blocoTam = larguraTela / (maxBlocos + (maxBlocos - 1) * espacoFator);
+    float espaco   = blocoTam * espacoFator;
+
+    // Agora alinhar ao centro
+    float totalLarg = objetivos.size() * blocoTam + (objetivos.size() - 1) * espaco;
+    float bx = larguraTela*0.5f - totalLarg*0.5f;
+
+    // posição vertical proporcional à tela
+    float by = alturaTela * 0.30f;
+    // float blocoTam = 110 * escala;
+    // float espaco   = 25  * escala;
+
+    // float totalLarg = objetivos.size() * blocoTam + (objetivos.size()-1) * espaco;
+    // float bx = larguraTela * 0.5f - totalLarg * 0.5f;
+    // float by = alturaTela * (0.28f + 0.07f * escala);
 
     for (int objetivo : objetivos) {
 
-        // --- 1. Buscar polígono associado (mesma lógica do seu trecho) ---
         int indicePoligono = -1;
 
         for (size_t i = 0; i < poligonos.size(); ++i) {
             auto adesivo = poligonos[i]->getAdesivo();
-            if (adesivo && adesivo->getTexturaID()-2 == objetivo) {
+            if (adesivo && adesivo->getTexturaID() - 2 == objetivo) {
                 indicePoligono = (int)i;
                 break;
             }
@@ -741,10 +860,9 @@ void desenha_blocos_overlay(const set<int>& objetivos, const vector<int>& coresP
 
         if (indicePoligono == -1) continue;
 
-        // --- 2. Pega cor do polígono ---
         Cor cor = get_cor_struct(coresPoligonos[indicePoligono]);
 
-        // ----- desenha bloco colorido -----
+        // ----- bloco -----
         glDisable(GL_TEXTURE_2D);
         glColor4f(cor.r, cor.g, cor.b, 1.0f);
 
@@ -755,8 +873,7 @@ void desenha_blocos_overlay(const set<int>& objetivos, const vector<int>& coresP
             glVertex2f(bx, by+blocoTam);
         glEnd();
 
-        // ----- desenha número por cima -----
-
+        // ----- número -----
         string num = to_string(objetivo);
         SDL_Color corNum = {0,0,0,255};
         if (cor.r==0 && cor.g==0 && cor.b==0) corNum = {255,255,255,255};
@@ -777,8 +894,8 @@ void desenha_blocos_overlay(const set<int>& objetivos, const vector<int>& coresP
         glEnable(GL_TEXTURE_2D);
         glColor4f(1,1,1,1);
 
-        float nx = bx + blocoTam/2 - num32->w/2;
-        float ny = by + blocoTam/2 - num32->h/2;
+        float nx = bx + blocoTam*0.5f - num32->w*0.5f;
+        float ny = by + blocoTam*0.5f - num32->h*0.5f;
 
         glBegin(GL_QUADS);
             glTexCoord2f(0,0); glVertex2f(nx, ny);
@@ -791,29 +908,35 @@ void desenha_blocos_overlay(const set<int>& objetivos, const vector<int>& coresP
         SDL_FreeSurface(num32);
         glDeleteTextures(1, &texNum);
 
+        // ----- Símbolo ColorADD -----
         if (modo_daltonico) {
+
             GLuint texSimbolo = coresPoligonos[indicePoligono] + 23;
-            // ajuste conforme seu mapeamento real ↑
 
             float simLarg = blocoTam * 0.55f;
             float simAlt  = simLarg;
 
-            float sx = bx + blocoTam/2 - simLarg/2;
-            float sy = by + blocoTam + 12;  // aparece logo abaixo
+            float sx = bx + blocoTam*0.5f - simLarg*0.5f;
+            float sy = by + blocoTam + (12 * escala);
 
             glBindTexture(GL_TEXTURE_2D, texID[texSimbolo]);
             glColor4f(1,1,1,1);
 
             glBegin(GL_QUADS);
-                if(texSimbolo != 34)
-                {glTexCoord2f(0,1); glVertex2f(sx, sy);
+
+            if (texSimbolo != 34) {
+                glTexCoord2f(0,1); glVertex2f(sx, sy);
                 glTexCoord2f(0,0); glVertex2f(sx+simLarg, sy);
                 glTexCoord2f(1,0); glVertex2f(sx+simLarg, sy+simAlt);
-                glTexCoord2f(1,1); glVertex2f(sx, sy+simAlt);}
-                else{glTexCoord2f(0,0); glVertex2f(sx, sy);
+                glTexCoord2f(1,1); glVertex2f(sx, sy+simAlt);
+            } 
+            else {
+                glTexCoord2f(0,0); glVertex2f(sx, sy);
                 glTexCoord2f(0,1); glVertex2f(sx, sy+simAlt);
                 glTexCoord2f(1,1); glVertex2f(sx+simLarg, sy+simAlt);
-                glTexCoord2f(1,0); glVertex2f(sx+simLarg, sy);}
+                glTexCoord2f(1,0); glVertex2f(sx+simLarg, sy);
+            }
+
             glEnd();
         }
 
@@ -822,7 +945,7 @@ void desenha_blocos_overlay(const set<int>& objetivos, const vector<int>& coresP
 
     TTF_CloseFont(fnt);
 
-    // ----- Restaurar matriz original -----
+    // ----- Restaurar -------
     glPopMatrix();
     glMatrixMode(GL_PROJECTION);
     glPopMatrix();
@@ -831,6 +954,234 @@ void desenha_blocos_overlay(const set<int>& objetivos, const vector<int>& coresP
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_LIGHTING);
 }
+
+// void desenha_bloco(float x, float y, float tamanho, Cor corFundo, GLuint texNumero) 
+// {
+//     glEnable(GL_TEXTURE_2D);
+//     glDisable(GL_LIGHTING);
+
+//     glColor4f(corFundo.r, corFundo.g, corFundo.b, 1.0f);
+//     glBindTexture(GL_TEXTURE_2D, texBlocoBase);
+
+//     // fundo do bloco
+//     glBegin(GL_QUADS);
+//         glTexCoord2f(0,0); glVertex2f(x, y);
+//         glTexCoord2f(1,0); glVertex2f(x+tamanho, y);
+//         glTexCoord2f(1,1); glVertex2f(x+tamanho, y+tamanho);
+//         glTexCoord2f(0,1); glVertex2f(x, y+tamanho);
+//     glEnd();
+
+//     // número por cima
+//     glBindTexture(GL_TEXTURE_2D, texNumero);
+//     glColor4f(0,0,0,1); // número sempre preto
+
+//     float margem = tamanho * 0.18f;
+//     float numSize = tamanho - margem*2;
+
+//     glBegin(GL_QUADS);
+//         glTexCoord2f(0,0); glVertex2f(x+margem, y+margem);
+//         glTexCoord2f(1,0); glVertex2f(x+margem+numSize, y+margem);
+//         glTexCoord2f(1,1); glVertex2f(x+margem+numSize, y+margem+numSize);
+//         glTexCoord2f(0,1); glVertex2f(x+margem, y+margem+numSize);
+//     glEnd();
+
+//     glEnable(GL_LIGHTING);
+//     glDisable(GL_TEXTURE_2D);
+// }
+
+// void desenha_blocos_overlay(const set<int>& objetivos, const vector<int>& coresPoligonos) {
+//     if (objetivos.empty()) return;
+
+//     int larguraTela, alturaTela;
+//     SDL_GetWindowSize(window, &larguraTela, &alturaTela);
+
+//     float escala = (float)alturaTela / 600.0f;
+//     int tamFonte = max(14, (int)(32 * escala));   // 32px base → ajusta
+//     TTF_Font* fnt = TTF_OpenFont("arial.ttf", tamFonte);
+//     //TTF_Font* fnt = TTF_OpenFont("arial.ttf", 48);
+
+//     // ----- Projeção 2D -----
+//     glDisable(GL_LIGHTING);
+//     glDisable(GL_DEPTH_TEST);
+
+//     glMatrixMode(GL_PROJECTION);
+//     glPushMatrix();
+//     glLoadIdentity();
+//     glOrtho(0, larguraTela, alturaTela, 0, -1, 1);
+
+//     glMatrixMode(GL_MODELVIEW);
+//     glPushMatrix();
+//     glLoadIdentity();
+
+//     glEnable(GL_BLEND);
+//     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+//     // ----- Fundo branco translúcido -----
+//     glColor4f(1, 1, 1, 0.55f);
+//     glBegin(GL_QUADS);
+//         glVertex2f(0, 0);
+//         glVertex2f(larguraTela, 0);
+//         glVertex2f(larguraTela, alturaTela);
+//         glVertex2f(0, alturaTela);
+//     glEnd();
+
+//     // -----------------------
+//     // Texto: "Adesivos faltando: X restantes"
+//     // -----------------------
+//     std::ostringstream oss;
+//     if(objetivos.size() != 1) oss << "Adesivos faltando: " << objetivos.size() << " restantes";
+//     else oss << "Adesivos faltando: 1 restante";
+//     string texto = oss.str();
+
+//     SDL_Color preto = {0,0,0,255};
+//     SDL_Surface* surfTxt = TTF_RenderText_Blended(fnt, texto.c_str(), preto);
+//     SDL_Surface* surfTxt32 = SDL_ConvertSurfaceFormat(surfTxt, SDL_PIXELFORMAT_RGBA32, 0);
+
+//     GLuint texTexto;
+//     glGenTextures(1, &texTexto);
+//     glBindTexture(GL_TEXTURE_2D, texTexto);
+//     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
+//                  surfTxt32->w, surfTxt32->h, 0,
+//                  GL_RGBA, GL_UNSIGNED_BYTE, surfTxt32->pixels);
+
+//     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+//     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+//     glEnable(GL_TEXTURE_2D);
+//     glColor4f(1,1,1,1);
+
+//     float tx = larguraTela/2 - surfTxt32->w/2;
+//     float ty = alturaTela * (0.10f + 0.05f * escala);// float ty = alturaTela*0.15f;
+
+//     glBegin(GL_QUADS);
+//         glTexCoord2f(0,0); glVertex2f(tx, ty);
+//         glTexCoord2f(1,0); glVertex2f(tx+surfTxt32->w, ty);
+//         glTexCoord2f(1,1); glVertex2f(tx+surfTxt32->w, ty+surfTxt32->h);
+//         glTexCoord2f(0,1); glVertex2f(tx, ty+surfTxt32->h);
+//     glEnd();
+
+//     SDL_FreeSurface(surfTxt);
+//     SDL_FreeSurface(surfTxt32);
+//     glDeleteTextures(1, &texTexto);
+
+//     // -----------------------
+//     // Blocos coloridos grandes
+//     // -----------------------
+    
+//     float blocoTam = 110 * escala;
+//     float espaco   = 25 * escala;
+//     // float blocoTam = 110;
+//     // float espaco = 25;
+
+//     float totalLarg = objetivos.size() * blocoTam + (objetivos.size()-1) * espaco;
+//     float bx = larguraTela/2 - totalLarg/2;
+//     float by = alturaTela * (0.28f + 0.07f * escala);//float by = alturaTela*0.35f;
+
+//     for (int objetivo : objetivos) {
+
+//         // --- 1. Buscar polígono associado (mesma lógica do seu trecho) ---
+//         int indicePoligono = -1;
+
+//         for (size_t i = 0; i < poligonos.size(); ++i) {
+//             auto adesivo = poligonos[i]->getAdesivo();
+//             if (adesivo && adesivo->getTexturaID()-2 == objetivo) {
+//                 indicePoligono = (int)i;
+//                 break;
+//             }
+//         }
+
+//         if (indicePoligono == -1) continue;
+
+//         // --- 2. Pega cor do polígono ---
+//         Cor cor = get_cor_struct(coresPoligonos[indicePoligono]);
+
+//         // ----- desenha bloco colorido -----
+//         glDisable(GL_TEXTURE_2D);
+//         glColor4f(cor.r, cor.g, cor.b, 1.0f);
+
+//         glBegin(GL_QUADS);
+//             glVertex2f(bx, by);
+//             glVertex2f(bx+blocoTam, by);
+//             glVertex2f(bx+blocoTam, by+blocoTam);
+//             glVertex2f(bx, by+blocoTam);
+//         glEnd();
+
+//         // ----- desenha número por cima -----
+
+//         string num = to_string(objetivo);
+//         SDL_Color corNum = {0,0,0,255};
+//         if (cor.r==0 && cor.g==0 && cor.b==0) corNum = {255,255,255,255};
+
+//         SDL_Surface* numSurf = TTF_RenderText_Blended(fnt, num.c_str(), corNum);
+//         SDL_Surface* num32 = SDL_ConvertSurfaceFormat(numSurf, SDL_PIXELFORMAT_RGBA32, 0);
+
+//         GLuint texNum;
+//         glGenTextures(1, &texNum);
+//         glBindTexture(GL_TEXTURE_2D, texNum);
+//         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
+//                      num32->w, num32->h, 0,
+//                      GL_RGBA, GL_UNSIGNED_BYTE, num32->pixels);
+
+//         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+//         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+//         glEnable(GL_TEXTURE_2D);
+//         glColor4f(1,1,1,1);
+
+//         float nx = bx + blocoTam/2 - num32->w/2;
+//         float ny = by + blocoTam/2 - num32->h/2;
+
+//         glBegin(GL_QUADS);
+//             glTexCoord2f(0,0); glVertex2f(nx, ny);
+//             glTexCoord2f(1,0); glVertex2f(nx+num32->w, ny);
+//             glTexCoord2f(1,1); glVertex2f(nx+num32->w, ny+num32->h);
+//             glTexCoord2f(0,1); glVertex2f(nx, ny+num32->h);
+//         glEnd();
+
+//         SDL_FreeSurface(numSurf);
+//         SDL_FreeSurface(num32);
+//         glDeleteTextures(1, &texNum);
+
+//         if (modo_daltonico) {
+//             GLuint texSimbolo = coresPoligonos[indicePoligono] + 23;
+//             // ajuste conforme seu mapeamento real ↑
+
+//             float simLarg = blocoTam * 0.55f;
+//             float simAlt  = simLarg;
+
+//             float sx = bx + blocoTam/2 - simLarg/2;
+//             float sy = by + blocoTam + (12 * escala);//float sy = by + blocoTam + 12;  // aparece logo abaixo
+
+//             glBindTexture(GL_TEXTURE_2D, texID[texSimbolo]);
+//             glColor4f(1,1,1,1);
+
+//             glBegin(GL_QUADS);
+//                 if(texSimbolo != 34)
+//                 {glTexCoord2f(0,1); glVertex2f(sx, sy);
+//                 glTexCoord2f(0,0); glVertex2f(sx+simLarg, sy);
+//                 glTexCoord2f(1,0); glVertex2f(sx+simLarg, sy+simAlt);
+//                 glTexCoord2f(1,1); glVertex2f(sx, sy+simAlt);}
+//                 else{glTexCoord2f(0,0); glVertex2f(sx, sy);
+//                 glTexCoord2f(0,1); glVertex2f(sx, sy+simAlt);
+//                 glTexCoord2f(1,1); glVertex2f(sx+simLarg, sy+simAlt);
+//                 glTexCoord2f(1,0); glVertex2f(sx+simLarg, sy);}
+//             glEnd();
+//         }
+
+//         bx += blocoTam + espaco;
+//     }
+
+//     TTF_CloseFont(fnt);
+
+//     // ----- Restaurar matriz original -----
+//     glPopMatrix();
+//     glMatrixMode(GL_PROJECTION);
+//     glPopMatrix();
+//     glMatrixMode(GL_MODELVIEW);
+
+//     glEnable(GL_DEPTH_TEST);
+//     glEnable(GL_LIGHTING);
+// }
 
 void atualiza_renascer(float dt) {
     static float acumulador = 0.0f;
@@ -865,10 +1216,12 @@ void desenha_menu() {
     glDisable(GL_LIGHTING);
     glDisable(GL_DEPTH_TEST);
 
+    glViewport(0, 0, w, h);
+
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
     glLoadIdentity();
-    gluOrtho2D(0, w, h, 0);
+    glOrtho(0, w, h, 0, -1, 1);
 
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
@@ -889,14 +1242,24 @@ void desenha_menu() {
     // --- Textos ---
     SDL_Color preto = {0,0,0,255};
 
-    TTF_Font* fontTitle = TTF_OpenFont("arial.ttf", 64);
-    TTF_Font* fontOpt   = TTF_OpenFont("arial.ttf", 38);
+    int baseTitle = 64;
+    int baseOpt   = 38;
+    float escala = (float)h / 600.0f;        // 600 = resolução base que você costumava usar
+    int titleSize = std::max(8, (int)round(baseTitle * escala));
+    int optSize   = std::max(8, (int)round(baseOpt   * escala));
+
+    TTF_Font* fontTitle = TTF_OpenFont("arial.ttf", titleSize);
+    TTF_Font* fontOpt   = TTF_OpenFont("arial.ttf", optSize);
+
+    // TTF_Font* fontTitle = TTF_OpenFont("arial.ttf", 64);
+    // TTF_Font* fontOpt   = TTF_OpenFont("arial.ttf", 38);
 
     int lw, lh;
 
     // Título
     GLuint texTitulo = criaTexturaDoTexto("STAMPARAZZI", fontTitle, preto, lw, lh);
     desenhaTexto(texTitulo, w/2 - lw/2, h*0.15f, lw, lh);
+    //desenhaTexto(texTitulo, w/2 - lw/2, h*0.15f, lw, lh);
     glDeleteTextures(1, &texTitulo);
 
     // Dificuldade
@@ -1038,6 +1401,21 @@ void loop_menu() {
                         e.cbutton.button == SDL_CONTROLLER_BUTTON_BACK) {
                         estado_atual = SAINDO;
                     }
+                } else if(e.type == SDL_CONTROLLERAXISMOTION) {
+                    Sint16 axisLX = SDL_GameControllerGetAxis(game_controller, SDL_CONTROLLER_AXIS_LEFTX);
+                    Sint16 axisLY = SDL_GameControllerGetAxis(game_controller, SDL_CONTROLLER_AXIS_LEFTY);
+
+                    if(axisLY < -32000) {
+                        dif++;
+                        if (dif > DIFICIL) dif = FACIL;
+                    }
+
+                    if(axisLY > 32000) {
+                        dif--;
+                        if (dif < FACIL) dif = DIFICIL;
+                    }
+
+                    if(fabs(axisLX) > 32000) modo_daltonico = !modo_daltonico;
                 }
             }
         }
@@ -1053,7 +1431,8 @@ void loop_menu() {
 
 void loop_jogo(){
 
-    rodando = true;
+    rodando = true; pause = false;
+    timer = 120 + 30 * dif;
     SDL_Event evento;
     inicio = SDL_GetTicks();
     bool overlay_antes = show_overlay;
@@ -1102,6 +1481,7 @@ void loop_jogo(){
                             SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
                             ajustaProjecao(800, 600);
                         }
+                        ajusta_tamanho_fonte();
                     } else if(evento.key.keysym.sym == SDLK_ESCAPE)
                         // alterna overlay. Se quiser o comportamento antigo (trocar primeira_pessoa),
                         // use outra tecla — aqui ESC faz overlay conforme pedido.
@@ -1143,6 +1523,7 @@ void loop_jogo(){
                             SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
                             ajustaProjecao(800, 600);
                         }
+                        ajusta_tamanho_fonte();
                     } else if(evento.cbutton.button == SDL_CONTROLLER_BUTTON_BACK) {
                         if(!pause and jogador.estaVivo()) {show_overlay = !show_overlay; overlay_antes = show_overlay;}
                         else if(pause) rodando = false;
@@ -1225,14 +1606,12 @@ void loop_jogo(){
                 // modo normal: apenas desenha o texto de objetivos normalmente
                 desenhaTexto(texturaTextoObj, 50, 100, larguraTextoObj, alturaTextoObj);
                 if(pause) {
-                    if(!tela_cheia){
-                        int larguraJanela, alturaJanela;
-                        SDL_GetWindowSize(window, &larguraJanela, &alturaJanela);
-                        int xCentro = (larguraJanela - larguraTextoPause) / 2;
-                        int yCentro = (alturaJanela - alturaTextoPause) / 2;
-                        desenhaTexto(texturaTextoPause, xCentro, yCentro, larguraTextoPause, alturaTextoPause);
-                    } else desenhaTexto(texturaTextoPause, 400, 300, larguraTextoPause, alturaTextoPause);
-                }
+                    int larguraJanela, alturaJanela;
+                    SDL_GetWindowSize(window, &larguraJanela, &alturaJanela);
+                    int xCentro = (larguraJanela - larguraTextoPause) / 2;
+                    int yCentro = (alturaJanela - alturaTextoPause) / 2;
+                    desenhaTexto(texturaTextoPause, xCentro, yCentro, larguraTextoPause, alturaTextoPause);       
+                } 
                 if(!jogador.estaVivo()){
                     if(!tela_cheia){
                         int larguraJanela, alturaJanela;
@@ -1469,8 +1848,8 @@ int main(int argc, char* argv[]) {
         loop_menu();
         if(estado_atual == SAINDO) break;
         else if(estado_atual == JOGO_PRINCIPAL){
-            define_objetivos(rand() % (8 - 1 + 1) + 1);
-            cria_poligonos(8);
+            define_objetivos(10);//(rand() % (8 - 1 + 1) + 1);
+            cria_poligonos(10);//(8);
             loop_jogo();
         }
 
