@@ -1108,7 +1108,7 @@ void atualiza_renascer(float dt) {
             renascer--;
             if (renascer == 0) {
                 jogador.nasce_jogador(0.0f,1.5f,0.0f);
-                renascer = 3;
+                renascer = 1 + 2 * dif;
                 ostringstream oss;
                 oss << "Voce morreu, renascendo em " << renascer;
                 string str = oss.str();
@@ -1223,7 +1223,10 @@ void loop_menu() {
 
             atualiza_controller(e);
 
-            if(!game_controller){    
+            if(!game_controller){  
+                
+                SDL_SetRelativeMouseMode(SDL_TRUE);
+                SDL_ShowCursor(SDL_DISABLE);
                 
                 if (e.type == SDL_KEYDOWN) {
 
@@ -1348,6 +1351,11 @@ void loop_jogo(){
 
     rodando = true; pause = false;
     timer = 90 + 30 * dif;
+    renascer = 1 + 2 * dif;
+    ostringstream oss;
+    oss << "Voce morreu, renascendo em " << renascer;
+    string str = oss.str();
+    atualizaTexto(str,texturaTextoMorto,larguraTextoMorto,alturaTextoMorto);
     SDL_Event evento;
     inicio = SDL_GetTicks();
     bool overlay_antes = show_overlay;
@@ -1410,6 +1418,7 @@ void loop_jogo(){
                 }
                 if(evento.type == SDL_MOUSEBUTTONDOWN and pause){
                     pause = false;
+                    SDL_SetRelativeMouseMode(SDL_TRUE);
                     SDL_ShowCursor(SDL_DISABLE);
                 } else if(evento.type == SDL_MOUSEBUTTONDOWN and !pause and !show_overlay and jogador.estaVivo()){
                     if(evento.button.button == SDL_BUTTON_LEFT){
