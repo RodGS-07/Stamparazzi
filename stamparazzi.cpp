@@ -33,14 +33,14 @@
 
 using namespace std;
 
-enum DIFICULDADE {FACIL, MEDIO, DIFICIL};
+enum DIFICULDADE {FACIL = 1, MEDIO = 2, DIFICIL = 3};
 enum ESTADO {MENU_PRINCIPAL, JOGO_PRINCIPAL, SAINDO, PAUSE, VITORIA, DERROTA};
 
 int teste = 0;
 int dif = MEDIO;
 int estado_atual = MENU_PRINCIPAL;
-int timer = 120 + 30 * dif;
-int renascer = 3 + 2 * dif;
+int timer = 90 + 30 * dif;
+int renascer = 1 + 2 * dif;
 int minutos = timer / 60;
 int segundos = timer % 60;
 bool mouse_in = false;
@@ -65,13 +65,6 @@ SDL_Renderer* renderer;
 SDL_GLContext glContext;
 SDL_GameController* game_controller = NULL;
 TTF_Font* fonte;
-
-// namespace NG{ //Namespace para Informações do Game/Jogo
-
-//     enum STATE{
-        
-//     };
-// };
 
 //Adesivo a = Adesivo(-5.0f,5.0f,10.0f,{0,0,1});
 
@@ -211,36 +204,6 @@ void desenhaTexto(GLuint textura, int x, int y, int largura, int altura) {
 
     glDisable(GL_TEXTURE_2D);
 }
-
-// void desenhaTexto(GLuint textura, int x, int y, int largura, int altura) {
-//     glEnable(GL_TEXTURE_2D);
-//     glBindTexture(GL_TEXTURE_2D, textura);
-
-//     glMatrixMode(GL_PROJECTION);
-//     glPushMatrix();
-//     glLoadIdentity();
-//     gluOrtho2D(0, 800, 600, 0); // Coordenadas em pixels (ajuste p/ sua janela)
-
-//     glMatrixMode(GL_MODELVIEW);
-//     glPushMatrix();
-//     glLoadIdentity();
-
-//     glColor3f(1.0f, 1.0f, 1.0f); // cor branca
-
-//     glBegin(GL_QUADS);
-//         glTexCoord2f(0, 0); glVertex2f(x, y);
-//         glTexCoord2f(1, 0); glVertex2f(x + largura, y);
-//         glTexCoord2f(1, 1); glVertex2f(x + largura, y + altura);
-//         glTexCoord2f(0, 1); glVertex2f(x, y + altura);
-//     glEnd();
-
-//     glPopMatrix();
-//     glMatrixMode(GL_PROJECTION);
-//     glPopMatrix();
-//     glMatrixMode(GL_MODELVIEW);
-
-//     glDisable(GL_TEXTURE_2D);
-// }
 
 void inicializa_sdl(){
     // Inicializa SDL2
@@ -398,7 +361,7 @@ void inicializa_ttf(){
     texturaTextoPause = criaTexturaDoTexto(texto, fonte, preto, larguraTextoPause, alturaTextoPause);
 
     ostringstream moss;
-    moss << "Voce morreu, renascendo em 3";
+    moss << "Voce morreu, renascendo em " << renascer;
     str = moss.str();
     texto = str.c_str();
     texturaTextoMorto = criaTexturaDoTexto(texto, fonte, preto, larguraTextoMorto, alturaTextoMorto);
@@ -465,6 +428,16 @@ void ajusta_tamanho_fonte() {
     atualizaTexto(oss.str(), texturaTextoMorto, larguraTextoMorto, alturaTextoMorto);
 }
 
+void define_objetivos(int n) {
+    if(dif == FACIL){
+        while(objetivos.size() < n)
+            objetivos.insert((rand() % (10 - 1 + 1)) + 1);
+    } else {
+        while(objetivos.size() < n)
+            objetivos.insert((rand() % (20 - 1 + 1)) + 1);
+    }
+}
+
 void cria_poligonos(int n){
     //room
     limites.push_back(make_unique<Cubo>(0.0f,0.0f,0.0f,nullptr,200.0f));
@@ -473,135 +446,310 @@ void cria_poligonos(int n){
     limites.push_back(make_unique<Cubo>(0.0f,-1.0f,0.0f,100.0f,0.1f,100.0f,nullptr,2.0f));
 
     set<int> copia; int idx;
-    for(int num : objetivos) copia.insert(num);
-    while(copia.size() < 8) copia.insert((rand() % (20 - 1 + 1)) + 1);
+    for(int i=1;i<=n;i++) copia.insert(i);
+    // if(n==20) for(int i=1;i<=20;i++) copia.insert(i);
+    // else{
+    //     for(int num : objetivos) copia.insert(num);
+    //     while(copia.size() < n) copia.insert((rand() % (20 - 1 + 1)) + 1);
+    // }
 
-    int randomIndex = rand() % copia.size();
-    auto it = copia.begin();
-    advance(it, randomIndex);
-    int id = *it - 1;
-    poligonos.push_back(make_unique<Cubo>(
-        0.0f, 0.0f, -20.0f,
-        make_unique<Adesivo>(0.0f, 0.0f, -20.0f, id, XYZ{0,0,1}),
-        2.0f
-    ));
-    copia.erase(it);
+    if(dif == FACIL) {
+        int randomIndex = rand() % copia.size();
+        auto it = copia.begin();
+        advance(it, randomIndex);
+        int id = *it - 1;
+        poligonos.push_back(make_unique<Cubo>(
+            0.0f, 0.0f, -20.0f,
+            make_unique<Adesivo>(0.0f, 0.0f, -20.0f, id, XYZ{0,0,1}),
+            2.0f
+        ));
+        copia.erase(it);
 
-    randomIndex = rand() % copia.size();
-    it = copia.begin();
-    advance(it, randomIndex);
-    id = *it - 1;
-    poligonos.push_back(make_unique<Piramide>(
-        10.0f, 0.0f, -20.0f,
-        make_unique<Adesivo>(10.0f, 0.0f, -20.0f, id, XYZ{0,0,1}),
-        4.0f, 4.0f
-    ));
-    copia.erase(it);
+        randomIndex = rand() % copia.size();
+        it = copia.begin();
+        advance(it, randomIndex);
+        id = *it - 1;
+        poligonos.push_back(make_unique<Piramide>(
+            10.0f, 0.0f, -20.0f,
+            make_unique<Adesivo>(10.0f, 0.0f, -20.0f, id, XYZ{0,0,1}),
+            4.0f, 4.0f
+        ));
+        copia.erase(it);
 
-    randomIndex = rand() % copia.size();
-    it = copia.begin();
-    advance(it, randomIndex);
-    id = *it - 1;
-    poligonos.push_back(make_unique<Esfera>(
-        20.0f, 0.0f, -20.0f,
-        make_unique<Adesivo>(20.0f, 0.0f, -20.0f, id, XYZ{0,0,1}),
-        2.0f
-    ));
-    copia.erase(it);
+        randomIndex = rand() % copia.size();
+        it = copia.begin();
+        advance(it, randomIndex);
+        id = *it - 1;
+        poligonos.push_back(make_unique<Esfera>(
+            20.0f, 0.0f, -20.0f,
+            make_unique<Adesivo>(20.0f, 0.0f, -20.0f, id, XYZ{0,0,1}),
+            2.0f
+        ));
+        copia.erase(it);
 
-    randomIndex = rand() % copia.size();
-    it = copia.begin();
-    advance(it, randomIndex);
-    id = *it - 1;
-    poligonos.push_back(make_unique<Cilindro>(
-        30.0f, 0.0f, -30.0f,
-        make_unique<Adesivo>(30.0f, 0.0f, -30.0f, id, XYZ{0,0,1}),
-        2.0f, 4.0f
-    ));
-    copia.erase(it);
+        randomIndex = rand() % copia.size();
+        it = copia.begin();
+        advance(it, randomIndex);
+        id = *it - 1;
+        poligonos.push_back(make_unique<Cilindro>(
+            30.0f, 0.0f, -30.0f,
+            make_unique<Adesivo>(30.0f, 0.0f, -30.0f, id, XYZ{0,0,1}),
+            2.0f, 4.0f
+        ));
+        copia.erase(it);
 
-    randomIndex = rand() % copia.size();
-    it = copia.begin();
-    advance(it, randomIndex);
-    id = *it - 1;
-    poligonos.push_back(make_unique<Cone>(
-        40.0f, 0.5f, -20.0f,
-        make_unique<Adesivo>(40.0f, 5.0f, -20.0f, id, XYZ{0,0,1}),
-        2.0f, 4.0f
-    ));
-    copia.erase(it);
+        randomIndex = rand() % copia.size();
+        it = copia.begin();
+        advance(it, randomIndex);
+        id = *it - 1;
+        poligonos.push_back(make_unique<Cone>(
+            40.0f, 0.5f, -20.0f,
+            make_unique<Adesivo>(40.0f, 0.5f, -20.0f, id, XYZ{0,0,1}),
+            2.0f, 4.0f
+        ));
+        copia.erase(it);
 
-    randomIndex = rand() % copia.size();
-    it = copia.begin();
-    advance(it, randomIndex);
-    id = *it - 1;
-    auto t1 = make_unique<Torus>(
-        -20, -98.5, 0,
-        make_unique<Adesivo>(-20, -98.5, 0, id, XYZ{0,0,1}),
-        1.0f, 3.0f
-    );
-    copia.erase(it);
+        randomIndex = rand() % copia.size();
+        it = copia.begin();
+        advance(it, randomIndex);
+        id = *it - 1;
+        poligonos.push_back(make_unique<Cubo>(
+            -20, 1.5, 50,
+            make_unique<Adesivo>(-20, 1.5, 50, id, XYZ{0,0,1}),
+            2.0f
+        ));
+        copia.erase(it);
 
-    randomIndex = rand() % copia.size();
-    it = copia.begin();
-    advance(it, randomIndex);
-    id = *it - 1;
-    auto t2 = make_unique<Torus>(
-        20, 1.5, 0,
-        make_unique<Adesivo>(20, 1.5, 0, id, XYZ{0,0,1}),
-        1.0f, 3.0f
-    );
-    copia.erase(it);
+        randomIndex = rand() % copia.size();
+        it = copia.begin();
+        advance(it, randomIndex);
+        id = *it - 1;
+        poligonos.push_back(make_unique<Piramide>(
+            20, 1.5, 50,
+            make_unique<Adesivo>(20, 1.5, 50, id, XYZ{0,0,1}),
+            4.0f, 4.0f
+        ));
+        copia.erase(it);
 
-    t1->setConjugado(t2.get());
-    t2->setConjugado(t1.get());
+        randomIndex = rand() % copia.size();
+        it = copia.begin();
+        advance(it, randomIndex);
+        id = *it - 1;
+        poligonos.push_back(make_unique<Esfera>(
+            20.0f, 0.0f, 60.0f,
+            make_unique<Adesivo>(20.0f, 0.0f, 60.0f, id, XYZ{0,0,1}),
+            2.0f
+        ));
+        copia.erase(it);
 
-    poligonos.push_back(move(t1));
-    poligonos.push_back(move(t2));
+        randomIndex = rand() % copia.size();
+        it = copia.begin();
+        advance(it, randomIndex);
+        id = *it - 1;
+        poligonos.push_back(make_unique<Cilindro>(
+            -30.0f, 0.0f, 30.0f,
+            make_unique<Adesivo>(-30.0f, 0.0f, 30.0f, id, XYZ{0,0,1}),
+            2.0f, 4.0f
+        ));
+        copia.erase(it);
 
-    randomIndex = rand() % copia.size();
-    it = copia.begin();
-    advance(it, randomIndex);
-    id = *it - 1;
-    poligonos.push_back(make_unique<Cubo>(
-        0.0f, -90.0f, -20.0f,
-        2.0f, 2.0f, 2.0f,
-        make_unique<Adesivo>(0.0f, -90.0f, -20.0f, id, XYZ{0,0,1}),
-        2.0f
-    ));
-    copia.erase(it);
+        randomIndex = rand() % copia.size();
+        it = copia.begin();
+        advance(it, randomIndex);
+        id = *it - 1;
+        poligonos.push_back(make_unique<Cone>(
+            -40.0f, 0.5f, 20.0f,
+            make_unique<Adesivo>(-40.0f, 0.5f, 20.0f, id, XYZ{0,0,1}),
+            2.0f, 4.0f
+        ));
+        copia.erase(it);
+    } else {
+        int randomIndex = rand() % copia.size();
+        auto it = copia.begin();
+        advance(it, randomIndex);
+        int id = *it - 1;
+        poligonos.push_back(make_unique<Cubo>(
+            0.0f, 0.0f, -20.0f,
+            make_unique<Adesivo>(0.0f, 0.0f, -20.0f, id, XYZ{0,0,1}),
+            2.0f
+        ));
+        copia.erase(it);
 
-    randomIndex = rand() % copia.size();
-    it = copia.begin();
-    advance(it, randomIndex);
-    id = *it - 1;
-    poligonos.push_back(make_unique<Cubo>(
-        5.0f, -90.0f, -20.0f,
-        2.0f, 2.0f, 2.0f,
-        make_unique<Adesivo>(5.0f, -90.0f, -20.0f, id, XYZ{0,0,1}),
-        2.0f
-    ));
-    copia.erase(it);
+        randomIndex = rand() % copia.size();
+        it = copia.begin();
+        advance(it, randomIndex);
+        id = *it - 1;
+        poligonos.push_back(make_unique<Piramide>(
+            10.0f, 0.0f, -20.0f,
+            make_unique<Adesivo>(10.0f, 0.0f, -20.0f, id, XYZ{0,0,1}),
+            4.0f, 4.0f
+        ));
+        copia.erase(it);
 
-    randomIndex = rand() % copia.size();
-    it = copia.begin();
-    advance(it, randomIndex);
-    id = *it - 1;
-    poligonos.push_back(make_unique<Cubo>(
-        10.0f, -90.0f, -20.0f,
-        2.0f, 2.0f, 2.0f,
-        make_unique<Adesivo>(10.0f, -90.0f, -20.0f, id, XYZ{0,0,1}),
-        2.0f
-    ));
-    copia.erase(it);
-    
+        randomIndex = rand() % copia.size();
+        it = copia.begin();
+        advance(it, randomIndex);
+        id = *it - 1;
+        poligonos.push_back(make_unique<Esfera>(
+            20.0f, 0.0f, -20.0f,
+            make_unique<Adesivo>(20.0f, 0.0f, -20.0f, id, XYZ{0,0,1}),
+            2.0f
+        ));
+        copia.erase(it);
+
+        randomIndex = rand() % copia.size();
+        it = copia.begin();
+        advance(it, randomIndex);
+        id = *it - 1;
+        poligonos.push_back(make_unique<Cilindro>(
+            30.0f, 0.0f, -30.0f,
+            make_unique<Adesivo>(30.0f, 0.0f, -30.0f, id, XYZ{0,0,1}),
+            2.0f, 4.0f
+        ));
+        copia.erase(it);
+
+        randomIndex = rand() % copia.size();
+        it = copia.begin();
+        advance(it, randomIndex);
+        id = *it - 1;
+        poligonos.push_back(make_unique<Cone>(
+            40.0f, 0.5f, -20.0f,
+            make_unique<Adesivo>(40.0f, 5.0f, -20.0f, id, XYZ{0,0,1}),
+            2.0f, 4.0f
+        ));
+        copia.erase(it);
+
+        randomIndex = rand() % copia.size();
+        it = copia.begin();
+        advance(it, randomIndex);
+        id = *it - 1;
+        auto t1 = make_unique<Torus>(
+            -20, -98.5, 0,
+            make_unique<Adesivo>(-20, -98.5, 0, id, XYZ{0,0,1}),
+            1.0f, 3.0f
+        );
+        copia.erase(it);
+
+        randomIndex = rand() % copia.size();
+        it = copia.begin();
+        advance(it, randomIndex);
+        id = *it - 1;
+        auto t2 = make_unique<Torus>(
+            20, 1.5, 0,
+            make_unique<Adesivo>(20, 1.5, 0, id, XYZ{0,0,1}),
+            1.0f, 3.0f
+        );
+        copia.erase(it);
+
+        t1->setConjugado(t2.get());
+        t2->setConjugado(t1.get());
+
+        poligonos.push_back(move(t1));
+        poligonos.push_back(move(t2));
+
+        randomIndex = rand() % copia.size();
+        it = copia.begin();
+        advance(it, randomIndex);
+        id = *it - 1;
+        poligonos.push_back(make_unique<Cubo>(
+            0.0f, -90.0f, -20.0f,
+            2.0f, 2.0f, 2.0f,
+            make_unique<Adesivo>(0.0f, -90.0f, -20.0f, id, XYZ{0,0,1}),
+            2.0f
+        ));
+        copia.erase(it);
+
+        randomIndex = rand() % copia.size();
+        it = copia.begin();
+        advance(it, randomIndex);
+        id = *it - 1;
+        poligonos.push_back(make_unique<Cubo>(
+            5.0f, -90.0f, -20.0f,
+            2.0f, 2.0f, 2.0f,
+            make_unique<Adesivo>(5.0f, -90.0f, -20.0f, id, XYZ{0,0,1}),
+            2.0f
+        ));
+        copia.erase(it);
+
+        randomIndex = rand() % copia.size();
+        it = copia.begin();
+        advance(it, randomIndex);
+        id = *it - 1;
+        poligonos.push_back(make_unique<Cubo>(
+            10.0f, -90.0f, -20.0f,
+            2.0f, 2.0f, 2.0f,
+            make_unique<Adesivo>(10.0f, -90.0f, -20.0f, id, XYZ{0,0,1}),
+            2.0f
+        ));
+        copia.erase(it);
+
+        // ==================================================
+        // ADICIONAR MAIS 10 POLÍGONOS (SEM TORUS)
+        // ==================================================
+
+        for (int i = 0; i < 10; i++) {
+
+            randomIndex = rand() % copia.size();
+            it = copia.begin();
+            advance(it, randomIndex);
+            id = *it - 1;
+
+            float x = -30 + (i * 6);   // linha organizada
+            float y = -40.0f;
+            float z = -25.0f;
+
+            switch (i % 4) {
+                case 0:
+                    poligonos.push_back(make_unique<Piramide>(
+                        x, y, z,
+                        2.0f, 2.0f, 2.0f,
+                        make_unique<Adesivo>(x, y, z, id, XYZ{0,0,1}),
+                        4.0f, 4.0f
+                    ));
+                    break;
+
+                case 1:
+                    poligonos.push_back(make_unique<Esfera>(
+                        x, y, z,
+                        make_unique<Adesivo>(x, y, z, id, XYZ{0,0,1}),
+                        2.0f
+                    ));
+                    break;
+
+                case 2:
+                    poligonos.push_back(make_unique<Cone>(
+                        x, y, z,
+                        make_unique<Adesivo>(x, y, z, id, XYZ{0,0,1}),
+                        2.0f, 4.0f
+                    ));
+                    break;
+
+                case 3:
+                    poligonos.push_back(make_unique<Cilindro>(
+                        x, y, z,
+                        make_unique<Adesivo>(x, y, z, id, XYZ{0,0,1}),
+                        2.0f, 4.0f
+                    ));
+                    break;
+            }
+
+            copia.erase(it);
+
+        }
+    }
+
     cores_poligonos.resize(n);
 
-    for(int i = 0; i < n; i++){
-        cores_poligonos[i] = rand() % (12+1);
-        if(poligonos[i]->getSuperficie()==F::TORUS) {
-            cores_poligonos[i+1]=cores_poligonos[i]; i++;
+    if(dif!=FACIL){
+        for(int i = 0; i < n; i++){
+            cores_poligonos[i] = rand() % (12+1);
+            if(poligonos[i]->getSuperficie()==F::TORUS and i<n-1) {
+                cores_poligonos[i+1]=cores_poligonos[i]; i++;
+            }
         }
+    } else {
+        for(int i = 0; i < n; i++)
+            cores_poligonos[i] = rand() % (12+1);
     }
 
     // Cria vetor de pares (polígono, cor)
@@ -625,11 +773,6 @@ void cria_poligonos(int n){
         poligonos.push_back(move(par.first));
         cores_poligonos.push_back(par.second);
     }
-}
-
-void define_objetivos(int n) {
-    while(objetivos.size() < n)
-        objetivos.insert((rand() % (20 - 1 + 1)) + 1);
 }
 
 void ajustaProjecao(int largura, int altura) {
@@ -955,234 +1098,6 @@ void desenha_blocos_overlay(const set<int>& objetivos, const vector<int>& coresP
     glEnable(GL_LIGHTING);
 }
 
-// void desenha_bloco(float x, float y, float tamanho, Cor corFundo, GLuint texNumero) 
-// {
-//     glEnable(GL_TEXTURE_2D);
-//     glDisable(GL_LIGHTING);
-
-//     glColor4f(corFundo.r, corFundo.g, corFundo.b, 1.0f);
-//     glBindTexture(GL_TEXTURE_2D, texBlocoBase);
-
-//     // fundo do bloco
-//     glBegin(GL_QUADS);
-//         glTexCoord2f(0,0); glVertex2f(x, y);
-//         glTexCoord2f(1,0); glVertex2f(x+tamanho, y);
-//         glTexCoord2f(1,1); glVertex2f(x+tamanho, y+tamanho);
-//         glTexCoord2f(0,1); glVertex2f(x, y+tamanho);
-//     glEnd();
-
-//     // número por cima
-//     glBindTexture(GL_TEXTURE_2D, texNumero);
-//     glColor4f(0,0,0,1); // número sempre preto
-
-//     float margem = tamanho * 0.18f;
-//     float numSize = tamanho - margem*2;
-
-//     glBegin(GL_QUADS);
-//         glTexCoord2f(0,0); glVertex2f(x+margem, y+margem);
-//         glTexCoord2f(1,0); glVertex2f(x+margem+numSize, y+margem);
-//         glTexCoord2f(1,1); glVertex2f(x+margem+numSize, y+margem+numSize);
-//         glTexCoord2f(0,1); glVertex2f(x+margem, y+margem+numSize);
-//     glEnd();
-
-//     glEnable(GL_LIGHTING);
-//     glDisable(GL_TEXTURE_2D);
-// }
-
-// void desenha_blocos_overlay(const set<int>& objetivos, const vector<int>& coresPoligonos) {
-//     if (objetivos.empty()) return;
-
-//     int larguraTela, alturaTela;
-//     SDL_GetWindowSize(window, &larguraTela, &alturaTela);
-
-//     float escala = (float)alturaTela / 600.0f;
-//     int tamFonte = max(14, (int)(32 * escala));   // 32px base → ajusta
-//     TTF_Font* fnt = TTF_OpenFont("arial.ttf", tamFonte);
-//     //TTF_Font* fnt = TTF_OpenFont("arial.ttf", 48);
-
-//     // ----- Projeção 2D -----
-//     glDisable(GL_LIGHTING);
-//     glDisable(GL_DEPTH_TEST);
-
-//     glMatrixMode(GL_PROJECTION);
-//     glPushMatrix();
-//     glLoadIdentity();
-//     glOrtho(0, larguraTela, alturaTela, 0, -1, 1);
-
-//     glMatrixMode(GL_MODELVIEW);
-//     glPushMatrix();
-//     glLoadIdentity();
-
-//     glEnable(GL_BLEND);
-//     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-//     // ----- Fundo branco translúcido -----
-//     glColor4f(1, 1, 1, 0.55f);
-//     glBegin(GL_QUADS);
-//         glVertex2f(0, 0);
-//         glVertex2f(larguraTela, 0);
-//         glVertex2f(larguraTela, alturaTela);
-//         glVertex2f(0, alturaTela);
-//     glEnd();
-
-//     // -----------------------
-//     // Texto: "Adesivos faltando: X restantes"
-//     // -----------------------
-//     std::ostringstream oss;
-//     if(objetivos.size() != 1) oss << "Adesivos faltando: " << objetivos.size() << " restantes";
-//     else oss << "Adesivos faltando: 1 restante";
-//     string texto = oss.str();
-
-//     SDL_Color preto = {0,0,0,255};
-//     SDL_Surface* surfTxt = TTF_RenderText_Blended(fnt, texto.c_str(), preto);
-//     SDL_Surface* surfTxt32 = SDL_ConvertSurfaceFormat(surfTxt, SDL_PIXELFORMAT_RGBA32, 0);
-
-//     GLuint texTexto;
-//     glGenTextures(1, &texTexto);
-//     glBindTexture(GL_TEXTURE_2D, texTexto);
-//     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
-//                  surfTxt32->w, surfTxt32->h, 0,
-//                  GL_RGBA, GL_UNSIGNED_BYTE, surfTxt32->pixels);
-
-//     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-//     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-//     glEnable(GL_TEXTURE_2D);
-//     glColor4f(1,1,1,1);
-
-//     float tx = larguraTela/2 - surfTxt32->w/2;
-//     float ty = alturaTela * (0.10f + 0.05f * escala);// float ty = alturaTela*0.15f;
-
-//     glBegin(GL_QUADS);
-//         glTexCoord2f(0,0); glVertex2f(tx, ty);
-//         glTexCoord2f(1,0); glVertex2f(tx+surfTxt32->w, ty);
-//         glTexCoord2f(1,1); glVertex2f(tx+surfTxt32->w, ty+surfTxt32->h);
-//         glTexCoord2f(0,1); glVertex2f(tx, ty+surfTxt32->h);
-//     glEnd();
-
-//     SDL_FreeSurface(surfTxt);
-//     SDL_FreeSurface(surfTxt32);
-//     glDeleteTextures(1, &texTexto);
-
-//     // -----------------------
-//     // Blocos coloridos grandes
-//     // -----------------------
-    
-//     float blocoTam = 110 * escala;
-//     float espaco   = 25 * escala;
-//     // float blocoTam = 110;
-//     // float espaco = 25;
-
-//     float totalLarg = objetivos.size() * blocoTam + (objetivos.size()-1) * espaco;
-//     float bx = larguraTela/2 - totalLarg/2;
-//     float by = alturaTela * (0.28f + 0.07f * escala);//float by = alturaTela*0.35f;
-
-//     for (int objetivo : objetivos) {
-
-//         // --- 1. Buscar polígono associado (mesma lógica do seu trecho) ---
-//         int indicePoligono = -1;
-
-//         for (size_t i = 0; i < poligonos.size(); ++i) {
-//             auto adesivo = poligonos[i]->getAdesivo();
-//             if (adesivo && adesivo->getTexturaID()-2 == objetivo) {
-//                 indicePoligono = (int)i;
-//                 break;
-//             }
-//         }
-
-//         if (indicePoligono == -1) continue;
-
-//         // --- 2. Pega cor do polígono ---
-//         Cor cor = get_cor_struct(coresPoligonos[indicePoligono]);
-
-//         // ----- desenha bloco colorido -----
-//         glDisable(GL_TEXTURE_2D);
-//         glColor4f(cor.r, cor.g, cor.b, 1.0f);
-
-//         glBegin(GL_QUADS);
-//             glVertex2f(bx, by);
-//             glVertex2f(bx+blocoTam, by);
-//             glVertex2f(bx+blocoTam, by+blocoTam);
-//             glVertex2f(bx, by+blocoTam);
-//         glEnd();
-
-//         // ----- desenha número por cima -----
-
-//         string num = to_string(objetivo);
-//         SDL_Color corNum = {0,0,0,255};
-//         if (cor.r==0 && cor.g==0 && cor.b==0) corNum = {255,255,255,255};
-
-//         SDL_Surface* numSurf = TTF_RenderText_Blended(fnt, num.c_str(), corNum);
-//         SDL_Surface* num32 = SDL_ConvertSurfaceFormat(numSurf, SDL_PIXELFORMAT_RGBA32, 0);
-
-//         GLuint texNum;
-//         glGenTextures(1, &texNum);
-//         glBindTexture(GL_TEXTURE_2D, texNum);
-//         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
-//                      num32->w, num32->h, 0,
-//                      GL_RGBA, GL_UNSIGNED_BYTE, num32->pixels);
-
-//         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-//         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-//         glEnable(GL_TEXTURE_2D);
-//         glColor4f(1,1,1,1);
-
-//         float nx = bx + blocoTam/2 - num32->w/2;
-//         float ny = by + blocoTam/2 - num32->h/2;
-
-//         glBegin(GL_QUADS);
-//             glTexCoord2f(0,0); glVertex2f(nx, ny);
-//             glTexCoord2f(1,0); glVertex2f(nx+num32->w, ny);
-//             glTexCoord2f(1,1); glVertex2f(nx+num32->w, ny+num32->h);
-//             glTexCoord2f(0,1); glVertex2f(nx, ny+num32->h);
-//         glEnd();
-
-//         SDL_FreeSurface(numSurf);
-//         SDL_FreeSurface(num32);
-//         glDeleteTextures(1, &texNum);
-
-//         if (modo_daltonico) {
-//             GLuint texSimbolo = coresPoligonos[indicePoligono] + 23;
-//             // ajuste conforme seu mapeamento real ↑
-
-//             float simLarg = blocoTam * 0.55f;
-//             float simAlt  = simLarg;
-
-//             float sx = bx + blocoTam/2 - simLarg/2;
-//             float sy = by + blocoTam + (12 * escala);//float sy = by + blocoTam + 12;  // aparece logo abaixo
-
-//             glBindTexture(GL_TEXTURE_2D, texID[texSimbolo]);
-//             glColor4f(1,1,1,1);
-
-//             glBegin(GL_QUADS);
-//                 if(texSimbolo != 34)
-//                 {glTexCoord2f(0,1); glVertex2f(sx, sy);
-//                 glTexCoord2f(0,0); glVertex2f(sx+simLarg, sy);
-//                 glTexCoord2f(1,0); glVertex2f(sx+simLarg, sy+simAlt);
-//                 glTexCoord2f(1,1); glVertex2f(sx, sy+simAlt);}
-//                 else{glTexCoord2f(0,0); glVertex2f(sx, sy);
-//                 glTexCoord2f(0,1); glVertex2f(sx, sy+simAlt);
-//                 glTexCoord2f(1,1); glVertex2f(sx+simLarg, sy+simAlt);
-//                 glTexCoord2f(1,0); glVertex2f(sx+simLarg, sy);}
-//             glEnd();
-//         }
-
-//         bx += blocoTam + espaco;
-//     }
-
-//     TTF_CloseFont(fnt);
-
-//     // ----- Restaurar matriz original -----
-//     glPopMatrix();
-//     glMatrixMode(GL_PROJECTION);
-//     glPopMatrix();
-//     glMatrixMode(GL_MODELVIEW);
-
-//     glEnable(GL_DEPTH_TEST);
-//     glEnable(GL_LIGHTING);
-// }
-
 void atualiza_renascer(float dt) {
     static float acumulador = 0.0f;
 
@@ -1432,7 +1347,7 @@ void loop_menu() {
 void loop_jogo(){
 
     rodando = true; pause = false;
-    timer = 120 + 30 * dif;
+    timer = 90 + 30 * dif;
     SDL_Event evento;
     inicio = SDL_GetTicks();
     bool overlay_antes = show_overlay;
@@ -1613,13 +1528,18 @@ void loop_jogo(){
                     desenhaTexto(texturaTextoPause, xCentro, yCentro, larguraTextoPause, alturaTextoPause);       
                 } 
                 if(!jogador.estaVivo()){
-                    if(!tela_cheia){
-                        int larguraJanela, alturaJanela;
-                        SDL_GetWindowSize(window, &larguraJanela, &alturaJanela);
-                        int xCentro = (larguraJanela - larguraTextoPause) / 2;
-                        int yCentro = (alturaJanela - alturaTextoPause) / 2;
-                        desenhaTexto(texturaTextoMorto, xCentro, yCentro, larguraTextoMorto, alturaTextoMorto);
-                    } else desenhaTexto(texturaTextoMorto, 300, 300, larguraTextoMorto, alturaTextoMorto);
+                    int larguraJanela, alturaJanela;
+                    SDL_GetWindowSize(window, &larguraJanela, &alturaJanela);
+                    int xCentro = (larguraJanela - larguraTextoMorto) / 2;
+                    int yCentro = (alturaJanela - alturaTextoMorto) / 2;
+                    desenhaTexto(texturaTextoMorto, xCentro, yCentro, larguraTextoMorto, alturaTextoMorto);       
+                    // if(!tela_cheia){
+                    //     int larguraJanela, alturaJanela;
+                    //     SDL_GetWindowSize(window, &larguraJanela, &alturaJanela);
+                    //     int xCentro = (larguraJanela - larguraTextoPause) / 2;
+                    //     int yCentro = (alturaJanela - alturaTextoPause) / 2;
+                    //     desenhaTexto(texturaTextoMorto, xCentro, yCentro, larguraTextoMorto, alturaTextoMorto);
+                    // } else desenhaTexto(texturaTextoMorto, 300, 300, larguraTextoMorto, alturaTextoMorto);
                 }
             }
         }
@@ -1848,8 +1768,8 @@ int main(int argc, char* argv[]) {
         loop_menu();
         if(estado_atual == SAINDO) break;
         else if(estado_atual == JOGO_PRINCIPAL){
-            define_objetivos(10);//(rand() % (8 - 1 + 1) + 1);
-            cria_poligonos(10);//(8);
+            define_objetivos(4 + 2 * dif);
+            cria_poligonos(dif == FACIL ? 10 : 20);
             loop_jogo();
         }
 
