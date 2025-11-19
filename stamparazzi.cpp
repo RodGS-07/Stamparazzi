@@ -41,6 +41,7 @@ int dif = MEDIO;
 int estado_atual = MENU_PRINCIPAL;
 int timer = 90 + 30 * dif;
 int renascer = 1 + 2 * dif;
+int vidas = 2 * dif - 1;
 int minutos = timer / 60;
 int segundos = timer % 60;
 bool mouse_in = false;
@@ -55,8 +56,8 @@ bool rodando = true;
 Uint32 inicio, fim;
 float dt;
 const Uint8* state;
-GLuint texturaTextoTempo = 0, texturaTextoObj = 0, texturaTextoPause = 0, texturaTextoMorto = 0, texBlocoBase = 0;
-int larguraTextoTempo = 0, larguraTextoObj = 0, larguraTextoPause = 0, larguraTextoMorto = 0, alturaTextoTempo = 0, alturaTextoObj = 0, alturaTextoPause = 0, alturaTextoMorto = 0;
+GLuint texturaTextoTempo = 0, texturaTextoObj = 0, texturaTextoPause = 0, texturaTextoMorto = 0, texturaTextoVida = 0, texBlocoBase = 0;
+int larguraTextoTempo = 0, larguraTextoObj = 0, larguraTextoPause = 0, larguraTextoMorto = 0, larguraTextoVida = 0, alturaTextoTempo = 0, alturaTextoObj = 0, alturaTextoPause = 0, alturaTextoMorto = 0, alturaTextoVida = 0;
 vector<int> cores_poligonos;
 unordered_map<int, GLuint> texNumero;
 
@@ -365,6 +366,12 @@ void inicializa_ttf(){
     str = moss.str();
     texto = str.c_str();
     texturaTextoMorto = criaTexturaDoTexto(texto, fonte, preto, larguraTextoMorto, alturaTextoMorto);
+
+    ostringstream voss;
+    voss << "Vidas restantes: " << vidas;
+    str = voss.str();
+    texto = str.c_str();
+    texturaTextoVida = criaTexturaDoTexto(texto, fonte, preto, larguraTextoVida, alturaTextoVida);
 
     cria_textura_bloco_base();
 }
@@ -1113,6 +1120,12 @@ void atualiza_renascer(float dt) {
                 oss << "Voce morreu, renascendo em " << renascer;
                 string str = oss.str();
                 atualizaTexto(str,texturaTextoMorto,larguraTextoMorto,alturaTextoMorto);
+                if(dif != FACIL) {
+                    ostringstream voss;
+                    voss << "Vidas restantes: " << vidas;
+                    str = voss.str();
+                    atualizaTexto(str,texturaTextoVida,larguraTextoVida,alturaTextoVida);
+                } else vidas = INT_MAX;
                 return;
             }
             ostringstream oss;
@@ -1352,10 +1365,17 @@ void loop_jogo(){
     rodando = true; pause = false;
     timer = 90 + 30 * dif;
     renascer = 1 + 2 * dif;
+    if(dif == FACIL) vidas = INT_MAX;
+    else vidas = 2 * dif - 1;
     ostringstream oss;
     oss << "Voce morreu, renascendo em " << renascer;
     string str = oss.str();
     atualizaTexto(str,texturaTextoMorto,larguraTextoMorto,alturaTextoMorto);
+    ostringstream voss;
+    voss << "Vidas restantes: " << vidas;
+    str = voss.str();
+    atualizaTexto(str,texturaTextoVida,larguraTextoVida,alturaTextoVida);
+
     SDL_Event evento;
     inicio = SDL_GetTicks();
     bool overlay_antes = show_overlay;
@@ -1375,6 +1395,7 @@ void loop_jogo(){
         if(!objetivos.size()) {rodando = false; cout << "Voce venceu!" << endl; break;}
         atualiza_objetivos(objetivos, cores_poligonos);
 
+        if(!vidas) {rodando = false; cout << "Voce perdeu todas as vidas!" << endl; break;}
         if(!jogador.estaVivo()) {show_overlay = false; atualiza_renascer(dt);}
 
         while (SDL_PollEvent(&evento)) {
@@ -1485,9 +1506,10 @@ void loop_jogo(){
         glLoadIdentity();
 
         // desenha texto
-        if(texturaTextoTempo && texturaTextoObj && texturaTextoPause && texturaTextoMorto) {
+        if(texturaTextoTempo && texturaTextoObj && texturaTextoPause && texturaTextoMorto && texturaTextoVida) {
             // sempre desenha tempo
             desenhaTexto(texturaTextoTempo, 50, 50, larguraTextoTempo, alturaTextoTempo);
+            if(dif != FACIL) desenhaTexto(texturaTextoVida, 50, 75, larguraTextoVida, alturaTextoVida);
 
             if (show_overlay) {
                 int w, h;
@@ -1712,12 +1734,12 @@ void loop_jogo(){
         }
 
         // Controla câmera
-        if(jogador.estaVivo()) jogador.controle_camera(MOVE_VEL, CAMERA_SENS,dt,pause,window,game_controller,state,poligonos,limites);
+        if(jogador.estaVivo()) jogador.controle_camera(MOVE_VEL, CAMERA_SENS,dt,vidas,pause,window,game_controller,state,poligonos,limites);
         //jogador.controle_camera(MOVE_VEL, CAMERA_SENS,dt,pause,window,game_controller,state,limites);
 
         for(const auto& p : poligonos){
             if(p->getSuperficie()==F::CONE)
-                p->aplica_efeito(jogador);
+                p->aplica_efeito(jogador,vidas);
         }
 
         // Verifica morte do jogador

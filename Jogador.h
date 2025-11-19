@@ -30,7 +30,7 @@ class Jogador : public Entidade{
         float getCamPitch() const;
         bool estaVivo() const;
         void nasce_jogador(float ix, float iy, float iz);
-        void morre();
+        void morre(int& vidas);
         void desenha_mascara(int stacks = 30, int fatias = 30);
         void desenha_mira();
         XYZ centroAABB(const AABB& box);
@@ -38,10 +38,10 @@ class Jogador : public Entidade{
         bool RayIntersectsAABB(const XYZ& orig, const XYZ& dir, const AABB& box);
         bool detecta_adesivo(const Adesivo& a, const vector<unique_ptr<Poligono>>& poligonos);
         void tirou_foto(const Adesivo& a, float dt, float& flash_alpha, bool& flash_ativo,const vector<unique_ptr<Poligono>>& poligonos,set<int>& objetivos);
-        bool tenta_mover(float dx, float dy, float dz, const vector<unique_ptr<Poligono>>& poligonos, const vector<unique_ptr<Poligono>>& limites);
+        bool tenta_mover(float dx, float dy, float dz, int& vidas, const vector<unique_ptr<Poligono>>& poligonos, const vector<unique_ptr<Poligono>>& limites);
         void prende_camera();
-        void move_camera(float dist, float dir, float dt, const vector<unique_ptr<Poligono>>& poligonos, const vector<unique_ptr<Poligono>>& limites, float val = 0.0f);
-        void controle_camera(float move_vel, float camera_sens, float dt, bool pause, SDL_Window* window, SDL_GameController* game_controller, const Uint8* state, const vector<unique_ptr<Poligono>>& poligonos, const vector<unique_ptr<Poligono>>& limites);
+        void move_camera(float dist, float dir, float dt, int& vidas, const vector<unique_ptr<Poligono>>& poligonos, const vector<unique_ptr<Poligono>>& limites, float val = 0.0f);
+        void controle_camera(float move_vel, float camera_sens, float dt, int& vidas, bool pause, SDL_Window* window, SDL_GameController* game_controller, const Uint8* state, const vector<unique_ptr<Poligono>>& poligonos, const vector<unique_ptr<Poligono>>& limites);
 };
 
 #endif

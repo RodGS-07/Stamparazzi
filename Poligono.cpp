@@ -80,7 +80,7 @@ bool Cubo::colide_jogador(const AABB& s) const {
     return AABBvsAABB(s, box);//SphereVsAABB(s,box);
 }
 
-void Cubo::aplica_efeito(Jogador& jogador) {
+void Cubo::aplica_efeito(Jogador& jogador, int& vidas) {
     return;
 }
 
@@ -203,8 +203,8 @@ bool Piramide::colide_jogador(const AABB& s) const {
     return false;*/
 }
 
-void Piramide::aplica_efeito(Jogador& jogador) {
-    jogador.morre();
+void Piramide::aplica_efeito(Jogador& jogador, int& vidas) {
+    jogador.morre(vidas);
 }
 
 void Piramide::desenha_poligono(int cor, bool pause, bool modo_daltonico) {
@@ -343,10 +343,10 @@ bool Esfera::colide_jogador(const AABB& s) const {
     //return SphereVsSphere(s, s2);
 }
 
-void Esfera::aplica_efeito(Jogador& jogador) {
+void Esfera::aplica_efeito(Jogador& jogador, int& vidas) {
     AABB box = {{this->getX() - raio, this->getY() - raio, this->getZ() - raio}, {this->getX() + raio, this->getY() + raio, this->getZ() + raio}};
     //if(!pause) cout << jogador.getMascara().max.y << " " << box.min.y << endl;
-    if(jogador.getMascara().max.y <= this->getY()) jogador.morre();
+    if(jogador.getMascara().max.y <= this->getY()) jogador.morre(vidas);
 }
 
 void Esfera::desenha_poligono(int cor, bool pause, bool modo_daltonico) {
@@ -492,10 +492,10 @@ bool Cilindro::colide_jogador(const AABB& s) const {
     return SphereVsCylinder(s, cyl);*/
 }
 
-void Cilindro::aplica_efeito(Jogador& jogador) {
+void Cilindro::aplica_efeito(Jogador& jogador, int& vidas) {
     AABB box = {{this->getX() - raio, this->getY() - raio, this->getZ() - raio}, {this->getX() + raio, this->getY() + raio, this->getZ() + raio}};
     //if(fabs(jogador.getX()) >= 100.0f) jogador.morre();
-    if(jogador.getMascara().max.y <= this->getY()) jogador.morre();
+    //if(jogador.getMascara().max.y <= this->getY()) jogador.morre(vidas);
 }
 
 void Cilindro::desenha_poligono(int cor, bool pause, bool modo_daltonico) {
@@ -639,7 +639,7 @@ bool Cone::colide_jogador(const AABB& s) const {
     return SphereVsCone(s,cone); //PointInConeBound(s.c, cone);*/
 }
 
-void Cone::aplica_efeito(Jogador& jogador) {
+void Cone::aplica_efeito(Jogador& jogador, int& vidas) {
     AABB box = jogador.getMascara();
 
     // origem = ápice do cone
@@ -648,7 +648,7 @@ void Cone::aplica_efeito(Jogador& jogador) {
     XYZ fim = apex - axis * altura * 50.0f; // 50x altura, laser longo
 
     if (SegmentVsAABB(origem, fim, box)) {
-        jogador.morre();
+        jogador.morre(vidas);
     }
 }
 
@@ -783,7 +783,7 @@ bool Torus::colide_jogador(const AABB& s) const{
     return AABBvsAABB(s, box);
 }
 
-void Torus::aplica_efeito(Jogador& jogador) {
+void Torus::aplica_efeito(Jogador& jogador, int& vidas) {
     //cout << (conjugado==NULL) << endl;
     bool in = fabs(jogador.getX()-this->getX()) <= p.raio_menor and fabs(jogador.getY()-this->getY()) <= p.raio_menor;
     if(conjugado and in){

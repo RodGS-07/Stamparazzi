@@ -35,7 +35,7 @@ class Poligono : public Entidade{
         virtual AABB getAABB() const = 0;
         virtual void realiza_movimento(int cor, float dt, bool pause, bool modo_daltonico)= 0;
         virtual bool colide_jogador(const AABB& s) const = 0;
-        virtual void aplica_efeito(Jogador& jogador) = 0;
+        virtual void aplica_efeito(Jogador& jogador, int& vidas) = 0;
         virtual void desenha_poligono(int cor, bool pause, bool modo_daltonico) = 0;
         //virtual void desenha_adesivo() = 0;
         virtual void desenha_mascara() = 0;
@@ -55,7 +55,7 @@ class Cubo : public Poligono{
         float getLado() const;
         void realiza_movimento(int cor, float dt, bool pause, bool modo_daltonico) override;
         bool colide_jogador(const AABB& s) const override;
-        void aplica_efeito(Jogador& jogador) override;
+        void aplica_efeito(Jogador& jogador, int& vidas) override;
         void desenha_poligono(int cor, bool pause, bool modo_daltonico) override;
         //void desenha_adesivo() override;
         void desenha_mascara();
@@ -74,7 +74,7 @@ class Piramide : public Poligono{
         float getAltura() const;
         void realiza_movimento(int cor, float dt, bool pause, bool modo_daltonico) override;
         bool colide_jogador(const AABB& s) const override;
-        void aplica_efeito(Jogador& jogador) override;
+        void aplica_efeito(Jogador& jogador, int& vidas) override;
         void desenha_poligono(int cor, bool pause, bool modo_daltonico) override;
         //void desenha_adesivo() override;
         void desenha_mascara();
@@ -93,7 +93,7 @@ class Esfera : public Poligono{
         float getRaio() const;
         void realiza_movimento(int cor, float dt, bool pause, bool modo_daltonico) override;
         bool colide_jogador(const AABB& s) const override;
-        void aplica_efeito(Jogador& jogador) override;
+        void aplica_efeito(Jogador& jogador, int& vidas) override;
         void desenha_poligono(int cor, bool pause, bool modo_daltonico) override;
         //void desenha_adesivo() override;
         void desenha_mascara();
@@ -114,7 +114,7 @@ class Cilindro : public Poligono{
         float getAltura() const;
         void realiza_movimento(int cor, float dt, bool pause, bool modo_daltonico) override;
         bool colide_jogador(const AABB& s) const override;
-        void aplica_efeito(Jogador& jogador) override;
+        void aplica_efeito(Jogador& jogador, int& vidas) override;
         void desenha_poligono(int cor, bool pause, bool modo_daltonico) override;
         //void desenha_adesivo() override;
         void desenha_mascara();
@@ -135,7 +135,7 @@ class Cone : public Poligono{
         float getAltura() const;
         void realiza_movimento(int cor, float dt, bool pause, bool modo_daltonico) override;
         bool colide_jogador(const AABB& s) const override;
-        void aplica_efeito(Jogador& jogador) override;
+        void aplica_efeito(Jogador& jogador, int& vidas) override;
         void desenha_poligono(int cor, bool pause, bool modo_daltonico) override;
         //void desenha_adesivo() override;
         void desenha_mascara();
@@ -156,7 +156,7 @@ class Torus : public Poligono{
         AABB getAABB() const override;
         void realiza_movimento(int cor, float dt, bool pause, bool modo_daltonico) override;
         bool colide_jogador(const AABB& s) const override;
-        void aplica_efeito(Jogador& jogador) override;
+        void aplica_efeito(Jogador& jogador, int& vidas) override;
         void desenha_poligono(int cor, bool pause, bool modo_daltonico) override;
         //void desenha_adesivo() override;
         void desenha_mascara();
