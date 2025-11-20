@@ -1360,6 +1360,140 @@ void loop_menu() {
     }
 }
 
+void mostrar_resultado(string s, bool vitoria) {
+    // --- Loop até o jogador pressionar ENTER ---
+    SDL_Event e;
+
+    while (true) {
+
+        // --- Captura eventos ---
+        while (SDL_PollEvent(&e)) {
+
+            if (e.type == SDL_QUIT) {
+                estado_atual = SAINDO;
+                return;
+            }
+
+            if (e.type == SDL_KEYDOWN) {
+                if (e.key.keysym.sym == SDLK_RETURN) {
+                    // VOLTAR PARA O MENU
+                    estado_atual = MENU_PRINCIPAL;
+                    return;
+                }
+            }
+        }
+
+        // ---------- Desenho na tela ----------
+
+        int w, h;
+        SDL_GetWindowSize(window, &w, &h);
+
+        glDisable(GL_LIGHTING);
+        glDisable(GL_DEPTH_TEST);
+
+        glViewport(0, 0, w, h);
+
+        glMatrixMode(GL_PROJECTION);
+        glPushMatrix();
+        glLoadIdentity();
+        glOrtho(0, w, h, 0, -1, 1);
+
+        glMatrixMode(GL_MODELVIEW);
+        glPushMatrix();
+        glLoadIdentity();
+
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+        // ---------- FUNDO ----------
+        if (vitoria)
+            glColor4f(0.7f, 1.0f, 0.7f, 1.0f);  // verde claro
+        else
+            glColor4f(1.0f, 0.6f, 0.6f, 1.0f);  // vermelho claro
+
+        glBegin(GL_QUADS);
+            glVertex2f(0, 0);
+            glVertex2f(w, 0);
+            glVertex2f(w, h);
+            glVertex2f(0, h);
+        glEnd();
+
+        // ---------- TEXTOS ----------
+        SDL_Color preto = {0,0,0,255};
+
+        int lw, lh;
+
+        // Fonte maior
+        TTF_Font* fntBig = TTF_OpenFont("arial.ttf", 48);
+        // Fonte menor
+        TTF_Font* fntSmall = TTF_OpenFont("arial.ttf", 28);
+
+        // ------- TEXTO PRINCIPAL --------
+        GLuint texMsg = criaTexturaDoTexto(s.c_str(), fntBig, preto, lw, lh);
+        float textX = w/2 - lw/2;
+        float textY = h*0.40f;
+
+        desenhaTexto(texMsg, textX, textY, lw, lh);
+        glDeleteTextures(1, &texMsg);
+
+        // ------- IMAGENS LATERAIS (modo daltônico) -------
+        if (modo_daltonico) {
+
+            static float acumulador = 0.0f;
+
+            float imgSize = h * 0.18f;
+            float yImg = textY - imgSize/2 + lh/2;
+
+            float xLeft  = textX - imgSize - 20;
+            float xRight = textX + lw + 20;
+
+            glColor4f(1,1,1,1);
+            glEnable(GL_TEXTURE_2D);
+
+            // --- imagem esquerda ---
+            glBindTexture(GL_TEXTURE_2D, texID[36 + vitoria]);
+            glBegin(GL_QUADS);
+                glTexCoord2f(0,1); glVertex2f(xLeft, yImg);
+                glTexCoord2f(1,1); glVertex2f(xLeft+imgSize, yImg);
+                glTexCoord2f(1,0); glVertex2f(xLeft+imgSize, yImg+imgSize);
+                glTexCoord2f(0,0); glVertex2f(xLeft, yImg+imgSize);
+            glEnd();
+
+            // --- imagem direita ---
+            glBindTexture(GL_TEXTURE_2D, texID[36 + vitoria]);
+            glBegin(GL_QUADS);
+                glTexCoord2f(0,1); glVertex2f(xRight, yImg);
+                glTexCoord2f(1,1); glVertex2f(xRight+imgSize, yImg);
+                glTexCoord2f(1,0); glVertex2f(xRight+imgSize, yImg+imgSize);
+                glTexCoord2f(0,0); glVertex2f(xRight, yImg+imgSize);
+            glEnd();
+
+            glDisable(GL_TEXTURE_2D);
+        }
+
+        // ------- TEXTO INFERIOR -------
+        string aviso = "Pressione ENTER para voltar ao menu";
+        GLuint texSub = criaTexturaDoTexto(aviso.c_str(), fntSmall, preto, lw, lh);
+
+        desenhaTexto(texSub, w/2 - lw/2, h*0.60f, lw, lh);
+        glDeleteTextures(1, &texSub);
+
+        TTF_CloseFont(fntBig);
+        TTF_CloseFont(fntSmall);
+
+        // ---------- restauração ----------
+        glPopMatrix();
+        glMatrixMode(GL_PROJECTION);
+        glPopMatrix();
+        glMatrixMode(GL_MODELVIEW);
+
+        glEnable(GL_LIGHTING);
+        glEnable(GL_DEPTH_TEST);
+
+        SDL_GL_SwapWindow(window);
+    }
+}
+
 void loop_jogo(){
 
     rodando = true; pause = false;
@@ -1390,12 +1524,12 @@ void loop_jogo(){
         inicio = fim;
 
         atualiza_timer(dt);
-        if(!timer) {rodando = false; cout << "Seu tempo acabou!" << endl; break;}
+        if(!timer) {rodando = false; mostrar_resultado("Seu tempo acabou!", false); break;}
 
-        if(!objetivos.size()) {rodando = false; cout << "Voce venceu!" << endl; break;}
+        if(!objetivos.size()) {rodando = false; mostrar_resultado("Voce venceu!", true); break;}
         atualiza_objetivos(objetivos, cores_poligonos);
 
-        if(!vidas) {rodando = false; cout << "Voce perdeu todas as vidas!" << endl; break;}
+        if(!vidas) {rodando = false; mostrar_resultado("Voce perdeu todas as vidas!", false); break;}
         if(!jogador.estaVivo()) {show_overlay = false; atualiza_renascer(dt);}
 
         while (SDL_PollEvent(&evento)) {

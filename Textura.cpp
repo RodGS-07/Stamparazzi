@@ -49,7 +49,9 @@ const char* textureFileNames[QTDTEXT] = {   //nomes dos arquivos das texturas
     "ColorADD_marrom.png",
     "ColorADD_branco.png",
     "ColorADD_cinza.png",
-    "ColorADD_preto.png"
+    "ColorADD_preto.png",
+    "simbolo_derrota.png",
+    "simbolo_vitoria.png",
 };
 
 void drawSquare(XYZ s,XYZ t){
