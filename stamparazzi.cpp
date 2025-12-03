@@ -453,21 +453,17 @@ void cria_poligonos(int n){
     limites.push_back(make_unique<Cubo>(0.0f,-1.0f,0.0f,100.0f,0.1f,100.0f,nullptr,2.0f));
 
     set<int> copia; int idx;
-    for(int i=1;i<=n;i++) copia.insert(i);
-    // if(n==20) for(int i=1;i<=20;i++) copia.insert(i);
-    // else{
-    //     for(int num : objetivos) copia.insert(num);
-    //     while(copia.size() < n) copia.insert((rand() % (20 - 1 + 1)) + 1);
-    // }
+    int randomIndex, id; auto it=copia.begin();
+    for(int i=1; i<=n; i++) copia.insert(i);
 
     if(dif == FACIL) {
-        int randomIndex = rand() % copia.size();
-        auto it = copia.begin();
+        randomIndex = rand() % copia.size();
+        it = copia.begin();
         advance(it, randomIndex);
-        int id = *it - 1;
+        id = *it - 1;
         poligonos.push_back(make_unique<Cubo>(
-            0.0f, 0.0f, -20.0f,
-            make_unique<Adesivo>(0.0f, 0.0f, -20.0f, id, XYZ{0,0,1}),
+            0.0f, 1.5f, -20.0f,
+            make_unique<Adesivo>(0.0f, 1.5f, -20.0f, id, XYZ{0,0,1}),
             2.0f
         ));
         copia.erase(it);
@@ -477,8 +473,8 @@ void cria_poligonos(int n){
         advance(it, randomIndex);
         id = *it - 1;
         poligonos.push_back(make_unique<Piramide>(
-            10.0f, 0.0f, -20.0f,
-            make_unique<Adesivo>(10.0f, 0.0f, -20.0f, id, XYZ{0,0,1}),
+            10.0f, 1.5f, -20.0f,
+            make_unique<Adesivo>(10.0f, 1.5f, -20.0f, id, XYZ{0,0,1}),
             4.0f, 4.0f
         ));
         copia.erase(it);
@@ -488,9 +484,9 @@ void cria_poligonos(int n){
         advance(it, randomIndex);
         id = *it - 1;
         poligonos.push_back(make_unique<Esfera>(
-            20.0f, 0.0f, -20.0f,
-            make_unique<Adesivo>(20.0f, 0.0f, -20.0f, id, XYZ{0,0,1}),
-            2.0f
+            20.0f, 1.5f, -20.0f,
+            make_unique<Adesivo>(20.0f, 1.5f, -20.0f, id, XYZ{0,0,1}),
+            2.0f, -1.0f
         ));
         copia.erase(it);
 
@@ -499,8 +495,8 @@ void cria_poligonos(int n){
         advance(it, randomIndex);
         id = *it - 1;
         poligonos.push_back(make_unique<Cilindro>(
-            30.0f, 0.0f, -30.0f,
-            make_unique<Adesivo>(30.0f, 0.0f, -30.0f, id, XYZ{0,0,1}),
+            30.0f, 1.5f, -30.0f,
+            make_unique<Adesivo>(30.0f, 1.5f, -30.0f, id, XYZ{0,0,1}),
             2.0f, 4.0f
         ));
         copia.erase(it);
@@ -543,9 +539,9 @@ void cria_poligonos(int n){
         advance(it, randomIndex);
         id = *it - 1;
         poligonos.push_back(make_unique<Esfera>(
-            20.0f, 0.0f, 60.0f,
-            make_unique<Adesivo>(20.0f, 0.0f, 60.0f, id, XYZ{0,0,1}),
-            2.0f
+            20.0f, 1.5f, 60.0f,
+            make_unique<Adesivo>(20.0f, 1.5f, 60.0f, id, XYZ{0,0,1}),
+            2.0f, -1.0f
         ));
         copia.erase(it);
 
@@ -554,8 +550,8 @@ void cria_poligonos(int n){
         advance(it, randomIndex);
         id = *it - 1;
         poligonos.push_back(make_unique<Cilindro>(
-            -30.0f, 0.0f, 30.0f,
-            make_unique<Adesivo>(-30.0f, 0.0f, 30.0f, id, XYZ{0,0,1}),
+            -30.0f, 1.5f, 30.0f,
+            make_unique<Adesivo>(-30.0f, 1.5f, 30.0f, id, XYZ{0,0,1}),
             2.0f, 4.0f
         ));
         copia.erase(it);
@@ -571,13 +567,13 @@ void cria_poligonos(int n){
         ));
         copia.erase(it);
     } else {
-        int randomIndex = rand() % copia.size();
-        auto it = copia.begin();
+        randomIndex = rand() % copia.size();
+        it = copia.begin();
         advance(it, randomIndex);
-        int id = *it - 1;
+        id = *it - 1;
         poligonos.push_back(make_unique<Cubo>(
-            0.0f, 0.0f, -20.0f,
-            make_unique<Adesivo>(0.0f, 0.0f, -20.0f, id, XYZ{0,0,1}),
+            0.0f, 1.5f, -20.0f,
+            make_unique<Adesivo>(0.0f, 1.5f, -20.0f, id, XYZ{0,0,1}),
             2.0f
         ));
         copia.erase(it);
@@ -587,8 +583,8 @@ void cria_poligonos(int n){
         advance(it, randomIndex);
         id = *it - 1;
         poligonos.push_back(make_unique<Piramide>(
-            10.0f, 0.0f, -20.0f,
-            make_unique<Adesivo>(10.0f, 0.0f, -20.0f, id, XYZ{0,0,1}),
+            10.0f, 1.5f, -20.0f,
+            make_unique<Adesivo>(10.0f, 1.5f, -20.0f, id, XYZ{0,0,1}),
             4.0f, 4.0f
         ));
         copia.erase(it);
@@ -598,9 +594,9 @@ void cria_poligonos(int n){
         advance(it, randomIndex);
         id = *it - 1;
         poligonos.push_back(make_unique<Esfera>(
-            20.0f, 0.0f, -20.0f,
-            make_unique<Adesivo>(20.0f, 0.0f, -20.0f, id, XYZ{0,0,1}),
-            2.0f
+            20.0f, 1.5f, -20.0f,
+            make_unique<Adesivo>(20.0f, 1.5f, -20.0f, id, XYZ{0,0,1}),
+            2.0f, -1.0f
         ));
         copia.erase(it);
 
@@ -609,8 +605,8 @@ void cria_poligonos(int n){
         advance(it, randomIndex);
         id = *it - 1;
         poligonos.push_back(make_unique<Cilindro>(
-            30.0f, 0.0f, -30.0f,
-            make_unique<Adesivo>(30.0f, 0.0f, -30.0f, id, XYZ{0,0,1}),
+            30.0f, 1.5f, -30.0f,
+            make_unique<Adesivo>(30.0f, 1.5f, -30.0f, id, XYZ{0,0,1}),
             2.0f, 4.0f
         ));
         copia.erase(it);
@@ -621,7 +617,51 @@ void cria_poligonos(int n){
         id = *it - 1;
         poligonos.push_back(make_unique<Cone>(
             40.0f, 0.5f, -20.0f,
-            make_unique<Adesivo>(40.0f, 5.0f, -20.0f, id, XYZ{0,0,1}),
+            make_unique<Adesivo>(40.0f, 0.5f, -20.0f, id, XYZ{0,0,1}),
+            2.0f, 4.0f
+        ));
+        copia.erase(it);
+
+        randomIndex = rand() % copia.size();
+        it = copia.begin();
+        advance(it, randomIndex);
+        id = *it - 1;
+        poligonos.push_back(make_unique<Cubo>(
+            -20, 1.5, 50,
+            make_unique<Adesivo>(-20, 1.5, 50, id, XYZ{0,0,1}),
+            2.0f
+        ));
+        copia.erase(it);
+
+        randomIndex = rand() % copia.size();
+        it = copia.begin();
+        advance(it, randomIndex);
+        id = *it - 1;
+        poligonos.push_back(make_unique<Piramide>(
+            20, 1.5, 50,
+            make_unique<Adesivo>(20, 1.5, 50, id, XYZ{0,0,1}),
+            4.0f, 4.0f
+        ));
+        copia.erase(it);
+
+        randomIndex = rand() % copia.size();
+        it = copia.begin();
+        advance(it, randomIndex);
+        id = *it - 1;
+        poligonos.push_back(make_unique<Esfera>(
+            20.0f, 1.5f, 60.0f,
+            make_unique<Adesivo>(20.0f, 1.5f, 60.0f, id, XYZ{0,0,1}),
+            2.0f, -1.0f
+        ));
+        copia.erase(it);
+
+        randomIndex = rand() % copia.size();
+        it = copia.begin();
+        advance(it, randomIndex);
+        id = *it - 1;
+        poligonos.push_back(make_unique<Cilindro>(
+            -30.0f, 1.5f, 30.0f,
+            make_unique<Adesivo>(-30.0f, 1.5f, 30.0f, id, XYZ{0,0,1}),
             2.0f, 4.0f
         ));
         copia.erase(it);
@@ -631,8 +671,8 @@ void cria_poligonos(int n){
         advance(it, randomIndex);
         id = *it - 1;
         auto t1 = make_unique<Torus>(
-            -20, -98.5, 0,
-            make_unique<Adesivo>(-20, -98.5, 0, id, XYZ{0,0,1}),
+            0, -98.5, 100,
+            make_unique<Adesivo>(0, -98.5, 100, id, XYZ{0,0,1}),
             1.0f, 3.0f
         );
         copia.erase(it);
@@ -642,12 +682,12 @@ void cria_poligonos(int n){
         advance(it, randomIndex);
         id = *it - 1;
         auto t2 = make_unique<Torus>(
-            20, 1.5, 0,
-            make_unique<Adesivo>(20, 1.5, 0, id, XYZ{0,0,1}),
+            0, 1.5, -100,
+            make_unique<Adesivo>(0, 1.5, -100, id, XYZ{0,0,1}),
             1.0f, 3.0f
         );
         copia.erase(it);
-
+        
         t1->setConjugado(t2.get());
         t2->setConjugado(t1.get());
 
@@ -659,9 +699,8 @@ void cria_poligonos(int n){
         advance(it, randomIndex);
         id = *it - 1;
         poligonos.push_back(make_unique<Cubo>(
-            0.0f, -90.0f, -20.0f,
-            2.0f, 2.0f, 2.0f,
-            make_unique<Adesivo>(0.0f, -90.0f, -20.0f, id, XYZ{0,0,1}),
+            0.0f, -98.5f, -20.0f,
+            make_unique<Adesivo>(0.0f, -98.5f, -20.0f, id, XYZ{0,0,1}),
             2.0f
         ));
         copia.erase(it);
@@ -670,11 +709,32 @@ void cria_poligonos(int n){
         it = copia.begin();
         advance(it, randomIndex);
         id = *it - 1;
-        poligonos.push_back(make_unique<Cubo>(
-            5.0f, -90.0f, -20.0f,
-            2.0f, 2.0f, 2.0f,
-            make_unique<Adesivo>(5.0f, -90.0f, -20.0f, id, XYZ{0,0,1}),
-            2.0f
+        poligonos.push_back(make_unique<Piramide>(
+            10.0f, -98.5f, -20.0f,
+            make_unique<Adesivo>(10.0f, -98.5f, -20.0f, id, XYZ{0,0,1}),
+            4.0f, 4.0f
+        ));
+        copia.erase(it);
+
+        randomIndex = rand() % copia.size();
+        it = copia.begin();
+        advance(it, randomIndex);
+        id = *it - 1;
+        poligonos.push_back(make_unique<Esfera>(
+            20.0f, -98.5f, -20.0f,
+            make_unique<Adesivo>(20.0f, -98.5f, -20.0f, id, XYZ{0,0,1}),
+            2.0f, -101.0f
+        ));
+        copia.erase(it);
+
+        randomIndex = rand() % copia.size();
+        it = copia.begin();
+        advance(it, randomIndex);
+        id = *it - 1;
+        poligonos.push_back(make_unique<Cilindro>(
+            30.0f, -98.5f, -30.0f,
+            make_unique<Adesivo>(30.0f, -98.5f, -30.0f, id, XYZ{0,0,1}),
+            2.0f, 4.0f
         ));
         copia.erase(it);
 
@@ -683,66 +743,55 @@ void cria_poligonos(int n){
         advance(it, randomIndex);
         id = *it - 1;
         poligonos.push_back(make_unique<Cubo>(
-            10.0f, -90.0f, -20.0f,
-            2.0f, 2.0f, 2.0f,
-            make_unique<Adesivo>(10.0f, -90.0f, -20.0f, id, XYZ{0,0,1}),
+            -20, -98.5, 50,
+            make_unique<Adesivo>(-20, -98.5, 50, id, XYZ{0,0,1}),
             2.0f
         ));
         copia.erase(it);
 
-        // ==================================================
-        // ADICIONAR MAIS 10 POLÍGONOS (SEM TORUS)
-        // ==================================================
+        randomIndex = rand() % copia.size();
+        it = copia.begin();
+        advance(it, randomIndex);
+        id = *it - 1;
+        poligonos.push_back(make_unique<Piramide>(
+            20, -98.5, 50,
+            make_unique<Adesivo>(20, -98.5, 50, id, XYZ{0,0,1}),
+            4.0f, 4.0f
+        ));
+        copia.erase(it);
 
-        for (int i = 0; i < 10; i++) {
+        randomIndex = rand() % copia.size();
+        it = copia.begin();
+        advance(it, randomIndex);
+        id = *it - 1;
+        poligonos.push_back(make_unique<Esfera>(
+            20.0f, -98.5f, 60.0f,
+            make_unique<Adesivo>(20.0f, -98.5f, 60.0f, id, XYZ{0,0,1}),
+            2.0f, -101.0f
+        ));
+        copia.erase(it);
 
-            randomIndex = rand() % copia.size();
-            it = copia.begin();
-            advance(it, randomIndex);
-            id = *it - 1;
+        randomIndex = rand() % copia.size();
+        it = copia.begin();
+        advance(it, randomIndex);
+        id = *it - 1;
+        poligonos.push_back(make_unique<Cilindro>(
+            -30.0f, -98.5f, 30.0f,
+            make_unique<Adesivo>(-30.0f, -98.5f, 30.0f, id, XYZ{0,0,1}),
+            2.0f, 4.0f
+        ));
+        copia.erase(it);
 
-            float x = -30 + (i * 6);   // linha organizada
-            float y = -40.0f;
-            float z = -25.0f;
-
-            switch (i % 4) {
-                case 0:
-                    poligonos.push_back(make_unique<Piramide>(
-                        x, y, z,
-                        2.0f, 2.0f, 2.0f,
-                        make_unique<Adesivo>(x, y, z, id, XYZ{0,0,1}),
-                        4.0f, 4.0f
-                    ));
-                    break;
-
-                case 1:
-                    poligonos.push_back(make_unique<Esfera>(
-                        x, y, z,
-                        make_unique<Adesivo>(x, y, z, id, XYZ{0,0,1}),
-                        2.0f
-                    ));
-                    break;
-
-                case 2:
-                    poligonos.push_back(make_unique<Cone>(
-                        x, y, z,
-                        make_unique<Adesivo>(x, y, z, id, XYZ{0,0,1}),
-                        2.0f, 4.0f
-                    ));
-                    break;
-
-                case 3:
-                    poligonos.push_back(make_unique<Cilindro>(
-                        x, y, z,
-                        make_unique<Adesivo>(x, y, z, id, XYZ{0,0,1}),
-                        2.0f, 4.0f
-                    ));
-                    break;
-            }
-
-            copia.erase(it);
-
-        }
+        randomIndex = rand() % copia.size();
+        it = copia.begin();
+        advance(it, randomIndex);
+        id = *it - 1;
+        poligonos.push_back(make_unique<Cone>(
+            -40.0f, -98.5f, 20.0f,
+            make_unique<Adesivo>(-40.0f, -98.5f, 20.0f, id, XYZ{0,0,1}),
+            2.0f, 4.0f
+        ));
+        copia.erase(it);
     }
 
     cores_poligonos.resize(n);

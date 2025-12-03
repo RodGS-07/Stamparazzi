@@ -290,17 +290,17 @@ void Piramide::desenha_mascara(){
 }
 
 Esfera::Esfera() : Poligono(F::ESFERA) {}
-Esfera::Esfera(float ix, float iy, float iz, unique_ptr<Adesivo> a, float r)
-: Poligono(ix,iy,iz,F::ESFERA,move(a)), raio(r) {
+Esfera::Esfera(float ix, float iy, float iz, unique_ptr<Adesivo> a, float r, float c)
+: Poligono(ix,iy,iz,F::ESFERA,move(a)), raio(r), chao(c) {
     y_vel = 10.0f;
     grav = -9.8f;     // "gravidade"
-    chao = -1.0f;         // altura do chão (pode ser o y=-1 do seu cenário)
+    //chao = -1.0f;         // altura do chão (pode ser o y=-1 do seu cenário)
 }
-Esfera::Esfera(float ix, float iy, float iz, float xs, float ys, float zs, unique_ptr<Adesivo> a, float r)
-: Poligono(ix,iy,iz,xs,ys,zs,F::ESFERA,move(a)), raio(r) {
+Esfera::Esfera(float ix, float iy, float iz, float xs, float ys, float zs, unique_ptr<Adesivo> a, float r, float c)
+: Poligono(ix,iy,iz,xs,ys,zs,F::ESFERA,move(a)), raio(r), chao(c) {
     y_vel = 10.0f;
     grav = -9.8f;     // "gravidade"
-    chao = -1.0f;         // altura do chão (pode ser o y=-1 do seu cenário)
+    //chao = -1.0f;         // altura do chão (pode ser o y=-1 do seu cenário)
 }
 
 AABB Esfera::getAABB() const {

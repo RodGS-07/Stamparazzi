@@ -133,7 +133,7 @@ void CarregaTexturas(){
     //     stbi_image_free(data);
     // }
     // glBindTexture(GL_TEXTURE_2D, 0);
-    stbi_set_flip_vertically_on_load(true);
+    //stbi_set_flip_vertically_on_load(true);
     int width, height, nrChannels;
     unsigned char *data;
 

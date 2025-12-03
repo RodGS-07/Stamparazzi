@@ -86,8 +86,8 @@ class Esfera : public Poligono{
 
     public:
         Esfera();
-        Esfera(float ix, float iy, float iz, unique_ptr<Adesivo> a, float r);
-        Esfera(float ix, float iy, float iz, float xs, float ys, float zs, unique_ptr<Adesivo> a, float r);
+        Esfera(float ix, float iy, float iz, unique_ptr<Adesivo> a, float r, float c);
+        Esfera(float ix, float iy, float iz, float xs, float ys, float zs, unique_ptr<Adesivo> a, float r, float c);
 
         AABB getAABB() const override;
         float getRaio() const;
