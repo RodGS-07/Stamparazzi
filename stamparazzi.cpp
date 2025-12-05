@@ -671,8 +671,8 @@ void cria_poligonos(int n){
         advance(it, randomIndex);
         id = *it - 1;
         auto t1 = make_unique<Torus>(
-            0, -98.5, 100,
-            make_unique<Adesivo>(0, -98.5, 100, id, XYZ{0,0,1}),
+            0, -98.5, 95,
+            make_unique<Adesivo>(0, -98.5, 95, id, XYZ{0,0,1}),
             1.0f, 3.0f
         );
         copia.erase(it);
@@ -682,8 +682,8 @@ void cria_poligonos(int n){
         advance(it, randomIndex);
         id = *it - 1;
         auto t2 = make_unique<Torus>(
-            0, 1.5, -100,
-            make_unique<Adesivo>(0, 1.5, -100, id, XYZ{0,0,1}),
+            0, 1.5, -95,
+            make_unique<Adesivo>(0, 1.5, -95, id, XYZ{0,0,1}),
             1.0f, 3.0f
         );
         copia.erase(it);

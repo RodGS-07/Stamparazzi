@@ -20,6 +20,65 @@ int get_cor_atual() {return cor_atual;}
 
 Cor get_cor_struct(int c) {return {cores[c][0],cores[c][1],cores[c][2]};}
 
+void desenha_simbolo_coloradd(int id_cor, float size)
+{
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, texID[id_cor]); // ID do símbolo coloradd
+
+    glDisable(GL_LIGHTING); // para não escurecer o símbolo
+
+    glBegin(GL_QUADS);
+
+        // textura sem ficar de cabeça para baixo
+        glTexCoord2f(0, 1); glVertex3f(-size, -size, 0);
+        glTexCoord2f(1, 1); glVertex3f( size, -size, 0);
+        glTexCoord2f(1, 0); glVertex3f( size,  size, 0);
+        glTexCoord2f(0, 0); glVertex3f(-size,  size, 0);
+
+    glEnd();
+
+    glEnable(GL_LIGHTING);
+    glDisable(GL_TEXTURE_2D);
+}
+
+/*void desenha_simbolo_coloradd(float x, float y, float z, int id_cor) {
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, texID[id_cor]);
+
+    glPushMatrix();
+
+        // Move até o ponto onde o X será desenhado
+        glTranslatef(0.0f, 2.5f, z);
+
+        // Pega a matriz atual (modelo-vista)
+        GLfloat modelview[16];
+        glGetFloatv(GL_MODELVIEW_MATRIX, modelview);
+
+        // Zera a rotação da matriz (mantém apenas a posição)
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                modelview[i*4 + j] = (i == j ? 1.0f : 0.0f);
+            }
+        }
+
+        // Recarrega matriz "sem rotação" → billboard perfeito
+        glLoadMatrixf(modelview);
+
+        glBegin(GL_QUADS);
+            glTexCoord2f(0, 0); glVertex3f(-1.0f, -1.0f, 0.0f);
+            glTexCoord2f(1, 0); glVertex3f(1.0f, -1.0f, 0.0f);
+            glTexCoord2f(1, 1); glVertex3f(1.0f, 1.0f, 0.0f);
+            glTexCoord2f(0, 1); glVertex3f(-1.0f, 1.0f, 0.0f);
+        glEnd();
+
+    glPopMatrix();
+
+    glDisable(GL_TEXTURE_2D);
+    glDisable(GL_POLYGON_OFFSET_FILL);
+}*/
+
 void desenha_cubo(float lado, int id_adesivo, bool modo_daltonico) {
     XYZ normal;
     int id_cor = get_cor_atual() + 23;
@@ -93,66 +152,75 @@ void desenha_cubo(float lado, int id_adesivo, bool modo_daltonico) {
     offset = lado + 0.002f;        // ligeiramente à frente da superfície
 
     if(modo_daltonico) {
-        // --- Frente ---
-        glBegin(GL_QUADS);
-            glTexCoord2f(0, 0); glVertex3f(-simboloTamanho, -simboloTamanho, offset);
-            glTexCoord2f(1, 0); glVertex3f( simboloTamanho, -simboloTamanho, offset);
-            glTexCoord2f(1, 1); glVertex3f( simboloTamanho,  simboloTamanho, offset);
-            glTexCoord2f(0, 1); glVertex3f(-simboloTamanho,  simboloTamanho, offset);
-        glEnd();
-
-        // --- Trás (rotacionada 180° para alinhar) ---
         glPushMatrix();
-            glRotatef(90, 0, 0, 1);
-            glBegin(GL_QUADS);
-                glTexCoord2f(1, 1); glVertex3f(-simboloTamanho, -simboloTamanho, -offset);
-                glTexCoord2f(0, 1); glVertex3f( simboloTamanho, -simboloTamanho, -offset);
-                glTexCoord2f(0, 0); glVertex3f( simboloTamanho,  simboloTamanho, -offset);
-                glTexCoord2f(1, 0); glVertex3f(-simboloTamanho,  simboloTamanho, -offset);
-            glEnd();
+        glTranslatef(0, lado/2 + 2.0f, 0); // cima do polígono
+        if(id_cor != 34) glRotatef(-90, 0, 0, 1);
+        desenha_simbolo_coloradd(id_cor);
         glPopMatrix();
-
-        // --- Esquerda (rotacionada 90° CW) ---
-        glPushMatrix();
-            glRotatef(90, 1, 0, 0);
-            glBegin(GL_QUADS);
-                glTexCoord2f(0, 1); glVertex3f(-offset, -simboloTamanho, -simboloTamanho);
-                glTexCoord2f(1, 1); glVertex3f(-offset, -simboloTamanho,  simboloTamanho);
-                glTexCoord2f(1, 0); glVertex3f(-offset,  simboloTamanho,  simboloTamanho);
-                glTexCoord2f(0, 0); glVertex3f(-offset,  simboloTamanho, -simboloTamanho);
-            glEnd();
-        glPopMatrix();
-
-        // --- Direita (rotacionada 90° CCW) ---
-        glBegin(GL_QUADS);
-            glTexCoord2f(1, 0); glVertex3f(offset, -simboloTamanho, -simboloTamanho);
-            glTexCoord2f(0, 0); glVertex3f(offset, -simboloTamanho,  simboloTamanho);
-            glTexCoord2f(0, 1); glVertex3f(offset,  simboloTamanho,  simboloTamanho);
-            glTexCoord2f(1, 1); glVertex3f(offset,  simboloTamanho, -simboloTamanho);
-        glEnd();
-
-        // --- Topo (rotacionada 90° CW) ---
-        glBegin(GL_QUADS);
-            glTexCoord2f(0, 1); glVertex3f(-simboloTamanho, offset, -simboloTamanho);
-            glTexCoord2f(1, 1); glVertex3f( simboloTamanho, offset, -simboloTamanho);
-            glTexCoord2f(1, 0); glVertex3f( simboloTamanho, offset,  simboloTamanho);
-            glTexCoord2f(0, 0); glVertex3f(-simboloTamanho, offset,  simboloTamanho);
-        glEnd();
-
-        // --- Base (rotacionada 90° CCW) ---
-        glPushMatrix();
-            glRotatef(-90, 0, 1, 0);
-            glBegin(GL_QUADS);
-                glTexCoord2f(1, 0); glVertex3f(-simboloTamanho, -offset, -simboloTamanho);
-                glTexCoord2f(0, 0); glVertex3f( simboloTamanho, -offset, -simboloTamanho);
-                glTexCoord2f(0, 1); glVertex3f( simboloTamanho, -offset,  simboloTamanho);
-                glTexCoord2f(1, 1); glVertex3f(-simboloTamanho, -offset,  simboloTamanho);
-            glEnd();
-        glPopMatrix();
-
-        glDisable(GL_TEXTURE_2D);
-        glDisable(GL_POLYGON_OFFSET_FILL);
+        //desenha_simbolo_coloradd(id_cor);
     }
+    //if(modo_daltonico) {
+
+        // // --- Frente ---
+        // glBegin(GL_QUADS);
+        //     glTexCoord2f(0, 0); glVertex3f(-simboloTamanho, -simboloTamanho, offset);
+        //     glTexCoord2f(1, 0); glVertex3f( simboloTamanho, -simboloTamanho, offset);
+        //     glTexCoord2f(1, 1); glVertex3f( simboloTamanho,  simboloTamanho, offset);
+        //     glTexCoord2f(0, 1); glVertex3f(-simboloTamanho,  simboloTamanho, offset);
+        // glEnd();
+
+        // // --- Trás (rotacionada 180° para alinhar) ---
+        // glPushMatrix();
+        //     glRotatef(90, 0, 0, 1);
+        //     glBegin(GL_QUADS);
+        //         glTexCoord2f(1, 1); glVertex3f(-simboloTamanho, -simboloTamanho, -offset);
+        //         glTexCoord2f(0, 1); glVertex3f( simboloTamanho, -simboloTamanho, -offset);
+        //         glTexCoord2f(0, 0); glVertex3f( simboloTamanho,  simboloTamanho, -offset);
+        //         glTexCoord2f(1, 0); glVertex3f(-simboloTamanho,  simboloTamanho, -offset);
+        //     glEnd();
+        // glPopMatrix();
+
+        // // --- Esquerda (rotacionada 90° CW) ---
+        // glPushMatrix();
+        //     glRotatef(90, 1, 0, 0);
+        //     glBegin(GL_QUADS);
+        //         glTexCoord2f(0, 1); glVertex3f(-offset, -simboloTamanho, -simboloTamanho);
+        //         glTexCoord2f(1, 1); glVertex3f(-offset, -simboloTamanho,  simboloTamanho);
+        //         glTexCoord2f(1, 0); glVertex3f(-offset,  simboloTamanho,  simboloTamanho);
+        //         glTexCoord2f(0, 0); glVertex3f(-offset,  simboloTamanho, -simboloTamanho);
+        //     glEnd();
+        // glPopMatrix();
+
+        // // --- Direita (rotacionada 90° CCW) ---
+        // glBegin(GL_QUADS);
+        //     glTexCoord2f(1, 0); glVertex3f(offset, -simboloTamanho, -simboloTamanho);
+        //     glTexCoord2f(0, 0); glVertex3f(offset, -simboloTamanho,  simboloTamanho);
+        //     glTexCoord2f(0, 1); glVertex3f(offset,  simboloTamanho,  simboloTamanho);
+        //     glTexCoord2f(1, 1); glVertex3f(offset,  simboloTamanho, -simboloTamanho);
+        // glEnd();
+
+        // // --- Topo (rotacionada 90° CW) ---
+        // glBegin(GL_QUADS);
+        //     glTexCoord2f(0, 1); glVertex3f(-simboloTamanho, offset, -simboloTamanho);
+        //     glTexCoord2f(1, 1); glVertex3f( simboloTamanho, offset, -simboloTamanho);
+        //     glTexCoord2f(1, 0); glVertex3f( simboloTamanho, offset,  simboloTamanho);
+        //     glTexCoord2f(0, 0); glVertex3f(-simboloTamanho, offset,  simboloTamanho);
+        // glEnd();
+
+        // // --- Base (rotacionada 90° CCW) ---
+        // glPushMatrix();
+        //     glRotatef(-90, 0, 1, 0);
+        //     glBegin(GL_QUADS);
+        //         glTexCoord2f(1, 0); glVertex3f(-simboloTamanho, -offset, -simboloTamanho);
+        //         glTexCoord2f(0, 0); glVertex3f( simboloTamanho, -offset, -simboloTamanho);
+        //         glTexCoord2f(0, 1); glVertex3f( simboloTamanho, -offset,  simboloTamanho);
+        //         glTexCoord2f(1, 1); glVertex3f(-simboloTamanho, -offset,  simboloTamanho);
+        //     glEnd();
+        // glPopMatrix();
+
+        // glDisable(GL_TEXTURE_2D);
+        // glDisable(GL_POLYGON_OFFSET_FILL);
+    //}
 
     // Divisão entre textura do ColorADD e do adesivo
 
@@ -228,125 +296,134 @@ void desenha_piramide(float base, float altura, int id_adesivo, bool modo_dalton
     glEnd();
 
     if(modo_daltonico) {
-        // ---------------------------------------------------------
-        // Símbolo ColorADD - DESENHADO PRIMEIRO (atrás)
-        // ---------------------------------------------------------
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glEnable(GL_TEXTURE_2D);
-        glBindTexture(GL_TEXTURE_2D, texID[id_cor]);
-        glColor4f(1, 1, 1, 1);
-
-        glEnable(GL_POLYGON_OFFSET_FILL);
-        glPolygonOffset(-1.0f, -1.0f);
-
-        float offset_symbol = 0.001f; // levemente acima da superfície
-        float qsize = b * 0.6f;       // tamanho do quadrado do símbolo
-
-        // --- Frente ---
-        glBegin(GL_QUADS);
-            glTexCoord2f(0, 0); glVertex3f(-(b/2) * 0.6f, (-b + offset_symbol) * 0.25f,  b * 0.65f);
-            glTexCoord2f(1, 0); glVertex3f( (b/2) * 0.6f, (-b + offset_symbol) * 0.25f,  b * 0.65f);
-            glTexCoord2f(1, 1); glVertex3f( (b/2) * 0.4f,  (h * 0.4f) * 0.20f,  b * 0.42f);
-            glTexCoord2f(0, 1); glVertex3f(-(b/2) * 0.4f,  (h * 0.4f) * 0.20f,  b * 0.42f);
-        glEnd();
-
-        // --- Trás ---
-        // centro aproximado da área onde o símbolo deve ficar
-        float centerX = 0.0f;
-        float centerY = ((-b + offset_symbol) * 0.25f + (h * 0.4f) * 0.20f) * 0.5f;
-        float centerZ = -b * 0.535f;
-
-        float sW = (b/2) * 0.4f; // meio-largura do quad (x local positivo)
-        float sH = (h * 0.4f) * 0.20f - ((-b + offset_symbol) * 0.25f); // altura local aproximada
-        if (sH <= 0.0f) sH = qsize * 0.5f; // fallback
-
         glPushMatrix();
-            // move para o centro da face traseira
-            glTranslatef(centerX, centerY, centerZ + 0.01f);
-
-            // gira para que o quad olhe para -Z (face traseira)
-            glRotatef(180.0f, 0.0f, 1.0f, 0.0f);
-
-            // ajuste para manter o símbolo "em pé" - altere se necessário
-            glRotatef(0.0f, 0.0f, 0.0f, 1.0f); // geralmente 0 funciona; use 180 para inverter, 90/-90 se estiver rotacionado
-
-            glRotatef(-25.0f, 1.0f, 0.0f, 0.0f);
-
-            // desenha o quad no plano local (z = 0)
-            float sx = (b/2) * 0.6f * 0.5f; // metade da largura local do símbolo
-            float sy = ( (h * 0.4f) * 0.20f - ((-b + offset_symbol) * 0.25f) ) * 0.5f;
-            if (sy <= 0.0f) sy = qsize * 0.5f;
-
-            glBegin(GL_QUADS);
-                glTexCoord2f(0.0f, 0.0f); glVertex3f(-sx, -sy, 0.0f);
-                glTexCoord2f(1.0f, 0.0f); glVertex3f( sx, -sy, 0.0f);
-                glTexCoord2f(1.0f, 1.0f); glVertex3f( sx,  sy, 0.0f);
-                glTexCoord2f(0.0f, 1.0f); glVertex3f(-sx,  sy, 0.0f);
-            glEnd();
+        glTranslatef(0, altura/2 + 0.5f, 0); // cima do polígono
+        if(id_cor != 34) glRotatef(-90, 0, 0, 1);
+        desenha_simbolo_coloradd(id_cor);
         glPopMatrix();
-        // glBegin(GL_QUADS);
-        //     glTexCoord2f(0, 0); glVertex3f(-(b/2) * 0.6f, (-b + offset_symbol) * 0.25f, -b * 0.65f);
-        //     glTexCoord2f(1, 0); glVertex3f( (b/2) * 0.6f, (-b + offset_symbol) * 0.25f, -b * 0.65f);
-        //     glTexCoord2f(1, 1); glVertex3f( (b/2) * 0.4f,  (h * 0.4f) * 0.20f, -b * 0.42f);
-        //     glTexCoord2f(0, 1); glVertex3f(-(b/2) * 0.4f,  (h * 0.4f) * 0.20f, -b * 0.42f);
-        // glEnd();
-
-        // --- Direita ---
-        glBegin(GL_QUADS);
-            glTexCoord2f(0, 0); glVertex3f( b * 0.65f, (-b + offset_symbol) * 0.25f,  (b/2) * 0.6f);
-            glTexCoord2f(1, 0); glVertex3f( b * 0.65f, (-b + offset_symbol) * 0.25f, -(b/2) * 0.6f);
-            glTexCoord2f(1, 1); glVertex3f( b * 0.42f,  (h * 0.4f) * 0.20f, -(b/2) * 0.4f);
-            glTexCoord2f(0, 1); glVertex3f( b * 0.42f,  (h * 0.4f) * 0.20f,  (b/2) * 0.4f);
-        glEnd();
-
-        // --- Esquerda ---
-        // Posição central aproximada do símbolo
-        static float acum_x = 0.0f;
-
-        centerX = -b * 0.535f;
-        centerY = ((-b + offset_symbol) * 0.25f + (h * 0.4f) * 0.20f) * 0.5f;
-        centerZ = 0.0f;
-
-        // Dimensões locais do símbolo
-        sx = (b/2) * 0.6f * 0.5f;
-        sy = ((h * 0.4f) * 0.20f - ((-b + offset_symbol) * 0.25f)) * 0.5f;
-        if (sy <= 0.0f) sy = qsize * 0.5f;
-
-        glPushMatrix();
-            // move até o centro da face esquerda
-            glTranslatef(centerX - 0.01f, centerY, centerZ);
-
-            glRotatef(-25.0f, 0.0f, 0.0f, 1.0f);
-            
-            glRotatef(-90.0f, 0.0f, 1.0f, 0.0f);
-
-            // desenha o símbolo plano
-            glBegin(GL_QUADS);
-                glTexCoord2f(0.0f, 0.0f); glVertex3f(-sx, -sy, 0.0f);
-                glTexCoord2f(1.0f, 0.0f); glVertex3f( sx, -sy, 0.0f);
-                glTexCoord2f(1.0f, 1.0f); glVertex3f( sx,  sy, 0.0f);
-                glTexCoord2f(0.0f, 1.0f); glVertex3f(-sx,  sy, 0.0f);
-            glEnd();
-        glPopMatrix();
-        // glBegin(GL_QUADS);
-        //     glTexCoord2f(0, 0); glVertex3f(-b * 0.65f, (-b + offset_symbol) * 0.25f,  (b/2) * 0.6f);
-        //     glTexCoord2f(1, 0); glVertex3f(-b * 0.65f, (-b + offset_symbol) * 0.25f, -(b/2) * 0.6f);
-        //     glTexCoord2f(1, 1); glVertex3f(-b * 0.42f,  (h * 0.4f) * 0.20f, -(b/2) * 0.4f);
-        //     glTexCoord2f(0, 1); glVertex3f(-b * 0.42f,  (h * 0.4f) * 0.20f,  (b/2) * 0.4f);
-        // glEnd();
-
-        // --- Base ---
-        glBegin(GL_QUADS);
-            glTexCoord2f(0, 0); glVertex3f(-b*0.5f, -b - offset_symbol, -b*0.5f);
-            glTexCoord2f(1, 0); glVertex3f( b*0.5f, -b - offset_symbol, -b*0.5f);
-            glTexCoord2f(1, 1); glVertex3f( b*0.5f, -b - offset_symbol,  b*0.5f);
-            glTexCoord2f(0, 1); glVertex3f(-b*0.5f, -b - offset_symbol,  b*0.5f);
-        glEnd();
-
-        glDisable(GL_TEXTURE_2D);
-        glDisable(GL_POLYGON_OFFSET_FILL);
+        //desenha_simbolo_coloradd(id_cor);
     }
+
+    // if(modo_daltonico) {
+    //     // ---------------------------------------------------------
+    //     // Símbolo ColorADD - DESENHADO PRIMEIRO (atrás)
+    //     // ---------------------------------------------------------
+    //     glEnable(GL_BLEND);
+    //     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    //     glEnable(GL_TEXTURE_2D);
+    //     glBindTexture(GL_TEXTURE_2D, texID[id_cor]);
+    //     glColor4f(1, 1, 1, 1);
+
+    //     glEnable(GL_POLYGON_OFFSET_FILL);
+    //     glPolygonOffset(-1.0f, -1.0f);
+
+    //     float offset_symbol = 0.001f; // levemente acima da superfície
+    //     float qsize = b * 0.6f;       // tamanho do quadrado do símbolo
+
+    //     // --- Frente ---
+    //     glBegin(GL_QUADS);
+    //         glTexCoord2f(0, 0); glVertex3f(-(b/2) * 0.6f, (-b + offset_symbol) * 0.25f,  b * 0.65f);
+    //         glTexCoord2f(1, 0); glVertex3f( (b/2) * 0.6f, (-b + offset_symbol) * 0.25f,  b * 0.65f);
+    //         glTexCoord2f(1, 1); glVertex3f( (b/2) * 0.4f,  (h * 0.4f) * 0.20f,  b * 0.42f);
+    //         glTexCoord2f(0, 1); glVertex3f(-(b/2) * 0.4f,  (h * 0.4f) * 0.20f,  b * 0.42f);
+    //     glEnd();
+
+    //     // --- Trás ---
+    //     // centro aproximado da área onde o símbolo deve ficar
+    //     float centerX = 0.0f;
+    //     float centerY = ((-b + offset_symbol) * 0.25f + (h * 0.4f) * 0.20f) * 0.5f;
+    //     float centerZ = -b * 0.535f;
+
+    //     float sW = (b/2) * 0.4f; // meio-largura do quad (x local positivo)
+    //     float sH = (h * 0.4f) * 0.20f - ((-b + offset_symbol) * 0.25f); // altura local aproximada
+    //     if (sH <= 0.0f) sH = qsize * 0.5f; // fallback
+
+    //     glPushMatrix();
+    //         // move para o centro da face traseira
+    //         glTranslatef(centerX, centerY, centerZ + 0.01f);
+
+    //         // gira para que o quad olhe para -Z (face traseira)
+    //         glRotatef(180.0f, 0.0f, 1.0f, 0.0f);
+
+    //         // ajuste para manter o símbolo "em pé" - altere se necessário
+    //         glRotatef(0.0f, 0.0f, 0.0f, 1.0f); // geralmente 0 funciona; use 180 para inverter, 90/-90 se estiver rotacionado
+
+    //         glRotatef(-25.0f, 1.0f, 0.0f, 0.0f);
+
+    //         // desenha o quad no plano local (z = 0)
+    //         float sx = (b/2) * 0.6f * 0.5f; // metade da largura local do símbolo
+    //         float sy = ( (h * 0.4f) * 0.20f - ((-b + offset_symbol) * 0.25f) ) * 0.5f;
+    //         if (sy <= 0.0f) sy = qsize * 0.5f;
+
+    //         glBegin(GL_QUADS);
+    //             glTexCoord2f(0.0f, 0.0f); glVertex3f(-sx, -sy, 0.0f);
+    //             glTexCoord2f(1.0f, 0.0f); glVertex3f( sx, -sy, 0.0f);
+    //             glTexCoord2f(1.0f, 1.0f); glVertex3f( sx,  sy, 0.0f);
+    //             glTexCoord2f(0.0f, 1.0f); glVertex3f(-sx,  sy, 0.0f);
+    //         glEnd();
+    //     glPopMatrix();
+    //     // glBegin(GL_QUADS);
+    //     //     glTexCoord2f(0, 0); glVertex3f(-(b/2) * 0.6f, (-b + offset_symbol) * 0.25f, -b * 0.65f);
+    //     //     glTexCoord2f(1, 0); glVertex3f( (b/2) * 0.6f, (-b + offset_symbol) * 0.25f, -b * 0.65f);
+    //     //     glTexCoord2f(1, 1); glVertex3f( (b/2) * 0.4f,  (h * 0.4f) * 0.20f, -b * 0.42f);
+    //     //     glTexCoord2f(0, 1); glVertex3f(-(b/2) * 0.4f,  (h * 0.4f) * 0.20f, -b * 0.42f);
+    //     // glEnd();
+
+    //     // --- Direita ---
+    //     glBegin(GL_QUADS);
+    //         glTexCoord2f(0, 0); glVertex3f( b * 0.65f, (-b + offset_symbol) * 0.25f,  (b/2) * 0.6f);
+    //         glTexCoord2f(1, 0); glVertex3f( b * 0.65f, (-b + offset_symbol) * 0.25f, -(b/2) * 0.6f);
+    //         glTexCoord2f(1, 1); glVertex3f( b * 0.42f,  (h * 0.4f) * 0.20f, -(b/2) * 0.4f);
+    //         glTexCoord2f(0, 1); glVertex3f( b * 0.42f,  (h * 0.4f) * 0.20f,  (b/2) * 0.4f);
+    //     glEnd();
+
+    //     // --- Esquerda ---
+    //     // Posição central aproximada do símbolo
+    //     static float acum_x = 0.0f;
+
+    //     centerX = -b * 0.535f;
+    //     centerY = ((-b + offset_symbol) * 0.25f + (h * 0.4f) * 0.20f) * 0.5f;
+    //     centerZ = 0.0f;
+
+    //     // Dimensões locais do símbolo
+    //     sx = (b/2) * 0.6f * 0.5f;
+    //     sy = ((h * 0.4f) * 0.20f - ((-b + offset_symbol) * 0.25f)) * 0.5f;
+    //     if (sy <= 0.0f) sy = qsize * 0.5f;
+
+    //     glPushMatrix();
+    //         // move até o centro da face esquerda
+    //         glTranslatef(centerX - 0.01f, centerY, centerZ);
+
+    //         glRotatef(-25.0f, 0.0f, 0.0f, 1.0f);
+            
+    //         glRotatef(-90.0f, 0.0f, 1.0f, 0.0f);
+
+    //         // desenha o símbolo plano
+    //         glBegin(GL_QUADS);
+    //             glTexCoord2f(0.0f, 0.0f); glVertex3f(-sx, -sy, 0.0f);
+    //             glTexCoord2f(1.0f, 0.0f); glVertex3f( sx, -sy, 0.0f);
+    //             glTexCoord2f(1.0f, 1.0f); glVertex3f( sx,  sy, 0.0f);
+    //             glTexCoord2f(0.0f, 1.0f); glVertex3f(-sx,  sy, 0.0f);
+    //         glEnd();
+    //     glPopMatrix();
+    //     // glBegin(GL_QUADS);
+    //     //     glTexCoord2f(0, 0); glVertex3f(-b * 0.65f, (-b + offset_symbol) * 0.25f,  (b/2) * 0.6f);
+    //     //     glTexCoord2f(1, 0); glVertex3f(-b * 0.65f, (-b + offset_symbol) * 0.25f, -(b/2) * 0.6f);
+    //     //     glTexCoord2f(1, 1); glVertex3f(-b * 0.42f,  (h * 0.4f) * 0.20f, -(b/2) * 0.4f);
+    //     //     glTexCoord2f(0, 1); glVertex3f(-b * 0.42f,  (h * 0.4f) * 0.20f,  (b/2) * 0.4f);
+    //     // glEnd();
+
+    //     // --- Base ---
+    //     glBegin(GL_QUADS);
+    //         glTexCoord2f(0, 0); glVertex3f(-b*0.5f, -b - offset_symbol, -b*0.5f);
+    //         glTexCoord2f(1, 0); glVertex3f( b*0.5f, -b - offset_symbol, -b*0.5f);
+    //         glTexCoord2f(1, 1); glVertex3f( b*0.5f, -b - offset_symbol,  b*0.5f);
+    //         glTexCoord2f(0, 1); glVertex3f(-b*0.5f, -b - offset_symbol,  b*0.5f);
+    //     glEnd();
+
+    //     glDisable(GL_TEXTURE_2D);
+    //     glDisable(GL_POLYGON_OFFSET_FILL);
+    // }
 
     // ---------------------------------------------------------
     // Adesivo - DESENHADO DEPOIS (na frente)
@@ -412,133 +489,142 @@ void desenha_esfera(float raio, int fatias, int stacks, int id_adesivo, bool mod
     }
 
     if(modo_daltonico) {
-        // --- Símbolo ColorADD nas laterais ---
-        glEnable(GL_POLYGON_OFFSET_FILL);
-        glPolygonOffset(-1.0f, -1.0f);
-
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glEnable(GL_TEXTURE_2D);
-        glBindTexture(GL_TEXTURE_2D, texID[id_cor]);
-        glColor4f(1, 1, 1, 1);
-
-        float simboloRaio = raio * 1.0005f;
-        float simboloAltura = M_PI / 6;   // ~30° de altura (zona equatorial)
-        float simboloLargura = M_PI / 2;  // 90° em torno do equador
-        int subdiv = 40;
-
-        // --- Frente ---
-        for (int i = 0; i < subdiv; ++i) {
-            float phi1 = -simboloAltura / 2 + i * (simboloAltura / subdiv);
-            float phi2 = -simboloAltura / 2 + (i + 1) * (simboloAltura / subdiv);
-
-            glBegin(GL_QUAD_STRIP);
-            for (int j = 0; j <= subdiv; ++j) {
-                float theta = -simboloLargura / 2 + j * (simboloLargura / subdiv);
-
-                // Faixa no equador (em torno de Y = 0)
-                float x1 = simboloRaio * cos(phi2) * sin(theta);
-                float y1 = simboloRaio * sin(phi2);
-                float z1 = simboloRaio * cos(phi2) * cos(theta);
-
-                float x2 = simboloRaio * cos(phi1) * sin(theta);
-                float y2 = simboloRaio * sin(phi1);
-                float z2 = simboloRaio * cos(phi1) * cos(theta);
-
-                float u = (theta + simboloLargura / 2) / simboloLargura;
-                float v1 = (phi2 + simboloAltura / 2) / simboloAltura;
-                float v2 = (phi1 + simboloAltura / 2) / simboloAltura;
-
-                glTexCoord2f(u, v1); glVertex3f(x1, y1, z1);
-                glTexCoord2f(u, v2); glVertex3f(x2, y2, z2);
-            }
-            glEnd();
-        }
-
-        // --- Lateral esquerda ---
-        for (int i = 0; i < subdiv; ++i) {
-            float phi1 = -simboloAltura / 2 + i * (simboloAltura / subdiv);
-            float phi2 = -simboloAltura / 2 + (i + 1) * (simboloAltura / subdiv);
-
-            glBegin(GL_QUAD_STRIP);
-            for (int j = 0; j <= subdiv; ++j) {
-                float theta = -M_PI / 2 - simboloLargura / 2 + j * (simboloLargura / subdiv);
-
-                float x1 = simboloRaio * cos(phi2) * sin(theta);
-                float y1 = simboloRaio * sin(phi2);
-                float z1 = simboloRaio * cos(phi2) * cos(theta);
-
-                float x2 = simboloRaio * cos(phi1) * sin(theta);
-                float y2 = simboloRaio * sin(phi1);
-                float z2 = simboloRaio * cos(phi1) * cos(theta);
-
-                float u = (theta + simboloLargura / 2) / simboloLargura;
-                float v1 = (phi2 + simboloAltura / 2) / simboloAltura;
-                float v2 = (phi1 + simboloAltura / 2) / simboloAltura;
-
-                glTexCoord2f(u, v1); glVertex3f(x1, y1, z1);
-                glTexCoord2f(u, v2); glVertex3f(x2, y2, z2);
-            }
-            glEnd();
-        }
-
-        // --- Lateral direita ---
-        for (int i = 0; i < subdiv; ++i) {
-            float phi1 = -simboloAltura / 2 + i * (simboloAltura / subdiv);
-            float phi2 = -simboloAltura / 2 + (i + 1) * (simboloAltura / subdiv);
-
-            glBegin(GL_QUAD_STRIP);
-            for (int j = 0; j <= subdiv; ++j) {
-                float theta = M_PI / 2 - simboloLargura / 2 + j * (simboloLargura / subdiv);
-
-                float x1 = simboloRaio * cos(phi2) * sin(theta);
-                float y1 = simboloRaio * sin(phi2);
-                float z1 = simboloRaio * cos(phi2) * cos(theta);
-
-                float x2 = simboloRaio * cos(phi1) * sin(theta);
-                float y2 = simboloRaio * sin(phi1);
-                float z2 = simboloRaio * cos(phi1) * cos(theta);
-
-                float u = (theta + simboloLargura / 2) / simboloLargura;
-                float v1 = (phi2 + simboloAltura / 2) / simboloAltura;
-                float v2 = (phi1 + simboloAltura / 2) / simboloAltura;
-
-                glTexCoord2f(u, v1); glVertex3f(x1, y1, z1);
-                glTexCoord2f(u, v2); glVertex3f(x2, y2, z2);
-            }
-            glEnd();
-        }
-
-        // --- Traseira ---
-        for (int i = 0; i < subdiv; ++i) {
-            float phi1 = -simboloAltura / 2 + i * (simboloAltura / subdiv);
-            float phi2 = -simboloAltura / 2 + (i + 1) * (simboloAltura / subdiv);
-
-            glBegin(GL_QUAD_STRIP);
-            for (int j = 0; j <= subdiv; ++j) {
-                float theta = M_PI - simboloLargura / 2 + j * (simboloLargura / subdiv);
-
-                float x1 = simboloRaio * cos(phi2) * sin(theta);
-                float y1 = simboloRaio * sin(phi2);
-                float z1 = simboloRaio * cos(phi2) * cos(theta);
-
-                float x2 = simboloRaio * cos(phi1) * sin(theta);
-                float y2 = simboloRaio * sin(phi1);
-                float z2 = simboloRaio * cos(phi1) * cos(theta);
-
-                float u = (theta + simboloLargura / 2) / simboloLargura;
-                float v1 = (phi2 + simboloAltura / 2) / simboloAltura;
-                float v2 = (phi1 + simboloAltura / 2) / simboloAltura;
-
-                glTexCoord2f(u, v1); glVertex3f(x1, y1, z1);
-                glTexCoord2f(u, v2); glVertex3f(x2, y2, z2);
-            }
-            glEnd();
-        }
-
-        glDisable(GL_TEXTURE_2D);
-        glDisable(GL_POLYGON_OFFSET_FILL);
+        glPushMatrix();
+        glTranslatef(0, raio + 0.5f, 0); // cima do polígono
+        if(id_cor != 34) glRotatef(-90, 0, 0, 1);
+        desenha_simbolo_coloradd(id_cor);
+        glPopMatrix();
+        //desenha_simbolo_coloradd(id_cor);
     }
+
+    // if(modo_daltonico) {
+    //     // --- Símbolo ColorADD nas laterais ---
+    //     glEnable(GL_POLYGON_OFFSET_FILL);
+    //     glPolygonOffset(-1.0f, -1.0f);
+
+    //     glEnable(GL_BLEND);
+    //     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    //     glEnable(GL_TEXTURE_2D);
+    //     glBindTexture(GL_TEXTURE_2D, texID[id_cor]);
+    //     glColor4f(1, 1, 1, 1);
+
+    //     float simboloRaio = raio * 1.0005f;
+    //     float simboloAltura = M_PI / 6;   // ~30° de altura (zona equatorial)
+    //     float simboloLargura = M_PI / 2;  // 90° em torno do equador
+    //     int subdiv = 40;
+
+    //     // --- Frente ---
+    //     for (int i = 0; i < subdiv; ++i) {
+    //         float phi1 = -simboloAltura / 2 + i * (simboloAltura / subdiv);
+    //         float phi2 = -simboloAltura / 2 + (i + 1) * (simboloAltura / subdiv);
+
+    //         glBegin(GL_QUAD_STRIP);
+    //         for (int j = 0; j <= subdiv; ++j) {
+    //             float theta = -simboloLargura / 2 + j * (simboloLargura / subdiv);
+
+    //             // Faixa no equador (em torno de Y = 0)
+    //             float x1 = simboloRaio * cos(phi2) * sin(theta);
+    //             float y1 = simboloRaio * sin(phi2);
+    //             float z1 = simboloRaio * cos(phi2) * cos(theta);
+
+    //             float x2 = simboloRaio * cos(phi1) * sin(theta);
+    //             float y2 = simboloRaio * sin(phi1);
+    //             float z2 = simboloRaio * cos(phi1) * cos(theta);
+
+    //             float u = (theta + simboloLargura / 2) / simboloLargura;
+    //             float v1 = (phi2 + simboloAltura / 2) / simboloAltura;
+    //             float v2 = (phi1 + simboloAltura / 2) / simboloAltura;
+
+    //             glTexCoord2f(u, v1); glVertex3f(x1, y1, z1);
+    //             glTexCoord2f(u, v2); glVertex3f(x2, y2, z2);
+    //         }
+    //         glEnd();
+    //     }
+
+    //     // --- Lateral esquerda ---
+    //     for (int i = 0; i < subdiv; ++i) {
+    //         float phi1 = -simboloAltura / 2 + i * (simboloAltura / subdiv);
+    //         float phi2 = -simboloAltura / 2 + (i + 1) * (simboloAltura / subdiv);
+
+    //         glBegin(GL_QUAD_STRIP);
+    //         for (int j = 0; j <= subdiv; ++j) {
+    //             float theta = -M_PI / 2 - simboloLargura / 2 + j * (simboloLargura / subdiv);
+
+    //             float x1 = simboloRaio * cos(phi2) * sin(theta);
+    //             float y1 = simboloRaio * sin(phi2);
+    //             float z1 = simboloRaio * cos(phi2) * cos(theta);
+
+    //             float x2 = simboloRaio * cos(phi1) * sin(theta);
+    //             float y2 = simboloRaio * sin(phi1);
+    //             float z2 = simboloRaio * cos(phi1) * cos(theta);
+
+    //             float u = (theta + simboloLargura / 2) / simboloLargura;
+    //             float v1 = (phi2 + simboloAltura / 2) / simboloAltura;
+    //             float v2 = (phi1 + simboloAltura / 2) / simboloAltura;
+
+    //             glTexCoord2f(u, v1); glVertex3f(x1, y1, z1);
+    //             glTexCoord2f(u, v2); glVertex3f(x2, y2, z2);
+    //         }
+    //         glEnd();
+    //     }
+
+    //     // --- Lateral direita ---
+    //     for (int i = 0; i < subdiv; ++i) {
+    //         float phi1 = -simboloAltura / 2 + i * (simboloAltura / subdiv);
+    //         float phi2 = -simboloAltura / 2 + (i + 1) * (simboloAltura / subdiv);
+
+    //         glBegin(GL_QUAD_STRIP);
+    //         for (int j = 0; j <= subdiv; ++j) {
+    //             float theta = M_PI / 2 - simboloLargura / 2 + j * (simboloLargura / subdiv);
+
+    //             float x1 = simboloRaio * cos(phi2) * sin(theta);
+    //             float y1 = simboloRaio * sin(phi2);
+    //             float z1 = simboloRaio * cos(phi2) * cos(theta);
+
+    //             float x2 = simboloRaio * cos(phi1) * sin(theta);
+    //             float y2 = simboloRaio * sin(phi1);
+    //             float z2 = simboloRaio * cos(phi1) * cos(theta);
+
+    //             float u = (theta + simboloLargura / 2) / simboloLargura;
+    //             float v1 = (phi2 + simboloAltura / 2) / simboloAltura;
+    //             float v2 = (phi1 + simboloAltura / 2) / simboloAltura;
+
+    //             glTexCoord2f(u, v1); glVertex3f(x1, y1, z1);
+    //             glTexCoord2f(u, v2); glVertex3f(x2, y2, z2);
+    //         }
+    //         glEnd();
+    //     }
+
+    //     // --- Traseira ---
+    //     for (int i = 0; i < subdiv; ++i) {
+    //         float phi1 = -simboloAltura / 2 + i * (simboloAltura / subdiv);
+    //         float phi2 = -simboloAltura / 2 + (i + 1) * (simboloAltura / subdiv);
+
+    //         glBegin(GL_QUAD_STRIP);
+    //         for (int j = 0; j <= subdiv; ++j) {
+    //             float theta = M_PI - simboloLargura / 2 + j * (simboloLargura / subdiv);
+
+    //             float x1 = simboloRaio * cos(phi2) * sin(theta);
+    //             float y1 = simboloRaio * sin(phi2);
+    //             float z1 = simboloRaio * cos(phi2) * cos(theta);
+
+    //             float x2 = simboloRaio * cos(phi1) * sin(theta);
+    //             float y2 = simboloRaio * sin(phi1);
+    //             float z2 = simboloRaio * cos(phi1) * cos(theta);
+
+    //             float u = (theta + simboloLargura / 2) / simboloLargura;
+    //             float v1 = (phi2 + simboloAltura / 2) / simboloAltura;
+    //             float v2 = (phi1 + simboloAltura / 2) / simboloAltura;
+
+    //             glTexCoord2f(u, v1); glVertex3f(x1, y1, z1);
+    //             glTexCoord2f(u, v2); glVertex3f(x2, y2, z2);
+    //         }
+    //         glEnd();
+    //     }
+
+    //     glDisable(GL_TEXTURE_2D);
+    //     glDisable(GL_POLYGON_OFFSET_FILL);
+    // }
 
     // --- Adesivo na frente da esfera ---
 
@@ -618,6 +704,15 @@ void desenha_cilindro(float raio, float altura, int fatias, int stacks, bool tam
         glEnd();
     }
 
+    if(modo_daltonico) {
+        glPushMatrix();
+        glTranslatef(0, altura/2 + 0.5f, 0); // cima do polígono
+        if(id_cor != 34) glRotatef(-90, 0, 0, 1);
+        desenha_simbolo_coloradd(id_cor);
+        glPopMatrix();
+        //desenha_simbolo_coloradd(id_cor);
+    }
+
     if(tampas){
         // Tampa inferior
         glBegin(GL_TRIANGLE_FAN);
@@ -643,104 +738,104 @@ void desenha_cilindro(float raio, float altura, int fatias, int stacks, bool tam
         }
         glEnd();
 
-        if(modo_daltonico) {
-            // =======================================================
-            // SÍMBOLO COLORADD NAS TAMPAS (atrás do adesivo)
-            // =======================================================
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            glEnable(GL_TEXTURE_2D);
-            glBindTexture(GL_TEXTURE_2D, texID[id_cor]);
-            glColor4f(1, 1, 1, 1);
+        // if(modo_daltonico) {
+        //     // =======================================================
+        //     // SÍMBOLO COLORADD NAS TAMPAS (atrás do adesivo)
+        //     // =======================================================
+        //     glEnable(GL_BLEND);
+        //     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        //     glEnable(GL_TEXTURE_2D);
+        //     glBindTexture(GL_TEXTURE_2D, texID[id_cor]);
+        //     glColor4f(1, 1, 1, 1);
 
-            glEnable(GL_POLYGON_OFFSET_FILL);
-            glPolygonOffset(-1.0f, -1.0f);
+        //     glEnable(GL_POLYGON_OFFSET_FILL);
+        //     glPolygonOffset(-1.0f, -1.0f);
 
-            float simboloRaio = raio * 0.6f;  // maior que o adesivo
-            float offsetSimbolo = half + 0.008f; // ligeiramente abaixo do adesivo
+        //     float simboloRaio = raio * 0.6f;  // maior que o adesivo
+        //     float offsetSimbolo = half + 0.008f; // ligeiramente abaixo do adesivo
 
-            // --- Tampa superior ---
-            glBegin(GL_TRIANGLE_FAN);
-                glNormal3f(0, 0, 1);
-                glTexCoord2f(0.5f, 0.5f);
-                glVertex3f(0, 0, offsetSimbolo);
-                for (int j = 0; j <= fatias; ++j) {
-                    float theta = j * (2 * M_PI / fatias);
-                    float x = simboloRaio * cos(theta);
-                    float y = simboloRaio * sin(theta);
-                    float u = 0.5f + 0.5f * cos(theta);
-                    float v = 0.5f + 0.5f * sin(theta);
-                    glTexCoord2f(u, v);
-                    glVertex3f(x, y, offsetSimbolo);
-                }
-            glEnd();
+        //     // --- Tampa superior ---
+        //     glBegin(GL_TRIANGLE_FAN);
+        //         glNormal3f(0, 0, 1);
+        //         glTexCoord2f(0.5f, 0.5f);
+        //         glVertex3f(0, 0, offsetSimbolo);
+        //         for (int j = 0; j <= fatias; ++j) {
+        //             float theta = j * (2 * M_PI / fatias);
+        //             float x = simboloRaio * cos(theta);
+        //             float y = simboloRaio * sin(theta);
+        //             float u = 0.5f + 0.5f * cos(theta);
+        //             float v = 0.5f + 0.5f * sin(theta);
+        //             glTexCoord2f(u, v);
+        //             glVertex3f(x, y, offsetSimbolo);
+        //         }
+        //     glEnd();
 
-            // --- Tampa inferior ---
-            glBegin(GL_TRIANGLE_FAN);
-                glNormal3f(0, 0, -1);
-                glTexCoord2f(0.5f, 0.5f);
-                glVertex3f(0, 0, -half - 0.008f);
-                for (int j = 0; j <= fatias; ++j) {
-                    float theta = j * (2 * M_PI / fatias);
-                    float x = simboloRaio * cos(theta);
-                    float y = simboloRaio * sin(theta);
-                    float u = 0.5f + 0.5f * cos(theta);
-                    float v = 0.5f + 0.5f * sin(theta);
-                    glTexCoord2f(u, v);
-                    glVertex3f(x, y, -half - 0.008f);
-                }
-            glEnd();
+        //     // --- Tampa inferior ---
+        //     glBegin(GL_TRIANGLE_FAN);
+        //         glNormal3f(0, 0, -1);
+        //         glTexCoord2f(0.5f, 0.5f);
+        //         glVertex3f(0, 0, -half - 0.008f);
+        //         for (int j = 0; j <= fatias; ++j) {
+        //             float theta = j * (2 * M_PI / fatias);
+        //             float x = simboloRaio * cos(theta);
+        //             float y = simboloRaio * sin(theta);
+        //             float u = 0.5f + 0.5f * cos(theta);
+        //             float v = 0.5f + 0.5f * sin(theta);
+        //             glTexCoord2f(u, v);
+        //             glVertex3f(x, y, -half - 0.008f);
+        //         }
+        //     glEnd();
 
-            // =======================================================
-            // SÍMBOLO COLORADD NA LATERAL  (corrigido: sem repeat)
-            // =======================================================
-            float simboloAltura = altura * 0.4f;   // ocupa 40% da altura
-            float simboloAngulo = M_PI / 4;        // cobre 45° da lateral
+        //     // =======================================================
+        //     // SÍMBOLO COLORADD NA LATERAL  (corrigido: sem repeat)
+        //     // =======================================================
+        //     float simboloAltura = altura * 0.4f;   // ocupa 40% da altura
+        //     float simboloAngulo = M_PI / 4;        // cobre 45° da lateral
 
-            float z1 = -simboloAltura / 2;
-            float z2 =  simboloAltura / 2;
-            float r = raio * 1.01f;
+        //     float z1 = -simboloAltura / 2;
+        //     float z2 =  simboloAltura / 2;
+        //     float r = raio * 1.01f;
 
-            // Antes de bind: força CLAMP para evitar repetição nas bordas
-            glEnable(GL_TEXTURE_2D);
-            glBindTexture(GL_TEXTURE_2D, texID[id_cor]);
+        //     // Antes de bind: força CLAMP para evitar repetição nas bordas
+        //     glEnable(GL_TEXTURE_2D);
+        //     glBindTexture(GL_TEXTURE_2D, texID[id_cor]);
 
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-            glPushMatrix();
-                glRotatef(180, 0, 1, 0);
-                glRotatef(90, 0, 0, 1);
-                glBegin(GL_QUADS);
-                    int segments = max(1, fatias / 8); // continue usando ~45° de arco
-                    for (int j = 0; j < segments; ++j) { // note: use < segments (não <=)
-                        float theta1 = -simboloAngulo / 2 + j * (simboloAngulo / segments);
-                        float theta2 = -simboloAngulo / 2 + (j + 1) * (simboloAngulo / segments);
+        //     glPushMatrix();
+        //         glRotatef(180, 0, 1, 0);
+        //         glRotatef(90, 0, 0, 1);
+        //         glBegin(GL_QUADS);
+        //             int segments = max(1, fatias / 8); // continue usando ~45° de arco
+        //             for (int j = 0; j < segments; ++j) { // note: use < segments (não <=)
+        //                 float theta1 = -simboloAngulo / 2 + j * (simboloAngulo / segments);
+        //                 float theta2 = -simboloAngulo / 2 + (j + 1) * (simboloAngulo / segments);
 
-                        float x1 = r * cos(theta1);
-                        float y1 = r * sin(theta1);
-                        float x2 = r * cos(theta2);
-                        float y2 = r * sin(theta2);
+        //                 float x1 = r * cos(theta1);
+        //                 float y1 = r * sin(theta1);
+        //                 float x2 = r * cos(theta2);
+        //                 float y2 = r * sin(theta2);
 
-                        // mapear u estritamente entre 0 e 1 para cada segmento
-                        float u1 = (float)j / (float)segments;
-                        float u2 = (float)(j+1) / (float)segments;
+        //                 // mapear u estritamente entre 0 e 1 para cada segmento
+        //                 float u1 = (float)j / (float)segments;
+        //                 float u2 = (float)(j+1) / (float)segments;
 
-                        glTexCoord2f(u1, 0); glVertex3f(x1, y1, z1);
-                        glTexCoord2f(u2, 0); glVertex3f(x2, y2, z1);
-                        glTexCoord2f(u2, 1); glVertex3f(x2, y2, z2);
-                        glTexCoord2f(u1, 1); glVertex3f(x1, y1, z2);
-                    }
-                glEnd();
-            glPopMatrix();
+        //                 glTexCoord2f(u1, 0); glVertex3f(x1, y1, z1);
+        //                 glTexCoord2f(u2, 0); glVertex3f(x2, y2, z1);
+        //                 glTexCoord2f(u2, 1); glVertex3f(x2, y2, z2);
+        //                 glTexCoord2f(u1, 1); glVertex3f(x1, y1, z2);
+        //             }
+        //         glEnd();
+        //     glPopMatrix();
 
-            // (opcional) restaurar wrap para o estado anterior (se quiser)
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        //     // (opcional) restaurar wrap para o estado anterior (se quiser)
+        //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-            glDisable(GL_TEXTURE_2D);
-            glDisable(GL_POLYGON_OFFSET_FILL);
-        }
+        //     glDisable(GL_TEXTURE_2D);
+        //     glDisable(GL_POLYGON_OFFSET_FILL);
+        // }
 
         // --- Adesivo na tampa superior ---
         glEnable(GL_POLYGON_OFFSET_FILL);
@@ -838,70 +933,79 @@ void desenha_cone(float raio, float altura, int fatias, int id_adesivo, bool mod
     float adesivoAltura, adesivoLargura, rOffset, zSimbolo, theta, xDir, yDir, adesivoZ, s, h, slopeAngle;
 
     if(modo_daltonico) {
-        // ==========================================================
-        // SÍMBOLO COLORADD (base e lateral inferior)
-        // ==========================================================
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glEnable(GL_TEXTURE_2D);
-        glBindTexture(GL_TEXTURE_2D, texID[id_cor]);
-        glColor4f(1, 1, 1, 1);
-
-        glEnable(GL_POLYGON_OFFSET_FILL);
-        glPolygonOffset(-1.0f, -1.0f);
-
-        // --- Base circular (como tampa inferior) ---
-        float simboloRaio = raio * 0.75f;
-        float offsetBase = -half - 0.008f; // um pouco abaixo da base
         glPushMatrix();
-            glRotatef(-90, 0, 0, 1);
-            glBegin(GL_TRIANGLE_FAN);
-                glNormal3f(0, 0, -1);
-                glTexCoord2f(0.5f, 0.5f);
-                glVertex3f(0, 0, offsetBase);
-                for (int j = 0; j <= fatias; ++j) {
-                    float theta = j * (2 * M_PI / fatias);
-                    float x = simboloRaio * cos(theta);
-                    float y = simboloRaio * sin(theta);
-                    float u = 0.5f + 0.5f * cos(theta);
-                    float v = 0.5f + 0.5f * sin(theta);
-                    glTexCoord2f(u, v);
-                    glVertex3f(x, y, offsetBase);
-                }
-            glEnd();
+        glTranslatef(0, altura/2 + 0.5f, 0); // cima do polígono
+        if(id_cor != 34) glRotatef(-90, 0, 0, 1);
+        desenha_simbolo_coloradd(id_cor);
         glPopMatrix();
-
-        // --- Lateral: símbolo abaixo do adesivo ---
-        adesivoAltura = altura * 0.2f;
-        adesivoLargura = raio * 0.8f;
-        rOffset = raio * 0.97f; // um pouco mais dentro que o adesivo
-        zSimbolo = half - adesivoAltura * 0.8f; //-half + (altura * 0.25f); // abaixo do adesivo
-        theta = 0.0f; // direção frontal (Z positivo)
-
-        xDir = rOffset * sin(theta);
-        yDir = rOffset * cos(theta);
-
-        glPushMatrix();
-            glTranslatef(xDir, yDir - 1.6f, zSimbolo);
-
-            // Mesmo ângulo de inclinação da lateral
-            slopeAngle = 63.75f;
-            glRotatef(-slopeAngle, 1, 0, 0);
-
-            s = adesivoLargura * 0.6f; // menor que o adesivo
-            h = adesivoAltura * 0.4f;  // menor também
-
-            glBegin(GL_QUADS);
-                glTexCoord2f(0, 0); glVertex3f(-s, -h, 0);
-                glTexCoord2f(1, 0); glVertex3f( s, -h, 0);
-                glTexCoord2f(1, 1); glVertex3f( s,  h, 0);
-                glTexCoord2f(0, 1); glVertex3f(-s,  h, 0);
-            glEnd();
-        glPopMatrix();
-
-        glDisable(GL_TEXTURE_2D);
-        glDisable(GL_POLYGON_OFFSET_FILL);
+        //desenha_simbolo_coloradd(id_cor);
     }
+
+    // if(modo_daltonico) {
+    //     // ==========================================================
+    //     // SÍMBOLO COLORADD (base e lateral inferior)
+    //     // ==========================================================
+    //     glEnable(GL_BLEND);
+    //     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    //     glEnable(GL_TEXTURE_2D);
+    //     glBindTexture(GL_TEXTURE_2D, texID[id_cor]);
+    //     glColor4f(1, 1, 1, 1);
+
+    //     glEnable(GL_POLYGON_OFFSET_FILL);
+    //     glPolygonOffset(-1.0f, -1.0f);
+
+    //     // --- Base circular (como tampa inferior) ---
+    //     float simboloRaio = raio * 0.75f;
+    //     float offsetBase = -half - 0.008f; // um pouco abaixo da base
+    //     glPushMatrix();
+    //         glRotatef(-90, 0, 0, 1);
+    //         glBegin(GL_TRIANGLE_FAN);
+    //             glNormal3f(0, 0, -1);
+    //             glTexCoord2f(0.5f, 0.5f);
+    //             glVertex3f(0, 0, offsetBase);
+    //             for (int j = 0; j <= fatias; ++j) {
+    //                 float theta = j * (2 * M_PI / fatias);
+    //                 float x = simboloRaio * cos(theta);
+    //                 float y = simboloRaio * sin(theta);
+    //                 float u = 0.5f + 0.5f * cos(theta);
+    //                 float v = 0.5f + 0.5f * sin(theta);
+    //                 glTexCoord2f(u, v);
+    //                 glVertex3f(x, y, offsetBase);
+    //             }
+    //         glEnd();
+    //     glPopMatrix();
+
+    //     // --- Lateral: símbolo abaixo do adesivo ---
+    //     adesivoAltura = altura * 0.2f;
+    //     adesivoLargura = raio * 0.8f;
+    //     rOffset = raio * 0.97f; // um pouco mais dentro que o adesivo
+    //     zSimbolo = half - adesivoAltura * 0.8f; //-half + (altura * 0.25f); // abaixo do adesivo
+    //     theta = 0.0f; // direção frontal (Z positivo)
+
+    //     xDir = rOffset * sin(theta);
+    //     yDir = rOffset * cos(theta);
+
+    //     glPushMatrix();
+    //         glTranslatef(xDir, yDir - 1.6f, zSimbolo);
+
+    //         // Mesmo ângulo de inclinação da lateral
+    //         slopeAngle = 63.75f;
+    //         glRotatef(-slopeAngle, 1, 0, 0);
+
+    //         s = adesivoLargura * 0.6f; // menor que o adesivo
+    //         h = adesivoAltura * 0.4f;  // menor também
+
+    //         glBegin(GL_QUADS);
+    //             glTexCoord2f(0, 0); glVertex3f(-s, -h, 0);
+    //             glTexCoord2f(1, 0); glVertex3f( s, -h, 0);
+    //             glTexCoord2f(1, 1); glVertex3f( s,  h, 0);
+    //             glTexCoord2f(0, 1); glVertex3f(-s,  h, 0);
+    //         glEnd();
+    //     glPopMatrix();
+
+    //     glDisable(GL_TEXTURE_2D);
+    //     glDisable(GL_POLYGON_OFFSET_FILL);
+    // }
 
     glEnable(GL_POLYGON_OFFSET_FILL);
     glPolygonOffset(-1.0f, -1.0f);
@@ -1011,59 +1115,69 @@ void desenha_torus(float R, float r, int fatias, int stacks, int id_adesivo, boo
     float zAdesivo = 0.0f;
 
     float offset, tamanho, s;
+
     if(modo_daltonico) {
-        // ==========================================================
-        // SÍMBOLOS COLORADD NAS LATERAIS
-        // ==========================================================
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glEnable(GL_TEXTURE_2D);
-        glBindTexture(GL_TEXTURE_2D, texID[id_cor]);
-        glColor4f(1, 1, 1, 1);
-
-        glEnable(GL_POLYGON_OFFSET_FILL);
-        glPolygonOffset(-1.0f, -1.0f);
-
-        offset = 0.003f;      // deslocamento para fora
-        tamanho = r * 1.4f;   // tamanho do símbolo
-        s = tamanho * 0.5f;
-
-        // Posições: direita (+X) e esquerda (-X)
-        float posicoes[2] = {0.0f, M_PI};
-
-        for (int i = 0; i < 2; ++i) {
-            float phi = posicoes[i];
-            float x = R * cos(phi);
-            float y = R * sin(phi);
-
-            glPushMatrix();
-                // Move o símbolo para o lado do torus
-                glTranslatef(x, y, 0.0f);
-
-                // Rotaciona para tangenciar a curvatura lateral
-                if(!i) {
-                    glRotatef(phi * 180.0f / M_PI, 0, 0, 1);  // acompanha lado (+X / -X)
-                    glRotatef(90, 0, 1, 0);                   // plano voltado para fora
-                } else {
-                    glRotatef(-90, 0, 1, 0);
-                }
-
-                // Desloca levemente para fora da superfície
-                glTranslatef(0, 0, r + offset);
-
-                // Desenha o quadrado do símbolo
-                glBegin(GL_QUADS);
-                    glTexCoord2f(0, 0); glVertex3f(-s, -s, 0);
-                    glTexCoord2f(1, 0); glVertex3f( s, -s, 0);
-                    glTexCoord2f(1, 1); glVertex3f( s,  s, 0);
-                    glTexCoord2f(0, 1); glVertex3f(-s,  s, 0);
-                glEnd();
-            glPopMatrix();
-        }
-
-        glDisable(GL_TEXTURE_2D);
-        glDisable(GL_POLYGON_OFFSET_FILL);
+        glPushMatrix();
+        glTranslatef(0, R + 2.0f, 0); // cima do polígono
+        if(id_cor != 34) glRotatef(-90, 0, 0, 1);
+        desenha_simbolo_coloradd(id_cor);
+        glPopMatrix();
+        //desenha_simbolo_coloradd(id_cor);
     }
+
+    // if(modo_daltonico) {
+    //     // ==========================================================
+    //     // SÍMBOLOS COLORADD NAS LATERAIS
+    //     // ==========================================================
+    //     glEnable(GL_BLEND);
+    //     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    //     glEnable(GL_TEXTURE_2D);
+    //     glBindTexture(GL_TEXTURE_2D, texID[id_cor]);
+    //     glColor4f(1, 1, 1, 1);
+
+    //     glEnable(GL_POLYGON_OFFSET_FILL);
+    //     glPolygonOffset(-1.0f, -1.0f);
+
+    //     offset = 0.003f;      // deslocamento para fora
+    //     tamanho = r * 1.4f;   // tamanho do símbolo
+    //     s = tamanho * 0.5f;
+
+    //     // Posições: direita (+X) e esquerda (-X)
+    //     float posicoes[2] = {0.0f, M_PI};
+
+    //     for (int i = 0; i < 2; ++i) {
+    //         float phi = posicoes[i];
+    //         float x = R * cos(phi);
+    //         float y = R * sin(phi);
+
+    //         glPushMatrix();
+    //             // Move o símbolo para o lado do torus
+    //             glTranslatef(x, y, 0.0f);
+
+    //             // Rotaciona para tangenciar a curvatura lateral
+    //             if(!i) {
+    //                 glRotatef(phi * 180.0f / M_PI, 0, 0, 1);  // acompanha lado (+X / -X)
+    //                 glRotatef(90, 0, 1, 0);                   // plano voltado para fora
+    //             } else {
+    //                 glRotatef(-90, 0, 1, 0);
+    //             }
+
+    //             // Desloca levemente para fora da superfície
+    //             glTranslatef(0, 0, r + offset);
+
+    //             // Desenha o quadrado do símbolo
+    //             glBegin(GL_QUADS);
+    //                 glTexCoord2f(0, 0); glVertex3f(-s, -s, 0);
+    //                 glTexCoord2f(1, 0); glVertex3f( s, -s, 0);
+    //                 glTexCoord2f(1, 1); glVertex3f( s,  s, 0);
+    //                 glTexCoord2f(0, 1); glVertex3f(-s,  s, 0);
+    //             glEnd();
+    //         glPopMatrix();
+    //     }
+
+    //     glDisable(GL_TEXTURE_2D);
+    //     glDisable(GL_POLYGON_OFFSET_FILL);
+    // }
 
     offset = 0.002f; // evita z-fighting
     tamanho = r * 1.2f; // tamanho relativo do adesivo
@@ -1196,156 +1310,3 @@ void marcax(float x, float y, float z, float cy, float cp){
     glLineWidth(1.0f);
     glPopMatrix();
 }
-
-/*double BezierBlend(int k,double mu, int n) {
-    int nn,kn,nkn;
-    double blend=1;
-    nn = n;
-    kn = k;
-    nkn = n - k;
-
-    while (nn >= 1) {
-        blend *= nn;
-        nn--;
-        if (kn > 1) {
-            blend /= (double)kn;
-            kn--;
-        }
-        if (nkn > 1) {
-            blend /= (double)nkn;
-            nkn--;
-        }
-    }
-    if (k > 0)
-        blend *= pow(mu,(double)k);
-    if (n-k > 0)
-        blend *= pow(1-mu,(double)(n-k));
-    return(blend);
-}
-
-void entrada_inpus(int forma, int i, int j){
-    // Normaliza parâmetros u, v em [0,1]
-    double u = (double)i / (double)NI;  
-    double v = (double)j / (double)NJ;  
-
-    // Ângulos padrão
-    double theta = 2.0 * M_PI * u;  // giro em torno do eixo
-    double phi   = M_PI * v;        // usado em esfera/torus
-    float r, R, Rmax, H;
-
-    switch(forma){
-        case ESFERA: 
-            R = 2.0f; // raio da esfera
-            inpu[i][j].x = R * sin(phi) * cos(theta);
-            inpu[i][j].y = R * sin(phi) * sin(theta);
-            inpu[i][j].z = R * cos(phi);
-            break;
-        
-        case CILINDRO: 
-            R = 2.0f; // raio
-            H = 4.0f; // altura
-            inpu[i][j].x = R * cos(theta);
-            inpu[i][j].y = R * sin(theta);
-            inpu[i][j].z = (v - 0.5f) * H;
-            break;
-        
-        case CONE: 
-            H = 4.0f;       // altura
-            Rmax = 2.0f;    // raio da base
-            R = (1.0f - v) * Rmax;
-            inpu[i][j].x = R * cos(theta);
-            inpu[i][j].y = R * sin(theta);
-            inpu[i][j].z = v * H;
-            break;
-        
-        case TORUS: 
-            R = 3.0f; // raio maior (centro até tubo)
-            r = 1.0f; // raio menor (espessura do tubo)
-            inpu[i][j].x = (R + r * cos(phi)) * cos(theta);
-            inpu[i][j].y = (R + r * cos(phi)) * sin(theta);
-            inpu[i][j].z = r * sin(phi);
-            break;
-        
-        case BEZIER: 
-            // Exemplo simples: grid de pontos com ondulação
-            inpu[i][j].x = i;
-            inpu[i][j].y = j;
-            inpu[i][j].z = 2.0f * sin(i * 0.5f) * cos(j * 0.5f);
-            break;
-        
-    }
-}
-
-void generateControlPoint(int forma) {
-    int nMax = 2;
-    int nMin = -2;
-    int i,j;
-    if(forma != CUBO and forma!= PIRAMIDE){
-        for (i=0;i<=NI;i++) {
-            for (j=0;j<=NJ;j++) {
-                entrada_inpus(forma,i,j);
-            }
-        }
-    }
-}*/
-
-
-//cálculos necessários para configurar a normal dos vértices da superfície
-/*XYZ calculaNormal(XYZ u, XYZ v) {
-    XYZ normal;
-    normal.x = u.y * v.z - u.z * v.y;
-    normal.y = u.z * v.x - u.x * v.z;
-    normal.z = u.x * v.y - u.y * v.x;
-
-
-    // Normaliza
-    float length = sqrt(normal.x * normal.x + normal.y * normal.y + normal.z * normal.z);
-    normal.x /= length;
-    normal.y /= length;
-    normal.z /= length;
-
-    return normal;
-}*/
-
-
-/*void Surface(int forma) {
-    if(forma != CUBO and forma != PIRAMIDE){
-        int i,j,ki,kj;
-        double mui,muj,bi,bj;
-        for (i=0;i<RESOLUTIONI;i++) {
-            mui = i / (double)(RESOLUTIONI-1);
-            for (j=0;j<RESOLUTIONJ;j++) {
-                muj = j / (double)(RESOLUTIONJ-1);
-                outpu[i][j].x = 0;
-                outpu[i][j].y = 0;
-                outpu[i][j].z = 0;
-                for (ki=0;ki<=NI;ki++) {
-                    bi = BezierBlend(ki,mui,NI);
-                    for (kj=0;kj<=NJ;kj++) {
-                    bj = BezierBlend(kj,muj,NJ);
-                    outpu[i][j].x += (inpu[ki][kj].x * bi * bj);
-                    outpu[i][j].y += (inpu[ki][kj].y * bi * bj);
-                    outpu[i][j].z += (inpu[ki][kj].z * bi * bj);
-                    }
-                }
-            }
-        }
-        for(i=0;i<RESOLUTIONI-1;i++){
-            for(j=0;j<RESOLUTIONJ-1;j++){
-                XYZ u = {outpu[i+1][j].x - outpu[i][j].x, outpu[i+1][j].y - outpu[i][j].y, outpu[i+1][j].z - outpu[i][j].z};
-                XYZ v = {outpu[i+1][j+1].x - outpu[i][j].x, outpu[i+1][j+1].y - outpu[i][j].y, outpu[i+1][j+1].z - outpu[i][j].z};
-                XYZ normal = calculaNormal(u,v);
-                glBegin(GL_QUADS);
-                    glNormal3f(normal.x,normal.y,normal.z); glVertex3f(outpu[i][j].x,outpu[i][j].y,outpu[i][j].z);
-                    glNormal3f(normal.x,normal.y,normal.z); glVertex3f(outpu[i+1][j].x,outpu[i+1][j].y,outpu[i+1][j].z);
-                    glNormal3f(normal.x,normal.y,normal.z); glVertex3f(outpu[i+1][j+1].x,outpu[i+1][j+1].y,outpu[i+1][j+1].z);
-                    glNormal3f(normal.x,normal.y,normal.z); glVertex3f(outpu[i][j+1].x,outpu[i][j+1].y,outpu[i][j+1].z);
-                glEnd();
-            }
-        }
-    } else if(forma == CUBO)
-        desenha_cubo();
-    else {
-        desenha_piramide();
-    }
-}*/
