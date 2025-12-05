@@ -71,8 +71,8 @@ AABB Cubo::getAABB() const {
 
 float Cubo::getLado() const {return this->lado;}
 
-void Cubo::realiza_movimento(int cor, float dt, bool pause, bool modo_daltonico) {
-    desenha_poligono(cor, pause, modo_daltonico);
+void Cubo::realiza_movimento(float dt, bool pause, bool modo_daltonico) {
+    //desenha_poligono(cor, pause, modo_daltonico);
 }
 
 bool Cubo::colide_jogador(const AABB& s) const {
@@ -167,8 +167,8 @@ AABB Piramide::getAABB() const {
 
 float Piramide::getAltura() const {return this->altura;}
 
-void Piramide::realiza_movimento(int cor, float dt, bool pause, bool modo_daltonico) {
-    desenha_poligono(cor, pause, modo_daltonico);
+void Piramide::realiza_movimento(float dt, bool pause, bool modo_daltonico) {
+    //desenha_poligono(cor, pause, modo_daltonico);
 }
 
 bool Piramide::colide_jogador(const AABB& s) const {
@@ -292,10 +292,17 @@ void Piramide::desenha_mascara(){
 Esfera::Esfera() : Poligono(F::ESFERA) {}
 Esfera::Esfera(float ix, float iy, float iz, unique_ptr<Adesivo> a, float r, float c)
 : Poligono(ix,iy,iz,F::ESFERA,move(a)), raio(r), chao(c) {
-    y_vel = 10.0f;
+    //y_vel = 10.0f;
     grav = -9.8f;     // "gravidade"
+    altura_inicial = iy;
+
+    // velocidade para chegar até a altura inicial
+    velocidade_inicial = sqrt(2.0f * (-grav) * (altura_inicial - chao));
+
+    y_vel = velocidade_inicial;
     //chao = -1.0f;         // altura do chão (pode ser o y=-1 do seu cenário)
 }
+
 Esfera::Esfera(float ix, float iy, float iz, float xs, float ys, float zs, unique_ptr<Adesivo> a, float r, float c)
 : Poligono(ix,iy,iz,xs,ys,zs,F::ESFERA,move(a)), raio(r), chao(c) {
     y_vel = 10.0f;
@@ -310,7 +317,7 @@ AABB Esfera::getAABB() const {
 
 float Esfera::getRaio() const {return this->raio;}
 
-void Esfera::realiza_movimento(int cor, float dt, bool pause, bool modo_daltonico) {
+void Esfera::realiza_movimento(float dt, bool pause, bool modo_daltonico) {
 
     if(!pause){
         // Atualiza velocidade com gravidade
@@ -320,12 +327,17 @@ void Esfera::realiza_movimento(int cor, float dt, bool pause, bool modo_daltonic
         this->setY(this->getY() + y_vel * dt);
 
         // Checa colisão com o chão
-        if (this->getY() - raio <= chao) {
+        if (this->getY() - raio <= chao)
+        {
             this->setY(chao + raio);
-            if (y_vel < 0) {                  // só inverte se estiver descendo
-                y_vel = -y_vel;
-            }
+            y_vel = velocidade_inicial; // sempre restaura a energia total
         }
+        // if (this->getY() - raio <= chao) {
+        //     this->setY(chao + raio);
+        //     if (y_vel < 0) {                  // só inverte se estiver descendo
+        //         y_vel = -y_vel;
+        //     }
+        // }
 
         if (this->getAdesivo()) {
             this->getAdesivo()->setX(this->getX());
@@ -333,7 +345,7 @@ void Esfera::realiza_movimento(int cor, float dt, bool pause, bool modo_daltonic
             this->getAdesivo()->setZ(this->getZ());
         }
     }
-    desenha_poligono(cor, pause, modo_daltonico);
+    //desenha_poligono(cor, pause, modo_daltonico);
 }
 
 bool Esfera::colide_jogador(const AABB& s) const {
@@ -441,7 +453,7 @@ float Cilindro::getRaio() const {return this->raio;}
 
 float Cilindro::getAltura() const {return this->altura;}
 
-void Cilindro::realiza_movimento(int cor, float dt, bool pause, bool modo_daltonico) {
+void Cilindro::realiza_movimento(float dt, bool pause, bool modo_daltonico) {
     float novaX = this->getX() + dt * 10.0f * x_vel;
 
     // Verifica se ultrapassou a borda
@@ -472,7 +484,7 @@ void Cilindro::realiza_movimento(int cor, float dt, bool pause, bool modo_dalton
     //     this->getAdesivo()->setNormal({nx, n.y, nz});
     // }
 
-    desenha_poligono(cor, pause, modo_daltonico);
+    //desenha_poligono(cor, pause, modo_daltonico);
 }
 
 bool Cilindro::colide_jogador(const AABB& s) const {
@@ -599,7 +611,7 @@ float Cone::getRaio() const {return this->raio;}
 
 float Cone::getAltura() const {return this->altura;}
 
-void Cone::realiza_movimento(int cor, float dt, bool pause, bool modo_daltonico) {
+void Cone::realiza_movimento(float dt, bool pause, bool modo_daltonico) {
     if(!pause){
         ang += 10.0f * dt;
 
@@ -620,7 +632,7 @@ void Cone::realiza_movimento(int cor, float dt, bool pause, bool modo_daltonico)
                                             apex.z - axis.z*altura - apex.z});
         }
     }
-    desenha_poligono(cor, pause, modo_daltonico);
+    //desenha_poligono(cor, pause, modo_daltonico);
 }
 
 bool Cone::colide_jogador(const AABB& s) const {
@@ -647,7 +659,7 @@ void Cone::aplica_efeito(Jogador& jogador, int& vidas) {
     // fim = ponto ao longo da direção do cone
     XYZ fim = apex - axis * altura * 50.0f; // 50x altura, laser longo
 
-    if (SegmentVsAABB(origem, fim, box)) {
+    if (SegmentVsAABB(origem, fim, box) and jogador.estaVivo()) {
         jogador.morre(vidas);
     }
 }
@@ -771,8 +783,8 @@ AABB Torus::getAABB() const {
     };
 }
 
-void Torus::realiza_movimento(int cor, float dt, bool pause, bool modo_daltonico) {
-    desenha_poligono(cor, pause, modo_daltonico);
+void Torus::realiza_movimento(float dt, bool pause, bool modo_daltonico) {
+    //desenha_poligono(cor, pause, modo_daltonico);
 }
 
 bool Torus::colide_jogador(const AABB& s) const{

@@ -27,6 +27,24 @@ void desenha_simbolo_coloradd(int id_cor, float size)
 
     glDisable(GL_LIGHTING); // para não escurecer o símbolo
 
+    glDepthMask(GL_FALSE);
+
+    // Pega a matriz atual (modelo-vista)
+    GLfloat modelview[16];
+    glGetFloatv(GL_MODELVIEW_MATRIX, modelview);
+
+    // Zera a rotação da matriz (mantém apenas a posição)
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+            modelview[i*4 + j] = (i == j ? 1.0f : 0.0f);
+        }
+    }
+
+    // Recarrega matriz "sem rotação" → billboard perfeito
+    glLoadMatrixf(modelview);
+
+    if(id_cor!=34) glRotatef(-90,0,0,1);
+
     glBegin(GL_QUADS);
 
         // textura sem ficar de cabeça para baixo
@@ -39,45 +57,8 @@ void desenha_simbolo_coloradd(int id_cor, float size)
 
     glEnable(GL_LIGHTING);
     glDisable(GL_TEXTURE_2D);
+    glDepthMask(GL_TRUE);
 }
-
-/*void desenha_simbolo_coloradd(float x, float y, float z, int id_cor) {
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, texID[id_cor]);
-
-    glPushMatrix();
-
-        // Move até o ponto onde o X será desenhado
-        glTranslatef(0.0f, 2.5f, z);
-
-        // Pega a matriz atual (modelo-vista)
-        GLfloat modelview[16];
-        glGetFloatv(GL_MODELVIEW_MATRIX, modelview);
-
-        // Zera a rotação da matriz (mantém apenas a posição)
-        for (int i = 0; i < 3; i++) {
-            for (int j = 0; j < 3; j++) {
-                modelview[i*4 + j] = (i == j ? 1.0f : 0.0f);
-            }
-        }
-
-        // Recarrega matriz "sem rotação" → billboard perfeito
-        glLoadMatrixf(modelview);
-
-        glBegin(GL_QUADS);
-            glTexCoord2f(0, 0); glVertex3f(-1.0f, -1.0f, 0.0f);
-            glTexCoord2f(1, 0); glVertex3f(1.0f, -1.0f, 0.0f);
-            glTexCoord2f(1, 1); glVertex3f(1.0f, 1.0f, 0.0f);
-            glTexCoord2f(0, 1); glVertex3f(-1.0f, 1.0f, 0.0f);
-        glEnd();
-
-    glPopMatrix();
-
-    glDisable(GL_TEXTURE_2D);
-    glDisable(GL_POLYGON_OFFSET_FILL);
-}*/
 
 void desenha_cubo(float lado, int id_adesivo, bool modo_daltonico) {
     XYZ normal;
@@ -135,30 +116,36 @@ void desenha_cubo(float lado, int id_adesivo, bool modo_daltonico) {
 
     glEnd();
 
-    glEnable(GL_POLYGON_OFFSET_FILL);
-    glPolygonOffset(-1.0f, -1.0f);
-
     float adesivoTamanho = lado * 0.3f; // 30% da face
     float offset = lado + 0.01f;       // ligeiramente à frente da face
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, texID[id_cor]);
+
+    glDepthMask(GL_FALSE);
+
+    //glEnable(GL_TEXTURE_2D);
+//glBindTexture(GL_TEXTURE_2D, texID[id_cor]);
 
     glColor4f(1, 1, 1, 1);
 
     float simboloTamanho = lado * 0.85f; // cobre ~85% da face
     offset = lado + 0.002f;        // ligeiramente à frente da superfície
 
-    if(modo_daltonico) {
-        glPushMatrix();
-        glTranslatef(0, lado/2 + 2.0f, 0); // cima do polígono
-        if(id_cor != 34) glRotatef(-90, 0, 0, 1);
-        desenha_simbolo_coloradd(id_cor);
-        glPopMatrix();
-        //desenha_simbolo_coloradd(id_cor);
-    }
+    // if(modo_daltonico) {
+        
+    //     glPushMatrix();
+    //     glTranslatef(0, lado/2 + 2.0f, 0); // cima do polígono
+    //     if(id_cor != 34) glRotatef(-90, 0, 0, 1);
+    //     desenha_simbolo_coloradd(id_cor);
+    //     glPopMatrix();
+        
+    //     //desenha_simbolo_coloradd(id_cor);
+    // }
+
+    glDepthMask(GL_TRUE);
+    glDisable(GL_TEXTURE_2D);
+
     //if(modo_daltonico) {
 
         // // --- Frente ---
@@ -295,14 +282,27 @@ void desenha_piramide(float base, float altura, int id_adesivo, bool modo_dalton
         glVertex3f( 0.0f,  h-b , 0.0f);
     glEnd();
 
-    if(modo_daltonico) {
-        glPushMatrix();
-        glTranslatef(0, altura/2 + 0.5f, 0); // cima do polígono
-        if(id_cor != 34) glRotatef(-90, 0, 0, 1);
-        desenha_simbolo_coloradd(id_cor);
-        glPopMatrix();
-        //desenha_simbolo_coloradd(id_cor);
-    }
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    glDepthMask(GL_FALSE);
+
+    //glEnable(GL_TEXTURE_2D);
+//glBindTexture(GL_TEXTURE_2D, texID[id_cor]);
+
+    // if(modo_daltonico) {
+        
+    //     glPushMatrix();
+    //     glTranslatef(0, altura/2 + 1.0f, 0); // cima do polígono
+    //     if(id_cor != 34) glRotatef(-90, 0, 0, 1);
+    //     desenha_simbolo_coloradd(id_cor);
+    //     glPopMatrix();
+        
+    //     //desenha_simbolo_coloradd(id_cor);
+    // }
+
+    glDepthMask(GL_TRUE);
+    glDisable(GL_TEXTURE_2D);
 
     // if(modo_daltonico) {
     //     // ---------------------------------------------------------
@@ -488,14 +488,27 @@ void desenha_esfera(float raio, int fatias, int stacks, int id_adesivo, bool mod
         glEnd();
     }
 
-    if(modo_daltonico) {
-        glPushMatrix();
-        glTranslatef(0, raio + 0.5f, 0); // cima do polígono
-        if(id_cor != 34) glRotatef(-90, 0, 0, 1);
-        desenha_simbolo_coloradd(id_cor);
-        glPopMatrix();
-        //desenha_simbolo_coloradd(id_cor);
-    }
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    glDepthMask(GL_FALSE);
+
+    //glEnable(GL_TEXTURE_2D);
+//glBindTexture(GL_TEXTURE_2D, texID[id_cor]);
+
+    // if(modo_daltonico) {
+        
+    //     glPushMatrix();
+    //     glTranslatef(0, raio + 1.0f, 0); // cima do polígono
+    //     if(id_cor != 34) glRotatef(-90, 0, 0, 1);
+    //     desenha_simbolo_coloradd(id_cor);
+    //     glPopMatrix();
+        
+    //     //desenha_simbolo_coloradd(id_cor);
+    // }
+
+    glDepthMask(GL_TRUE);
+    glDisable(GL_TEXTURE_2D);
 
     // if(modo_daltonico) {
     //     // --- Símbolo ColorADD nas laterais ---
@@ -670,7 +683,6 @@ void desenha_esfera(float raio, int fatias, int stacks, int id_adesivo, bool mod
     }
 
     glDisable(GL_TEXTURE_2D);
-
     glDisable(GL_POLYGON_OFFSET_FILL);
 }
 
@@ -704,14 +716,27 @@ void desenha_cilindro(float raio, float altura, int fatias, int stacks, bool tam
         glEnd();
     }
 
-    if(modo_daltonico) {
-        glPushMatrix();
-        glTranslatef(0, altura/2 + 0.5f, 0); // cima do polígono
-        if(id_cor != 34) glRotatef(-90, 0, 0, 1);
-        desenha_simbolo_coloradd(id_cor);
-        glPopMatrix();
-        //desenha_simbolo_coloradd(id_cor);
-    }
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    glDepthMask(GL_FALSE);
+
+    //glEnable(GL_TEXTURE_2D);
+//glBindTexture(GL_TEXTURE_2D, texID[id_cor]);
+
+    // if(modo_daltonico) {
+        
+    //     glPushMatrix();
+    //     glTranslatef(0, altura/2 + 1.0f, 0); // cima do polígono
+    //     if(id_cor != 34) glRotatef(-90, 0, 0, 1);
+    //     desenha_simbolo_coloradd(id_cor);
+    //     glPopMatrix();
+        
+    //     //desenha_simbolo_coloradd(id_cor);
+    // }
+
+    glDepthMask(GL_TRUE);
+    glDisable(GL_TEXTURE_2D);
 
     if(tampas){
         // Tampa inferior
@@ -867,11 +892,10 @@ void desenha_cilindro(float raio, float altura, int fatias, int stacks, bool tam
                 glVertex3f(x, y, offset);
             }
         glEnd();
-
-        glDisable(GL_TEXTURE_2D);
-
-        glDisable(GL_POLYGON_OFFSET_FILL);
     }
+
+    glDisable(GL_TEXTURE_2D);
+    glDisable(GL_POLYGON_OFFSET_FILL);
 }
 
 void desenha_cone(float raio, float altura, int fatias, int id_adesivo, bool modo_daltonico){
@@ -932,14 +956,27 @@ void desenha_cone(float raio, float altura, int fatias, int id_adesivo, bool mod
 
     float adesivoAltura, adesivoLargura, rOffset, zSimbolo, theta, xDir, yDir, adesivoZ, s, h, slopeAngle;
 
-    if(modo_daltonico) {
-        glPushMatrix();
-        glTranslatef(0, altura/2 + 0.5f, 0); // cima do polígono
-        if(id_cor != 34) glRotatef(-90, 0, 0, 1);
-        desenha_simbolo_coloradd(id_cor);
-        glPopMatrix();
-        //desenha_simbolo_coloradd(id_cor);
-    }
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    glDepthMask(GL_FALSE);
+
+    //glEnable(GL_TEXTURE_2D);
+//glBindTexture(GL_TEXTURE_2D, texID[id_cor]);
+
+    // if(modo_daltonico) {
+        
+    //     glPushMatrix();
+    //     glTranslatef(0, altura/2 + 1.0f, 0); // cima do polígono
+    //     if(id_cor != 34) glRotatef(-90, 0, 0, 1);
+    //     desenha_simbolo_coloradd(id_cor);
+    //     glPopMatrix();
+        
+    //     //desenha_simbolo_coloradd(id_cor);
+    // }
+
+    glDepthMask(GL_TRUE);
+    glDisable(GL_TEXTURE_2D);
 
     // if(modo_daltonico) {
     //     // ==========================================================
@@ -1010,6 +1047,12 @@ void desenha_cone(float raio, float altura, int fatias, int id_adesivo, bool mod
     glEnable(GL_POLYGON_OFFSET_FILL);
     glPolygonOffset(-1.0f, -1.0f);
 
+    // Configura textura
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, texID[id_adesivo]);
+
+    glColor4f(1, 1, 1, 1); // mantém cores da textura
+
     // ---------------- Adesivo na lateral ----------------
     // O adesivo será colado no lado "frontal" do cone (direção +Z)
     adesivoAltura = altura * 0.3f;  // fração da altura
@@ -1024,12 +1067,6 @@ void desenha_cone(float raio, float altura, int fatias, int id_adesivo, bool mod
 
     // Posição média do adesivo na superfície
     adesivoZ = -half + adesivoAltura * 0.5f;
-
-    // Configura textura
-    glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, texID[id_adesivo]);
-
-    glColor4f(1, 1, 1, 1); // mantém cores da textura
 
     // Coloca o adesivo orientado tangente à superfície
     glPushMatrix();
@@ -1057,7 +1094,6 @@ void desenha_cone(float raio, float altura, int fatias, int id_adesivo, bool mod
     glPopMatrix();
 
     glDisable(GL_TEXTURE_2D);
-
     glDisable(GL_POLYGON_OFFSET_FILL);
 }
 
@@ -1116,14 +1152,27 @@ void desenha_torus(float R, float r, int fatias, int stacks, int id_adesivo, boo
 
     float offset, tamanho, s;
 
-    if(modo_daltonico) {
-        glPushMatrix();
-        glTranslatef(0, R + 2.0f, 0); // cima do polígono
-        if(id_cor != 34) glRotatef(-90, 0, 0, 1);
-        desenha_simbolo_coloradd(id_cor);
-        glPopMatrix();
-        //desenha_simbolo_coloradd(id_cor);
-    }
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    glDepthMask(GL_FALSE);
+
+    //glEnable(GL_TEXTURE_2D);
+//glBindTexture(GL_TEXTURE_2D, texID[id_cor]);
+
+    // if(modo_daltonico) {
+        
+    //     glPushMatrix();
+    //     glTranslatef(0, R + 2.0f, 0); // cima do polígono
+    //     if(id_cor != 34) glRotatef(-90, 0, 0, 1);
+    //     desenha_simbolo_coloradd(id_cor);
+    //     glPopMatrix();
+        
+    //     //desenha_simbolo_coloradd(id_cor);
+    // }
+
+    glDepthMask(GL_TRUE);
+    glDisable(GL_TEXTURE_2D);
 
     // if(modo_daltonico) {
     //     // ==========================================================
@@ -1182,14 +1231,14 @@ void desenha_torus(float R, float r, int fatias, int stacks, int id_adesivo, boo
     offset = 0.002f; // evita z-fighting
     tamanho = r * 1.2f; // tamanho relativo do adesivo
 
+    glEnable(GL_POLYGON_OFFSET_FILL);
+    glPolygonOffset(-1.0f, -1.0f);
+
     // ---------- Desenha o adesivo ----------
     glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, texID[id_adesivo]);
 
     glColor4f(1, 1, 1, 1);
-
-    glEnable(GL_POLYGON_OFFSET_FILL);
-    glPolygonOffset(-1.0f, -1.0f);
 
     glPushMatrix();
         // Move até o ponto da lateral (esquerda ou direita)
@@ -1211,7 +1260,6 @@ void desenha_torus(float R, float r, int fatias, int stacks, int id_adesivo, boo
     glPopMatrix();
 
     glDisable(GL_TEXTURE_2D);
-
     glDisable(GL_POLYGON_OFFSET_FILL);
 }
 

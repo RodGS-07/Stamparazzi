@@ -539,8 +539,8 @@ void cria_poligonos(int n){
         advance(it, randomIndex);
         id = *it - 1;
         poligonos.push_back(make_unique<Esfera>(
-            20.0f, 1.5f, 60.0f,
-            make_unique<Adesivo>(20.0f, 1.5f, 60.0f, id, XYZ{0,0,1}),
+            20.0f, 11.5f, 60.0f,
+            make_unique<Adesivo>(20.0f, 11.5f, 60.0f, id, XYZ{0,0,1}),
             2.0f, -1.0f
         ));
         copia.erase(it);
@@ -649,8 +649,8 @@ void cria_poligonos(int n){
         advance(it, randomIndex);
         id = *it - 1;
         poligonos.push_back(make_unique<Esfera>(
-            20.0f, 1.5f, 60.0f,
-            make_unique<Adesivo>(20.0f, 1.5f, 60.0f, id, XYZ{0,0,1}),
+            20.0f, 11.5f, 60.0f,
+            make_unique<Adesivo>(20.0f, 11.5f, 60.0f, id, XYZ{0,0,1}),
             2.0f, -1.0f
         ));
         copia.erase(it);
@@ -723,7 +723,7 @@ void cria_poligonos(int n){
         poligonos.push_back(make_unique<Esfera>(
             20.0f, -98.5f, -20.0f,
             make_unique<Adesivo>(20.0f, -98.5f, -20.0f, id, XYZ{0,0,1}),
-            2.0f, -101.0f
+            2.0f, -100.0f
         ));
         copia.erase(it);
 
@@ -765,9 +765,9 @@ void cria_poligonos(int n){
         advance(it, randomIndex);
         id = *it - 1;
         poligonos.push_back(make_unique<Esfera>(
-            20.0f, -98.5f, 60.0f,
-            make_unique<Adesivo>(20.0f, -98.5f, 60.0f, id, XYZ{0,0,1}),
-            2.0f, -101.0f
+            20.0f, -88.5f, 60.0f,
+            make_unique<Adesivo>(20.0f, -88.5f, 60.0f, id, XYZ{0,0,1}),
+            2.0f, -100.0f
         ));
         copia.erase(it);
 
@@ -1800,10 +1800,10 @@ void loop_jogo(){
         //     if(jogador.estaVivo()) {jogador.desenha_mascara(); jogador.desenha_mira();}
         // }
 
-        GLfloat position0[] = { 0.0, 100.0f, 0.0f, 1.0f};
+        GLfloat position0[] = { 0.0, 150.0f, 0.0f, 1.0f};
         glLightfv(GL_LIGHT0,GL_POSITION,position0);
 
-        GLfloat position1[] = { 0.0, -100.0f, 0.0f, 1.0f};
+        GLfloat position1[] = { 0.0, -150.0f, 0.0f, 1.0f};
         glLightfv(GL_LIGHT1,GL_POSITION,position1);
 
         // Desenha chão
@@ -1844,9 +1844,8 @@ void loop_jogo(){
         }
 
         // 2) desenhamos polígonos e máscaras e realizamos movimentos
-        int i = 0;
         for (const auto& p : poligonos){
-            p->realiza_movimento(cores_poligonos[i],dt,pause,modo_daltonico); i++;
+            p->realiza_movimento(dt,pause,modo_daltonico);
             //p->desenha_mascara();
             //p->desenha_adesivo();
         }
@@ -1913,6 +1912,22 @@ void loop_jogo(){
                     // swept overlapped, mas final não -- movimento passou "perto".
                     // se quiser, pode tratar amostragens/interpolação para evitar tunneling.
                 }
+            }
+        }
+
+        int i = 0;
+        for(const auto& p : poligonos){
+            p->desenha_poligono(cores_poligonos[i], pause, modo_daltonico); i++;
+        }
+
+        if(modo_daltonico){
+            i=0;
+            for(const auto& p : poligonos){
+                glPushMatrix();
+                glTranslatef(p->getX(), p->getY() + 3.0f + 2.0f*(p->getSuperficie()==F::TORUS), p->getZ());
+                desenha_simbolo_coloradd(cores_poligonos[i]+23);
+                glPopMatrix();
+                i++;
             }
         }
 
