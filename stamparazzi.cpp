@@ -59,6 +59,7 @@ const Uint8* state;
 GLuint texturaTextoTempo = 0, texturaTextoObj = 0, texturaTextoPause = 0, texturaTextoMorto = 0, texturaTextoVida = 0, texBlocoBase = 0;
 int larguraTextoTempo = 0, larguraTextoObj = 0, larguraTextoPause = 0, larguraTextoMorto = 0, larguraTextoVida = 0, alturaTextoTempo = 0, alturaTextoObj = 0, alturaTextoPause = 0, alturaTextoMorto = 0, alturaTextoVida = 0;
 vector<int> cores_poligonos;
+vector<bool> cores_ativadas;
 unordered_map<int, GLuint> texNumero;
 
 SDL_Window* window;
@@ -799,13 +800,16 @@ void cria_poligonos(int n){
     if(dif!=FACIL){
         for(int i = 0; i < n; i++){
             cores_poligonos[i] = rand() % (12+1);
+            if(!cores_ativadas[cores_poligonos[i]]) {i--; continue;}
             if(poligonos[i]->getSuperficie()==F::TORUS and i<n-1) {
                 cores_poligonos[i+1]=cores_poligonos[i]; i++;
             }
         }
     } else {
-        for(int i = 0; i < n; i++)
+        for(int i = 0; i < n; i++) {
             cores_poligonos[i] = rand() % (12+1);
+            if(!cores_ativadas[cores_poligonos[i]]) {i--; continue;}
+        }
     }
 
     // Cria vetor de pares (polígono, cor)
@@ -1185,7 +1189,7 @@ void atualiza_renascer(float dt) {
     }
 }
 
-void desenha_menu(int menu_cursor) {
+void desenha_menu(int menu_cursor, int quad_atual) {
 
     int w, h;
     SDL_GetWindowSize(window, &w, &h);
@@ -1221,12 +1225,15 @@ void desenha_menu(int menu_cursor) {
 
     int baseTitle = 64;
     int baseOpt   = 38;
+    int baseQuads = 16;
     float escala = (float)h / 600.0f;
     int titleSize = std::max(8, (int)round(baseTitle * escala));
     int optSize   = std::max(8, (int)round(baseOpt   * escala));
+    int quadSize  = std::max(8, (int)round(baseQuads * escala));
 
     TTF_Font* fontTitle = TTF_OpenFont("arial.ttf", titleSize);
     TTF_Font* fontOpt   = TTF_OpenFont("arial.ttf", optSize);
+    TTF_Font* fontQuads = TTF_OpenFont("arial.ttf", quadSize);
 
     int lw, lh;
 
@@ -1346,12 +1353,14 @@ void desenha_menu(int menu_cursor) {
         glEnd();
 
         glColor4f(0, 0, 0, 1);
+        if(menu_cursor == 2 and i == quad_atual) glLineWidth(3);
         glBegin(GL_LINE_LOOP);
             glVertex2f(x1, y1);
             glVertex2f(x2, y1);
             glVertex2f(x2, y2);
             glVertex2f(x1, y2);
         glEnd();
+        glLineWidth(1);
 
         if (modo_daltonico) {
             glEnable(GL_TEXTURE_2D);
@@ -1380,6 +1389,26 @@ void desenha_menu(int menu_cursor) {
             glDisable(GL_TEXTURE_2D);
         }
 
+        // ------------------------------------------
+        //   DESENHAR TEXTO "ON" / "OFF" ABAIXO DO QUAD
+        // ------------------------------------------
+
+        {
+            // texto depende de cores ativadas
+            const char* label = cores_ativadas[i] ? "ON" : "OFF";
+
+            int tw, th;
+            GLuint texLabel = criaTexturaDoTexto(label, fontQuads, preto, tw, th);
+
+            // posição do texto centralizado abaixo do quadrado
+            float tx = x1 + (sqSize - tw) * 0.5f;
+            float ty = y2 + 5.0f * escala;  // pequeno espaçamento abaixo do quadrado
+
+            desenhaTexto(texLabel, tx, ty, tw, th);
+
+            glDeleteTextures(1, &texLabel);
+        }
+
         glPopMatrix();
     }
 
@@ -1393,6 +1422,7 @@ void desenha_menu(int menu_cursor) {
 
     TTF_CloseFont(fontTitle);
     TTF_CloseFont(fontOpt);
+    TTF_CloseFont(fontQuads);
 
     // restaurar
     glPopMatrix();
@@ -1409,6 +1439,7 @@ void loop_menu() {
     SDL_Event e;
     int menu_cursor = 0;        // 0 = dificuldade, 1 = daltonico, 2 = cores
     const int menu_opcoes = 3;  // quantidade de itens do menu
+    int quad_atual = 0;
 
     while (estado_atual == MENU_PRINCIPAL) {
 
@@ -1447,6 +1478,11 @@ void loop_menu() {
                         {
                             modo_daltonico = false;
                         }
+                        else if (menu_cursor == 2)
+                        {
+                            quad_atual--;
+                            if (quad_atual < 0) quad_atual = 0;
+                        }
                     }
                     else if (k == SDLK_RIGHT)
                     {
@@ -1459,7 +1495,15 @@ void loop_menu() {
                         {
                             modo_daltonico = true;
                         }
+                        else if (menu_cursor == 2)
+                        {
+                            quad_atual++;
+                            if (quad_atual >= 13) quad_atual = 12;
+                        }
                     }
+
+                    if (k == SDLK_SPACE and menu_cursor == 2)
+                        cores_ativadas[quad_atual] = !cores_ativadas[quad_atual];
 
                     // iniciar jogo
                     else if (k == SDLK_RETURN)
@@ -1532,6 +1576,19 @@ void loop_menu() {
                                 modo_daltonico = 0;
                             else modo_daltonico = 1;
                         }
+                        else if (menu_cursor == 2)
+                        {
+                            if (b == SDL_CONTROLLER_BUTTON_DPAD_LEFT)
+                            {
+                                quad_atual--;
+                                if (quad_atual < 0) quad_atual = 0;
+                            }
+                            else
+                            {
+                                quad_atual++;
+                                if (quad_atual >= 13) quad_atual = 12;
+                            }
+                        }
                     }
 
                     // fullscreen
@@ -1554,12 +1611,20 @@ void loop_menu() {
                         }
                     }
 
+                    // ativa cores desativadas
+                    if (b == SDL_CONTROLLER_BUTTON_A and menu_cursor == 2)
+                        cores_ativadas[quad_atual] = true;
+
+                    // desativa cores ativadas
+                    if (b == SDL_CONTROLLER_BUTTON_B and menu_cursor == 2)
+                        cores_ativadas[quad_atual] = false;
+
                     // iniciar jogo
-                    if (b == SDL_CONTROLLER_BUTTON_A || b == SDL_CONTROLLER_BUTTON_START)
+                    if (b == SDL_CONTROLLER_BUTTON_START)
                         estado_atual = JOGO_PRINCIPAL;
 
                     // sair
-                    if (b == SDL_CONTROLLER_BUTTON_B || b == SDL_CONTROLLER_BUTTON_BACK)
+                    if (b == SDL_CONTROLLER_BUTTON_BACK)
                         estado_atual = SAINDO;
                 }
             }
@@ -1568,7 +1633,7 @@ void loop_menu() {
         glClearColor(1,1,1,1);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        desenha_menu(menu_cursor);
+        desenha_menu(menu_cursor, quad_atual);
 
         SDL_GL_SwapWindow(window);
     }
@@ -2157,7 +2222,12 @@ int main(int argc, char* argv[]) {
 
 	SDL_ShowCursor(SDL_ENABLE);
 
+    cores_ativadas = vector<bool> (13, true);
+
     while(estado_atual != SAINDO) {
+
+        SDL_SetRelativeMouseMode(SDL_TRUE);
+        SDL_ShowCursor(SDL_DISABLE);
 
         loop_menu();
         if(estado_atual == SAINDO) break;
