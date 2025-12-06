@@ -1185,7 +1185,7 @@ void atualiza_renascer(float dt) {
     }
 }
 
-void desenha_menu() {
+void desenha_menu(int menu_cursor) {
 
     int w, h;
     SDL_GetWindowSize(window, &w, &h);
@@ -1221,44 +1221,174 @@ void desenha_menu() {
 
     int baseTitle = 64;
     int baseOpt   = 38;
-    float escala = (float)h / 600.0f;        // 600 = resolução base que você costumava usar
+    float escala = (float)h / 600.0f;
     int titleSize = std::max(8, (int)round(baseTitle * escala));
     int optSize   = std::max(8, (int)round(baseOpt   * escala));
 
     TTF_Font* fontTitle = TTF_OpenFont("arial.ttf", titleSize);
     TTF_Font* fontOpt   = TTF_OpenFont("arial.ttf", optSize);
 
-    // TTF_Font* fontTitle = TTF_OpenFont("arial.ttf", 64);
-    // TTF_Font* fontOpt   = TTF_OpenFont("arial.ttf", 38);
-
     int lw, lh;
 
-    // Título
+    // --- TÍTULO ---
     GLuint texTitulo = criaTexturaDoTexto("STAMPARAZZI", fontTitle, preto, lw, lh);
-    desenhaTexto(texTitulo, w/2 - lw/2, h*0.15f, lw, lh);
-    //desenhaTexto(texTitulo, w/2 - lw/2, h*0.15f, lw, lh);
+    float xTitulo = w/2 - lw/2;
+    float yTitulo = h*0.15f;
+    desenhaTexto(texTitulo, xTitulo, yTitulo, lw, lh);
     glDeleteTextures(1, &texTitulo);
 
-    // Dificuldade
-    string difStr = "Dificuldade: ";
-    if (dif == FACIL) difStr += "FACIL";
-    else if (dif == MEDIO) difStr += "MEDIO";
-    else difStr += "DIFICIL";
+    // ----------------------------
+    //   ITENS DO MENU (2 itens)
+    // ----------------------------
+    float itemY[2] = { h * 0.40f, h * 0.50f };
+    string textoItem[2];
 
-    GLuint texDif = criaTexturaDoTexto(difStr.c_str(), fontOpt, preto, lw, lh);
-    desenhaTexto(texDif, w/2 - lw/2, h*0.40f, lw, lh);
-    glDeleteTextures(1, &texDif);
+    // monta texto dificuldade
+    if      (dif == FACIL)  textoItem[0] = "Dificuldade: FACIL";
+    else if (dif == MEDIO)  textoItem[0] = "Dificuldade: MEDIO";
+    else                    textoItem[0] = "Dificuldade: DIFICIL";
 
-    // Modo daltônico
-    string dalStr = string("Modo daltonico: ") + (modo_daltonico ? "ON" : "OFF");
+    // monta texto daltonismo
+    textoItem[1] = string("Modo daltonico: ") + (modo_daltonico ? "ON" : "OFF");
 
-    GLuint texDal = criaTexturaDoTexto(dalStr.c_str(), fontOpt, preto, lw, lh);
-    desenhaTexto(texDal, w/2 - lw/2, h*0.50f, lw, lh);
-    glDeleteTextures(1, &texDal);
+    for (int i = 0; i < 2; i++)
+    {
+        GLuint tex = criaTexturaDoTexto(textoItem[i].c_str(), fontOpt, preto, lw, lh);
 
-    // Start
+        float x = w/2 - lw/2;
+        float y = itemY[i];
+
+        desenhaTexto(tex, x, y, lw, lh);
+
+        // ---------------------------------------------------
+        //   DESENHAR RETÂNGULO AO REDOR DO ITEM SELECIONADO
+        // ---------------------------------------------------
+        if (i == menu_cursor)
+        {
+            float margem = 10.0f * escala;
+
+            float x1 = x - margem;
+            float y1 = y - margem;
+            float x2 = x + lw + margem;
+            float y2 = y + lh + margem;
+
+            glColor3f(0,0,0);
+            glLineWidth(3);
+            glBegin(GL_LINE_LOOP);
+                glVertex2f(x1, y1);
+                glVertex2f(x2, y1);
+                glVertex2f(x2, y2);
+                glVertex2f(x1, y2);
+            glEnd();
+
+            // -----------------------------
+            //       SETAS LATERAIS
+            // -----------------------------
+
+            float midY = (y1 + y2) * 0.5f;   // centro vertical do item
+            float arrowW = 18.0f * escala;   // largura
+            float arrowH = (y2 - y1) * 0.35f; // altura proporcional ao retângulo
+
+            // --- Seta esquerda ---
+            if((menu_cursor == 0 and dif != FACIL) or (menu_cursor == 1 and modo_daltonico)) {
+                glBegin(GL_TRIANGLES);
+                    glVertex2f(x1 - 2*arrowW, midY);         // ponta
+                    glVertex2f(x1 - arrowW, midY - arrowH);
+                    glVertex2f(x1 - arrowW, midY + arrowH);
+                glEnd();
+            }
+
+            // --- Seta direita ---
+            if((menu_cursor == 0 and dif != DIFICIL) or (menu_cursor == 1 and !modo_daltonico)) {
+                glBegin(GL_TRIANGLES);
+                    glVertex2f(x2 + 2*arrowW, midY);         // ponta
+                    glVertex2f(x2 + arrowW, midY - arrowH);
+                    glVertex2f(x2 + arrowW, midY + arrowH);
+                glEnd();
+            }
+        }
+
+        glLineWidth(1);
+        glDeleteTextures(1, &tex);
+    }
+
+    // -------------------------------------------
+    // DESENHAR QUADRADOS DE TODAS AS 13 CORES
+    // -------------------------------------------
+
+    int totalCores = 13;
+
+    // tamanho base e escala
+    float sqSize  = 40.0f * escala;     // tamanho do quadrado
+    float sqSpace = 20.0f * escala;     // espaço entre quadrados
+
+    float totalWidth = totalCores * sqSize + (totalCores - 1) * sqSpace;
+    float startX = (w - totalWidth) * 0.5f;   // centralizar horizontalmente
+    float ySquares = h * 0.70f;               // posição vertical (70% da tela)
+
+    for (int i = 0; i < totalCores; i++)
+    {
+        float x1 = startX + i * (sqSize + sqSpace);
+        float y1 = ySquares;
+        float x2 = x1 + sqSize;
+        float y2 = y1 + sqSize;
+
+        glPushMatrix();
+
+        // aplica a cor do polígono i
+        muda_cor(i);
+
+        glBegin(GL_QUADS);
+            glVertex2f(x1, y1);
+            glVertex2f(x2, y1);
+            glVertex2f(x2, y2);
+            glVertex2f(x1, y2);
+        glEnd();
+
+        glColor4f(0, 0, 0, 1);
+        glBegin(GL_LINE_LOOP);
+            glVertex2f(x1, y1);
+            glVertex2f(x2, y1);
+            glVertex2f(x2, y2);
+            glVertex2f(x1, y2);
+        glEnd();
+
+        if (modo_daltonico) {
+            glEnable(GL_TEXTURE_2D);
+            glBindTexture(GL_TEXTURE_2D, texID[i+23]);
+
+            // centro do quad
+            float cx = (x1 + x2) * 0.5f;
+            float cy = (y1 + y2) * 0.5f;
+            float hw = (x2 - x1) * 0.5f;
+            float hh = (y2 - y1) * 0.5f;
+
+            glPushMatrix();
+
+            glTranslatef(cx, cy, 0);        // move origem para o centro do quad
+            if(i != 11) glRotatef(90, 0, 0, 1);        // agora sim gira corretamente
+            glTranslatef(-cx, -cy, 0);      // volta ao espaço original
+
+            glBegin(GL_QUADS);
+                glTexCoord2f(0, 0); glVertex2f(x1, y1);
+                glTexCoord2f(1, 0); glVertex2f(x2, y1);
+                glTexCoord2f(1, 1); glVertex2f(x2, y2);
+                glTexCoord2f(0, 1); glVertex2f(x1, y2);
+            glEnd();
+            glPopMatrix();
+
+            glDisable(GL_TEXTURE_2D);
+        }
+
+        glPopMatrix();
+    }
+
+    // restaurar cor preta para desenhar textos depois
+    glColor3f(0,0,0);
+
+    // --- TEXTO "ENTER" ---
     GLuint texStart = criaTexturaDoTexto("Pressione ENTER para iniciar", fontOpt, preto, lw, lh);
-    desenhaTexto(texStart, w/2 - lw/2, h*0.70f, lw, lh);
+    desenhaTexto(texStart, w/2 - lw/2, h*0.90f, lw, lh);
     glDeleteTextures(1, &texStart);
 
     TTF_CloseFont(fontTitle);
@@ -1277,6 +1407,8 @@ void desenha_menu() {
 void loop_menu() {
 
     SDL_Event e;
+    int menu_cursor = 0;        // 0 = dificuldade, 1 = daltonico, 2 = cores
+    const int menu_opcoes = 3;  // quantidade de itens do menu
 
     while (estado_atual == MENU_PRINCIPAL) {
 
@@ -1285,125 +1417,158 @@ void loop_menu() {
 
             atualiza_controller(e);
 
-            if(!game_controller){  
-                
-                SDL_SetRelativeMouseMode(SDL_TRUE);
-                SDL_ShowCursor(SDL_DISABLE);
-                
-                if (e.type == SDL_KEYDOWN) {
+            if (!game_controller)
+            {
+                if (e.type == SDL_KEYDOWN)
+                {
+                    SDL_Keycode k = e.key.keysym.sym;
 
-                    if (e.key.keysym.sym == SDLK_UP) {
-                        dif++;
-                        if (dif > DIFICIL) dif = FACIL;
+                    // mover cursor para cima / baixo
+                    if (k == SDLK_UP)
+                    {
+                        menu_cursor--;
+                        if (menu_cursor < 0) menu_cursor = 0;
+                    }
+                    else if (k == SDLK_DOWN)
+                    {
+                        menu_cursor++;
+                        if (menu_cursor >= menu_opcoes) menu_cursor = menu_opcoes - 1;
                     }
 
-                    if (e.key.keysym.sym == SDLK_DOWN) {
-                        dif--;
-                        if (dif < FACIL) dif = DIFICIL;
-                    }
-
-                    if (e.key.keysym.sym == SDLK_LEFT ||
-                        e.key.keysym.sym == SDLK_RIGHT) {
-                        modo_daltonico = !modo_daltonico;
-                    }
-
-                        if(e.key.keysym.sym == SDLK_F11) {
-                            tela_cheia = !tela_cheia;
-                            //if (!pause) pause = true;
-                            if (tela_cheia) {
-                                SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
-                                int w, h;
-                                SDL_GetWindowSize(window, &w, &h);
-                                ajustaProjecao(w, h);
-                            } else {
-                                SDL_SetWindowFullscreen(window, 0);
-                                SDL_SetWindowSize(window, 800, 600);
-                                SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
-                                ajustaProjecao(800, 600);
-                            }
+                    // alterar opções da linha selecionada
+                    else if (k == SDLK_LEFT)
+                    {
+                        if (menu_cursor == 0)   // dificuldade
+                        {
+                            dif--;
+                            if (dif < FACIL) dif = FACIL;
                         }
+                        else if (menu_cursor == 1) // modo daltonico
+                        {
+                            modo_daltonico = false;
+                        }
+                    }
+                    else if (k == SDLK_RIGHT)
+                    {
+                        if (menu_cursor == 0)
+                        {
+                            dif++;
+                            if (dif > DIFICIL) dif = DIFICIL;
+                        }
+                        else if (menu_cursor == 1)
+                        {
+                            modo_daltonico = true;
+                        }
+                    }
 
-                    if (e.key.keysym.sym == SDLK_RETURN) {
+                    // iniciar jogo
+                    else if (k == SDLK_RETURN)
+                    {
                         estado_atual = JOGO_PRINCIPAL;
                     }
 
-                    if(e.key.keysym.sym == SDLK_ESCAPE) {
-                        estado_atual = SAINDO;
-                    }
-                }
-            } else {
-                if (e.type == SDL_CONTROLLERBUTTONDOWN) {
-                    // --- D-Pad Cima ---
-                    if (e.cbutton.button == SDL_CONTROLLER_BUTTON_DPAD_UP) {
-                        dif++;
-                        if (dif > DIFICIL) dif = FACIL;
-                    }
-
-                    // --- D-Pad Baixo ---
-                    if (e.cbutton.button == SDL_CONTROLLER_BUTTON_DPAD_DOWN) {
-                        dif--;
-                        if (dif < FACIL) dif = DIFICIL;
-                    }
-
-                    // --- D-Pad Esquerda / Direita (modo daltônico) ---
-                    if (e.cbutton.button == SDL_CONTROLLER_BUTTON_DPAD_LEFT ||
-                        e.cbutton.button == SDL_CONTROLLER_BUTTON_DPAD_RIGHT) {
-                        modo_daltonico = !modo_daltonico;
-                    }
-
-                    // --- Toggle fullscreen (LB + RB juntos) ---
-                    if (SDL_GameControllerGetButton(game_controller, SDL_CONTROLLER_BUTTON_LEFTSHOULDER) &&
-                        SDL_GameControllerGetButton(game_controller, SDL_CONTROLLER_BUTTON_RIGHTSHOULDER)) {
-
+                    // alternar fullscreen
+                    else if (k == SDLK_F11)
+                    {
                         tela_cheia = !tela_cheia;
-
-                        if (tela_cheia) {
+                        if (tela_cheia)
+                        {
                             SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
-                            int w, h;
-                            SDL_GetWindowSize(window, &w, &h);
-                            ajustaProjecao(w, h);
-                        } else {
+                            int w, h; SDL_GetWindowSize(window, &w, &h);
+                            ajustaProjecao(w,h);
+                        }
+                        else
+                        {
                             SDL_SetWindowFullscreen(window, 0);
                             SDL_SetWindowSize(window, 800, 600);
                             SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
-                            ajustaProjecao(800, 600);
+                            ajustaProjecao(800,600);
                         }
                     }
 
-                    // --- Botão A ou Start: iniciar jogo ---
-                    if (e.cbutton.button == SDL_CONTROLLER_BUTTON_A ||
-                        e.cbutton.button == SDL_CONTROLLER_BUTTON_START) {
-                        estado_atual = JOGO_PRINCIPAL;
-                    }
-
-                    // --- Botão B ou Back: sair ---
-                    if (e.cbutton.button == SDL_CONTROLLER_BUTTON_B ||
-                        e.cbutton.button == SDL_CONTROLLER_BUTTON_BACK) {
+                    else if (k == SDLK_ESCAPE)
+                    {
                         estado_atual = SAINDO;
                     }
-                } else if(e.type == SDL_CONTROLLERAXISMOTION) {
-                    Sint16 axisLX = SDL_GameControllerGetAxis(game_controller, SDL_CONTROLLER_AXIS_LEFTX);
-                    Sint16 axisLY = SDL_GameControllerGetAxis(game_controller, SDL_CONTROLLER_AXIS_LEFTY);
+                }
+            } else // game_controller ativo
+            {
+                if (e.type == SDL_CONTROLLERBUTTONDOWN)
+                {
+                    int b = e.cbutton.button;
 
-                    if(axisLY < -32000) {
-                        dif++;
-                        if (dif > DIFICIL) dif = FACIL;
+                    // mover cursor
+                    if (b == SDL_CONTROLLER_BUTTON_DPAD_UP)
+                    {
+                        menu_cursor--;
+                        if (menu_cursor < 0) menu_cursor = 0;
+                    }
+                    else if (b == SDL_CONTROLLER_BUTTON_DPAD_DOWN)
+                    {
+                        menu_cursor++;
+                        if (menu_cursor >= menu_opcoes) menu_cursor = menu_opcoes - 1;
                     }
 
-                    if(axisLY > 32000) {
-                        dif--;
-                        if (dif < FACIL) dif = DIFICIL;
+                    // alterar opção da linha selecionada
+                    else if (b == SDL_CONTROLLER_BUTTON_DPAD_LEFT ||
+                            b == SDL_CONTROLLER_BUTTON_DPAD_RIGHT)
+                    {
+                        if (menu_cursor == 0)  // dificuldade
+                        {
+                            if (b == SDL_CONTROLLER_BUTTON_DPAD_LEFT)
+                            {
+                                dif--;
+                                if (dif < FACIL) dif = FACIL;
+                            }
+                            else
+                            {
+                                dif++;
+                                if (dif > DIFICIL) dif = DIFICIL;
+                            }
+                        }
+                        else if (menu_cursor == 1) // daltônico
+                        {
+                            if (b == SDL_CONTROLLER_BUTTON_DPAD_LEFT)
+                                modo_daltonico = 0;
+                            else modo_daltonico = 1;
+                        }
                     }
 
-                    if(fabs(axisLX) > 32000) modo_daltonico = !modo_daltonico;
+                    // fullscreen
+                    if (SDL_GameControllerGetButton(game_controller, SDL_CONTROLLER_BUTTON_LEFTSHOULDER) &&
+                        SDL_GameControllerGetButton(game_controller, SDL_CONTROLLER_BUTTON_RIGHTSHOULDER))
+                    {
+                        tela_cheia = !tela_cheia;
+                        if (tela_cheia)
+                        {
+                            SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
+                            int w,h; SDL_GetWindowSize(window,&w,&h);
+                            ajustaProjecao(w,h);
+                        }
+                        else
+                        {
+                            SDL_SetWindowFullscreen(window, 0);
+                            SDL_SetWindowSize(window, 800, 600);
+                            SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+                            ajustaProjecao(800,600);
+                        }
+                    }
+
+                    // iniciar jogo
+                    if (b == SDL_CONTROLLER_BUTTON_A || b == SDL_CONTROLLER_BUTTON_START)
+                        estado_atual = JOGO_PRINCIPAL;
+
+                    // sair
+                    if (b == SDL_CONTROLLER_BUTTON_B || b == SDL_CONTROLLER_BUTTON_BACK)
+                        estado_atual = SAINDO;
                 }
             }
         }
-
+        
         glClearColor(1,1,1,1);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        desenha_menu();
+        desenha_menu(menu_cursor);
 
         SDL_GL_SwapWindow(window);
     }
