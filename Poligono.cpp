@@ -14,8 +14,10 @@ Poligono::Poligono(float ix, float iy, float iz, int s, unique_ptr<Adesivo> a)
 : Entidade(ix,iy,iz), superficie(s) {
     this->setAdesivo(move(a));
 }
-Poligono::Poligono(float ix, float iy, float iz, float xs, float ys, float zs, int s, unique_ptr<Adesivo> a)
-: Entidade(ix,iy,iz), escalax(xs), escalay(ys), escalaz(zs), superficie(s) {
+Poligono::Poligono(float ix, float iy, float iz, int op, float xs, float ys, float zs, int s, unique_ptr<Adesivo> a)
+: Entidade(ix,iy,iz), superficie(s) {
+    if(!op) {rotx = xs, roty = ys, rotz = zs;} 
+    else {escalax = xs, escalay = ys, escalaz = zs;}
     this->setAdesivo(move(a));
 }
 
@@ -26,6 +28,12 @@ float Poligono::getEscalaX() const {return this->escalax;}
 float Poligono::getEscalaY() const {return this->escalay;}
 
 float Poligono::getEscalaZ() const {return this->escalaz;}
+
+float Poligono::getRotX() const {return this->rotx;}
+
+float Poligono::getRotY() const {return this->roty;}
+
+float Poligono::getRotZ() const {return this->rotz;}
 
 void Poligono::setEscala(float xs, float ys, float zs) {
     escalax = xs, escalay = ys, escalaz = zs;
@@ -42,15 +50,15 @@ void Poligono::desenha_adesivo_no_poligono(const Adesivo& adesivo, float offset)
     auto n = adesivo.getNormal();
 
     // rotaciona conforme a normal
-    if (n.x == 1)       glRotatef(90, 0, 1, 0);   // X+
-    else if (n.x == -1) glRotatef(-90, 0, 1, 0);  // X-
-    else if (n.y == 1)  glRotatef(-90, 1, 0, 0);  // Y+
-    else if (n.y == -1) glRotatef(90, 1, 0, 0);   // Y-
-    else if (n.z == -1) glRotatef(180, 0, 1, 0);  // Z-
+    //if (n.x == 1)       glRotatef(90, 0, 1, 0);   // X+
+    //else if (n.x == -1) glRotatef(-90, 0, 1, 0);  // X-
+    //else if (n.y == 1)  glRotatef(-90, 1, 0, 0);  // Y+
+    //else if (n.y == -1) glRotatef(90, 1, 0, 0);   // Y-
+    //else if (n.z == -1) glRotatef(180, 0, 1, 0);  // Z-
     // se for Z+ (default), não precisa girar
 
     // empurra até a superfície do polígono
-    glTranslatef(n.x * offset, n.y * offset, n.z * offset);
+    //glTranslatef(n.x * offset, n.y * offset, n.z * offset);
 
     // desenha o adesivo plano
     adesivo.desenha_adesivo();
@@ -61,8 +69,8 @@ void Poligono::desenha_adesivo_no_poligono(const Adesivo& adesivo, float offset)
 Cubo::Cubo() : Poligono(F::CUBO) {}
 Cubo::Cubo(float ix, float iy, float iz, unique_ptr<Adesivo> a, float l)
 : Poligono(ix,iy,iz,F::CUBO,move(a)), lado(l) {}
-Cubo::Cubo(float ix, float iy, float iz, float xs, float ys, float zs, unique_ptr<Adesivo> a, float l)
-: Poligono(ix,iy,iz,xs,ys,zs,F::CUBO,move(a)), lado(l) {}
+Cubo::Cubo(float ix, float iy, float iz, int op, float xs, float ys, float zs, unique_ptr<Adesivo> a, float l)
+: Poligono(ix,iy,iz,op,xs,ys,zs,F::CUBO,move(a)), lado(l) {}
 
 AABB Cubo::getAABB() const {
     return {{ (this->getX() - lado) * getEscalaX(), (this->getY() - lado) * getEscalaY(), (this->getZ() - lado) * getEscalaZ() },
@@ -73,6 +81,21 @@ float Cubo::getLado() const {return this->lado;}
 
 void Cubo::realiza_movimento(float dt, bool pause, bool modo_daltonico) {
     //desenha_poligono(cor, pause, modo_daltonico);
+    /*if (getAdesivo()) {
+
+        XYZ normal;
+
+        float rx = getRotX() * M_PI / 180.0f;
+        float ry = getRotY() * M_PI / 180.0f;
+        float rz = getRotZ() * M_PI / 180.0f;
+
+        // A ordem das rotações deve ser a mesma que você usa para desenhar!
+        normal = rotX(normal, rx);
+        normal = rotY(normal, ry);
+        normal = rotZ(normal, rz);
+
+        getAdesivo()->setNormal(normal);
+    }*/
 }
 
 bool Cubo::colide_jogador(const AABB& s) const {
@@ -157,8 +180,8 @@ void Cubo::desenha_mascara() {
 Piramide::Piramide() : Poligono(F::PIRAMIDE) {}
 Piramide::Piramide(float ix, float iy, float iz, unique_ptr<Adesivo> a, float b, float h)
 : Poligono(ix,iy,iz,F::PIRAMIDE,move(a)), base(b), altura(h) {}
-Piramide::Piramide(float ix, float iy, float iz, float xs, float ys, float zs, unique_ptr<Adesivo> a, float b, float h)
-: Poligono(ix,iy,iz,xs,ys,zs,F::PIRAMIDE,move(a)), base(b), altura(h) {}
+Piramide::Piramide(float ix, float iy, float iz, int op, float xs, float ys, float zs, unique_ptr<Adesivo> a, float b, float h)
+: Poligono(ix,iy,iz,op,xs,ys,zs,F::PIRAMIDE,move(a)), base(b), altura(h) {}
 
 AABB Piramide::getAABB() const {
     return {{(this->getX() - base/2.0f) * getEscalaX(), (this->getY() - altura/2.0f) * getEscalaY(), (this->getZ() - base/2.0f) * getEscalaZ()}, 
@@ -169,6 +192,21 @@ float Piramide::getAltura() const {return this->altura;}
 
 void Piramide::realiza_movimento(float dt, bool pause, bool modo_daltonico) {
     //desenha_poligono(cor, pause, modo_daltonico);
+    /*if (getAdesivo()) {
+
+        XYZ normal;
+
+        float rx = getRotX() * M_PI / 180.0f;
+        float ry = getRotY() * M_PI / 180.0f;
+        float rz = getRotZ() * M_PI / 180.0f;
+
+        // A ordem das rotações deve ser a mesma que você usa para desenhar!
+        normal = rotX(normal, rx);
+        normal = rotY(normal, ry);
+        normal = rotZ(normal, rz);
+
+        getAdesivo()->setNormal(normal);
+    }*/
 }
 
 bool Piramide::colide_jogador(const AABB& s) const {
@@ -303,10 +341,16 @@ Esfera::Esfera(float ix, float iy, float iz, unique_ptr<Adesivo> a, float r, flo
     //chao = -1.0f;         // altura do chão (pode ser o y=-1 do seu cenário)
 }
 
-Esfera::Esfera(float ix, float iy, float iz, float xs, float ys, float zs, unique_ptr<Adesivo> a, float r, float c)
-: Poligono(ix,iy,iz,xs,ys,zs,F::ESFERA,move(a)), raio(r), chao(c) {
-    y_vel = 10.0f;
+Esfera::Esfera(float ix, float iy, float iz, int op, float xs, float ys, float zs, unique_ptr<Adesivo> a, float r, float c)
+: Poligono(ix,iy,iz,op,xs,ys,zs,F::ESFERA,move(a)), raio(r), chao(c) {
+    //y_vel = 10.0f;
     grav = -9.8f;     // "gravidade"
+    altura_inicial = iy;
+
+    // velocidade para chegar até a altura inicial
+    velocidade_inicial = sqrt(2.0f * (-grav) * (altura_inicial - chao));
+
+    y_vel = velocidade_inicial;
     //chao = -1.0f;         // altura do chão (pode ser o y=-1 do seu cenário)
 }
 
@@ -329,6 +373,7 @@ void Esfera::realiza_movimento(float dt, bool pause, bool modo_daltonico) {
         // Checa colisão com o chão
         if (this->getY() - raio <= chao)
         {
+            //cout << this->getAdesivo()->getTexturaID() << " colidiu com chao" << endl;
             this->setY(chao + raio);
             y_vel = velocidade_inicial; // sempre restaura a energia total
         }
@@ -343,6 +388,19 @@ void Esfera::realiza_movimento(float dt, bool pause, bool modo_daltonico) {
             this->getAdesivo()->setX(this->getX());
             this->getAdesivo()->setY(this->getY());
             this->getAdesivo()->setZ(this->getZ());
+
+            /*XYZ normal;
+
+            float rx = getRotX() * M_PI / 180.0f;
+            float ry = getRotY() * M_PI / 180.0f;
+            float rz = getRotZ() * M_PI / 180.0f;
+
+            // A ordem das rotações deve ser a mesma que você usa para desenhar!
+            normal = rotX(normal, rx);
+            normal = rotY(normal, ry);
+            normal = rotZ(normal, rz);
+
+            getAdesivo()->setNormal(normal);*/
         }
     }
     //desenha_poligono(cor, pause, modo_daltonico);
@@ -436,8 +494,8 @@ Cilindro::Cilindro(float ix, float iy, float iz, unique_ptr<Adesivo> a, float r,
     axis = { 0.0f, 0.0f, 1.0f };
     ang = 0.0f;
 }
-Cilindro::Cilindro(float ix, float iy, float iz, float xs, float ys, float zs, unique_ptr<Adesivo> a, float r, float h)
-: Poligono(ix,iy,iz,xs,ys,zs,F::CILINDRO,move(a)), raio(r), altura(h), x_vel(1.0f) {
+Cilindro::Cilindro(float ix, float iy, float iz, int op, float xs, float ys, float zs, unique_ptr<Adesivo> a, float r, float h)
+: Poligono(ix,iy,iz,op,xs,ys,zs,F::CILINDRO,move(a)), raio(r), altura(h), x_vel(1.0f) {
     centro_base = { this->getX(), this->getY(), this->getZ() - altura/2.0f };
     axis = { 0.0f, 0.0f, 1.0f };
     ang = 0.0f;
@@ -472,6 +530,19 @@ void Cilindro::realiza_movimento(float dt, bool pause, bool modo_daltonico) {
         this->getAdesivo()->setX(this->getX());
         this->getAdesivo()->setY(this->getY());
         this->getAdesivo()->setZ(this->getZ());
+
+        /*XYZ normal;
+
+        float rx = getRotX() * M_PI / 180.0f;
+        float ry = getRotY() * M_PI / 180.0f;
+        float rz = getRotZ() * M_PI / 180.0f;
+
+        // A ordem das rotações deve ser a mesma que você usa para desenhar!
+        normal = rotX(normal, rx);
+        normal = rotY(normal, ry);
+        normal = rotZ(normal, rz);
+
+        getAdesivo()->setNormal(normal);*/
     }
     // if (this->getAdesivo() and !pause) {
     //     auto n = this->getAdesivo()->getNormal();
@@ -594,8 +665,8 @@ Cone::Cone(float ix, float iy, float iz, unique_ptr<Adesivo> a, float r, float h
     apex = { this->getX(), this->getY(), this->getZ() };
     axis = { 0.0f, 0.0f, -1.0f }; 
 }
-Cone::Cone(float ix, float iy, float iz, float xs, float ys, float zs, unique_ptr<Adesivo> a, float r, float h)
-: Poligono(ix,iy,iz,xs,ys,zs,F::CONE,move(a)), raio(r), altura(h), ang(0.0f) { 
+Cone::Cone(float ix, float iy, float iz, int op, float xs, float ys, float zs, unique_ptr<Adesivo> a, float r, float h)
+: Poligono(ix,iy,iz,op,xs,ys,zs,F::CONE,move(a)), raio(r), altura(h), ang(0.0f) { 
     apex = { this->getX(), this->getY(), this->getZ() };
     axis = { 0.0f, 0.0f, -1.0f }; 
 }
@@ -763,8 +834,8 @@ Torus::Torus(float ix, float iy, float iz, unique_ptr<Adesivo> a, float re, floa
     p.par = nullptr;
     conjugado = nullptr;
 }
-Torus::Torus(float ix, float iy, float iz, float xs, float ys, float zs, unique_ptr<Adesivo> a, float re, float ra)
-: Poligono(ix,iy,iz,xs,ys,zs,F::TORUS,move(a)) {
+Torus::Torus(float ix, float iy, float iz, int op, float xs, float ys, float zs, unique_ptr<Adesivo> a, float re, float ra)
+: Poligono(ix,iy,iz,op,xs,ys,zs,F::TORUS,move(a)) {
     p.c = {ix,iy,iz};
     p.raio_menor = re;
     p.raio_maior = ra;
@@ -785,6 +856,21 @@ AABB Torus::getAABB() const {
 
 void Torus::realiza_movimento(float dt, bool pause, bool modo_daltonico) {
     //desenha_poligono(cor, pause, modo_daltonico);
+    /*if (getAdesivo()) {
+
+        XYZ normal;
+
+        float rx = getRotX() * M_PI / 180.0f;
+        float ry = getRotY() * M_PI / 180.0f;
+        float rz = getRotZ() * M_PI / 180.0f;
+
+        // A ordem das rotações deve ser a mesma que você usa para desenhar!
+        normal = rotX(normal, rx);
+        normal = rotY(normal, ry);
+        normal = rotZ(normal, rz);
+
+        getAdesivo()->setNormal(normal);
+    }*/
 }
 
 bool Torus::colide_jogador(const AABB& s) const{

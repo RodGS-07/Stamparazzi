@@ -35,3 +35,27 @@ GLfloat Arccos(XYZ Pa, XYZ Pb){//Arco cosseno entre dois vetores
     GLfloat e = Escalar(Pa,Pb);
     return acos(e/(!Pa*!Pb));
 }
+XYZ rotX(const XYZ& v, float ang) {//Vetor rotacionado no eixo x
+    float c = cos(ang), s = sin(ang);
+    return XYZ(
+        v.x,
+        v.y * c - v.z * s,
+        v.y * s + v.z * c
+    );
+}
+XYZ rotY(const XYZ& v, float ang) {//Vetor rotacionado no eixo y
+    float c = cos(ang), s = sin(ang);
+    return XYZ(
+        v.x * c + v.z * s,
+        v.y,
+        -v.x * s + v.z * c
+    );
+}
+XYZ rotZ(const XYZ& v, float ang) {//Vetor rotacionado no eixo z
+    float c = cos(ang), s = sin(ang);
+    return XYZ(
+        v.x * c - v.y * s,
+        v.x * s + v.y * c,
+        v.z
+    );
+}

@@ -37,4 +37,13 @@ XYZ Normal(XYZ Pa, XYZ Pb, XYZ Pc);
 // Ângulo (arccos) entre dois vetores
 GLfloat Arccos(XYZ Pa, XYZ Pb);
 
+// Vetor rotacionado no eixo x
+XYZ rotX(const XYZ& v, float ang);
+
+// Vetor rotacionado no eixo y
+XYZ rotY(const XYZ& v, float ang);
+
+// Vetor rotacionado no eixo z
+XYZ rotZ(const XYZ& v, float ang);
+
 #endif

@@ -332,7 +332,7 @@ void inicializa_ttf(){
     // resolução base = 600px de altura
     float escala = (float)h / 600.0f;
 
-    int novo_tam = max(12, (int)(12 * escala));  
+    int novo_tam = max(18, (int)(18 * escala));  
 
     fonte = TTF_OpenFont("arial.ttf", novo_tam); // precisa de um .ttf na mesma pasta
     //cout << (fonte==NULL) << endl;
@@ -395,7 +395,7 @@ void ajusta_tamanho_fonte() {
     // resolução base = 600px de altura
     float escala = (float)h / 600.0f;
 
-    int novo_tam = max(12, (int)(12 * escala));   
+    int novo_tam = max(18, (int)(18 * escala));   
     // 12 é o tamanho original da sua fonte
     // em fullscreen 1080p → novo_tam ≈ 21
 
@@ -451,7 +451,7 @@ void cria_poligonos(int n){
     limites.push_back(make_unique<Cubo>(0.0f,0.0f,0.0f,nullptr,200.0f));
 
     //chao
-    limites.push_back(make_unique<Cubo>(0.0f,-1.0f,0.0f,100.0f,0.1f,100.0f,nullptr,2.0f));
+    limites.push_back(make_unique<Cubo>(0.0f,-1.0f,0.0f,1,100.0f,0.1f,100.0f,nullptr,2.0f));
 
     set<int> copia; int idx;
     int randomIndex, id; auto it=copia.begin();
@@ -464,7 +464,8 @@ void cria_poligonos(int n){
         id = *it - 1;
         poligonos.push_back(make_unique<Cubo>(
             0.0f, 1.5f, -20.0f,
-            make_unique<Adesivo>(0.0f, 1.5f, -20.0f, id, XYZ{0,0,1}),
+            0, 0.0f, 0.0f, 0.0f,
+            make_unique<Adesivo>(0.0f, 1.5f, -20.0f, id),
             2.0f
         ));
         copia.erase(it);
@@ -475,7 +476,8 @@ void cria_poligonos(int n){
         id = *it - 1;
         poligonos.push_back(make_unique<Piramide>(
             10.0f, 1.5f, -20.0f,
-            make_unique<Adesivo>(10.0f, 1.5f, -20.0f, id, XYZ{0,0,1}),
+            0, 0.0f, 0.0f, 0.0f,
+            make_unique<Adesivo>(10.0f, 1.5f, -20.0f, id),
             4.0f, 4.0f
         ));
         copia.erase(it);
@@ -486,7 +488,8 @@ void cria_poligonos(int n){
         id = *it - 1;
         poligonos.push_back(make_unique<Esfera>(
             20.0f, 1.5f, -20.0f,
-            make_unique<Adesivo>(20.0f, 1.5f, -20.0f, id, XYZ{0,0,1}),
+            0, 0.0f, 0.0f, 0.0f,
+            make_unique<Adesivo>(20.0f, 1.5f, -20.0f, id),
             2.0f, -1.0f
         ));
         copia.erase(it);
@@ -497,7 +500,8 @@ void cria_poligonos(int n){
         id = *it - 1;
         poligonos.push_back(make_unique<Cilindro>(
             30.0f, 1.5f, -30.0f,
-            make_unique<Adesivo>(30.0f, 1.5f, -30.0f, id, XYZ{0,0,1}),
+            0, 0.0f, 0.0f, 0.0f,
+            make_unique<Adesivo>(30.0f, 1.5f, -30.0f, id),
             2.0f, 4.0f
         ));
         copia.erase(it);
@@ -508,7 +512,8 @@ void cria_poligonos(int n){
         id = *it - 1;
         poligonos.push_back(make_unique<Cone>(
             40.0f, 0.5f, -20.0f,
-            make_unique<Adesivo>(40.0f, 0.5f, -20.0f, id, XYZ{0,0,1}),
+            0, 0.0f, 0.0f, 0.0f,
+            make_unique<Adesivo>(40.0f, 0.5f, -20.0f, id),
             2.0f, 4.0f
         ));
         copia.erase(it);
@@ -519,7 +524,8 @@ void cria_poligonos(int n){
         id = *it - 1;
         poligonos.push_back(make_unique<Cubo>(
             -20, 1.5, 50,
-            make_unique<Adesivo>(-20, 1.5, 50, id, XYZ{0,0,1}),
+            0, 0.0f, 0.0f, 0.0f,
+            make_unique<Adesivo>(-20, 1.5, 50, id),
             2.0f
         ));
         copia.erase(it);
@@ -530,7 +536,8 @@ void cria_poligonos(int n){
         id = *it - 1;
         poligonos.push_back(make_unique<Piramide>(
             20, 1.5, 50,
-            make_unique<Adesivo>(20, 1.5, 50, id, XYZ{0,0,1}),
+            0, 0.0f, 0.0f, 0.0f,
+            make_unique<Adesivo>(20, 1.5, 50, id),
             4.0f, 4.0f
         ));
         copia.erase(it);
@@ -541,7 +548,8 @@ void cria_poligonos(int n){
         id = *it - 1;
         poligonos.push_back(make_unique<Esfera>(
             20.0f, 11.5f, 60.0f,
-            make_unique<Adesivo>(20.0f, 11.5f, 60.0f, id, XYZ{0,0,1}),
+            0, 0.0f, 0.0f, 0.0f,
+            make_unique<Adesivo>(20.0f, 11.5f, 60.0f, id),
             2.0f, -1.0f
         ));
         copia.erase(it);
@@ -552,7 +560,8 @@ void cria_poligonos(int n){
         id = *it - 1;
         poligonos.push_back(make_unique<Cilindro>(
             -30.0f, 1.5f, 30.0f,
-            make_unique<Adesivo>(-30.0f, 1.5f, 30.0f, id, XYZ{0,0,1}),
+            0, 0.0f, 0.0f, 0.0f,
+            make_unique<Adesivo>(-30.0f, 1.5f, 30.0f, id),
             2.0f, 4.0f
         ));
         copia.erase(it);
@@ -563,7 +572,8 @@ void cria_poligonos(int n){
         id = *it - 1;
         poligonos.push_back(make_unique<Cone>(
             -40.0f, 0.5f, 20.0f,
-            make_unique<Adesivo>(-40.0f, 0.5f, 20.0f, id, XYZ{0,0,1}),
+            0, 0.0f, 0.0f, 0.0f,
+            make_unique<Adesivo>(-40.0f, 0.5f, 20.0f, id),
             2.0f, 4.0f
         ));
         copia.erase(it);
@@ -574,7 +584,8 @@ void cria_poligonos(int n){
         id = *it - 1;
         poligonos.push_back(make_unique<Cubo>(
             0.0f, 1.5f, -20.0f,
-            make_unique<Adesivo>(0.0f, 1.5f, -20.0f, id, XYZ{0,0,1}),
+            0, 0.0f, 0.0f, 0.0f,
+            make_unique<Adesivo>(0.0f, 1.5f, -20.0f, id),
             2.0f
         ));
         copia.erase(it);
@@ -585,7 +596,8 @@ void cria_poligonos(int n){
         id = *it - 1;
         poligonos.push_back(make_unique<Piramide>(
             10.0f, 1.5f, -20.0f,
-            make_unique<Adesivo>(10.0f, 1.5f, -20.0f, id, XYZ{0,0,1}),
+            0, 0.0f, 0.0f, 0.0f,
+            make_unique<Adesivo>(10.0f, 1.5f, -20.0f, id),
             4.0f, 4.0f
         ));
         copia.erase(it);
@@ -596,7 +608,8 @@ void cria_poligonos(int n){
         id = *it - 1;
         poligonos.push_back(make_unique<Esfera>(
             20.0f, 1.5f, -20.0f,
-            make_unique<Adesivo>(20.0f, 1.5f, -20.0f, id, XYZ{0,0,1}),
+            0, 0.0f, 0.0f, 0.0f,
+            make_unique<Adesivo>(20.0f, 1.5f, -20.0f, id),
             2.0f, -1.0f
         ));
         copia.erase(it);
@@ -607,7 +620,8 @@ void cria_poligonos(int n){
         id = *it - 1;
         poligonos.push_back(make_unique<Cilindro>(
             30.0f, 1.5f, -30.0f,
-            make_unique<Adesivo>(30.0f, 1.5f, -30.0f, id, XYZ{0,0,1}),
+            0, 0.0f, 0.0f, 0.0f,
+            make_unique<Adesivo>(30.0f, 1.5f, -30.0f, id),
             2.0f, 4.0f
         ));
         copia.erase(it);
@@ -618,7 +632,8 @@ void cria_poligonos(int n){
         id = *it - 1;
         poligonos.push_back(make_unique<Cone>(
             40.0f, 0.5f, -20.0f,
-            make_unique<Adesivo>(40.0f, 0.5f, -20.0f, id, XYZ{0,0,1}),
+            0, 0.0f, 0.0f, 0.0f,
+            make_unique<Adesivo>(40.0f, 0.5f, -20.0f, id),
             2.0f, 4.0f
         ));
         copia.erase(it);
@@ -629,7 +644,8 @@ void cria_poligonos(int n){
         id = *it - 1;
         poligonos.push_back(make_unique<Cubo>(
             -20, 1.5, 50,
-            make_unique<Adesivo>(-20, 1.5, 50, id, XYZ{0,0,1}),
+            0, 0.0f, 0.0f, 0.0f,
+            make_unique<Adesivo>(-20, 1.5, 50, id),
             2.0f
         ));
         copia.erase(it);
@@ -640,7 +656,8 @@ void cria_poligonos(int n){
         id = *it - 1;
         poligonos.push_back(make_unique<Piramide>(
             20, 1.5, 50,
-            make_unique<Adesivo>(20, 1.5, 50, id, XYZ{0,0,1}),
+            0, 0.0f, 0.0f, 0.0f,
+            make_unique<Adesivo>(20, 1.5, 50, id),
             4.0f, 4.0f
         ));
         copia.erase(it);
@@ -651,7 +668,8 @@ void cria_poligonos(int n){
         id = *it - 1;
         poligonos.push_back(make_unique<Esfera>(
             20.0f, 11.5f, 60.0f,
-            make_unique<Adesivo>(20.0f, 11.5f, 60.0f, id, XYZ{0,0,1}),
+            0, 0.0f, 0.0f, 0.0f,
+            make_unique<Adesivo>(20.0f, 11.5f, 60.0f, id),
             2.0f, -1.0f
         ));
         copia.erase(it);
@@ -662,7 +680,8 @@ void cria_poligonos(int n){
         id = *it - 1;
         poligonos.push_back(make_unique<Cilindro>(
             -30.0f, 1.5f, 30.0f,
-            make_unique<Adesivo>(-30.0f, 1.5f, 30.0f, id, XYZ{0,0,1}),
+            0, 0.0f, 0.0f, 0.0f,
+            make_unique<Adesivo>(-30.0f, 1.5f, 30.0f, id),
             2.0f, 4.0f
         ));
         copia.erase(it);
@@ -673,7 +692,8 @@ void cria_poligonos(int n){
         id = *it - 1;
         auto t1 = make_unique<Torus>(
             0, -98.5, 95,
-            make_unique<Adesivo>(0, -98.5, 95, id, XYZ{0,0,1}),
+            0, 0.0f, 0.0f, 0.0f,
+            make_unique<Adesivo>(0, -98.5, 95, id),
             1.0f, 3.0f
         );
         copia.erase(it);
@@ -684,7 +704,8 @@ void cria_poligonos(int n){
         id = *it - 1;
         auto t2 = make_unique<Torus>(
             0, 1.5, -95,
-            make_unique<Adesivo>(0, 1.5, -95, id, XYZ{0,0,1}),
+            0, 0.0f, 0.0f, 0.0f,
+            make_unique<Adesivo>(0, 1.5, -95, id),
             1.0f, 3.0f
         );
         copia.erase(it);
@@ -701,7 +722,8 @@ void cria_poligonos(int n){
         id = *it - 1;
         poligonos.push_back(make_unique<Cubo>(
             0.0f, -98.5f, -20.0f,
-            make_unique<Adesivo>(0.0f, -98.5f, -20.0f, id, XYZ{0,0,1}),
+            0, 0.0f, 0.0f, 0.0f,
+            make_unique<Adesivo>(0.0f, -98.5f, -20.0f, id),
             2.0f
         ));
         copia.erase(it);
@@ -712,7 +734,8 @@ void cria_poligonos(int n){
         id = *it - 1;
         poligonos.push_back(make_unique<Piramide>(
             10.0f, -98.5f, -20.0f,
-            make_unique<Adesivo>(10.0f, -98.5f, -20.0f, id, XYZ{0,0,1}),
+            0, 0.0f, 0.0f, 0.0f,
+            make_unique<Adesivo>(10.0f, -98.5f, -20.0f, id),
             4.0f, 4.0f
         ));
         copia.erase(it);
@@ -723,7 +746,8 @@ void cria_poligonos(int n){
         id = *it - 1;
         poligonos.push_back(make_unique<Esfera>(
             20.0f, -98.5f, -20.0f,
-            make_unique<Adesivo>(20.0f, -98.5f, -20.0f, id, XYZ{0,0,1}),
+            0, 0.0f, 0.0f, 0.0f,
+            make_unique<Adesivo>(20.0f, -98.5f, -20.0f, id),
             2.0f, -100.0f
         ));
         copia.erase(it);
@@ -734,7 +758,8 @@ void cria_poligonos(int n){
         id = *it - 1;
         poligonos.push_back(make_unique<Cilindro>(
             30.0f, -98.5f, -30.0f,
-            make_unique<Adesivo>(30.0f, -98.5f, -30.0f, id, XYZ{0,0,1}),
+            0, 0.0f, 0.0f, 0.0f,
+            make_unique<Adesivo>(30.0f, -98.5f, -30.0f, id),
             2.0f, 4.0f
         ));
         copia.erase(it);
@@ -745,7 +770,8 @@ void cria_poligonos(int n){
         id = *it - 1;
         poligonos.push_back(make_unique<Cubo>(
             -20, -98.5, 50,
-            make_unique<Adesivo>(-20, -98.5, 50, id, XYZ{0,0,1}),
+            0, 0.0f, 0.0f, 0.0f,
+            make_unique<Adesivo>(-20, -98.5, 50, id),
             2.0f
         ));
         copia.erase(it);
@@ -756,7 +782,8 @@ void cria_poligonos(int n){
         id = *it - 1;
         poligonos.push_back(make_unique<Piramide>(
             20, -98.5, 50,
-            make_unique<Adesivo>(20, -98.5, 50, id, XYZ{0,0,1}),
+            0, 0.0f, 0.0f, 0.0f,
+            make_unique<Adesivo>(20, -98.5, 50, id),
             4.0f, 4.0f
         ));
         copia.erase(it);
@@ -767,7 +794,8 @@ void cria_poligonos(int n){
         id = *it - 1;
         poligonos.push_back(make_unique<Esfera>(
             20.0f, -88.5f, 60.0f,
-            make_unique<Adesivo>(20.0f, -88.5f, 60.0f, id, XYZ{0,0,1}),
+            0, 0.0f, 0.0f, 0.0f,
+            make_unique<Adesivo>(20.0f, -88.5f, 60.0f, id),
             2.0f, -100.0f
         ));
         copia.erase(it);
@@ -778,7 +806,8 @@ void cria_poligonos(int n){
         id = *it - 1;
         poligonos.push_back(make_unique<Cilindro>(
             -30.0f, -98.5f, 30.0f,
-            make_unique<Adesivo>(-30.0f, -98.5f, 30.0f, id, XYZ{0,0,1}),
+            0, 0.0f, 0.0f, 0.0f,
+            make_unique<Adesivo>(-30.0f, -98.5f, 30.0f, id),
             2.0f, 4.0f
         ));
         copia.erase(it);
@@ -789,7 +818,8 @@ void cria_poligonos(int n){
         id = *it - 1;
         poligonos.push_back(make_unique<Cone>(
             -40.0f, -98.5f, 20.0f,
-            make_unique<Adesivo>(-40.0f, -98.5f, 20.0f, id, XYZ{0,0,1}),
+            0, 0.0f, 0.0f, 0.0f,
+            make_unique<Adesivo>(-40.0f, -98.5f, 20.0f, id),
             2.0f, 4.0f
         ));
         copia.erase(it);
@@ -1714,41 +1744,6 @@ void mostrar_resultado(string s, bool vitoria) {
 
         desenhaTexto(texMsg, textX, textY, lw, lh);
         glDeleteTextures(1, &texMsg);
-
-        // ------- IMAGENS LATERAIS (modo daltônico) -------
-        if (modo_daltonico) {
-
-            static float acumulador = 0.0f;
-
-            float imgSize = h * 0.18f;
-            float yImg = textY - imgSize/2 + lh/2;
-
-            float xLeft  = textX - imgSize - 20;
-            float xRight = textX + lw + 20;
-
-            glColor4f(1,1,1,1);
-            glEnable(GL_TEXTURE_2D);
-
-            // --- imagem esquerda ---
-            glBindTexture(GL_TEXTURE_2D, texID[36 + vitoria]);
-            glBegin(GL_QUADS);
-                glTexCoord2f(0,1); glVertex2f(xLeft, yImg);
-                glTexCoord2f(1,1); glVertex2f(xLeft+imgSize, yImg);
-                glTexCoord2f(1,0); glVertex2f(xLeft+imgSize, yImg+imgSize);
-                glTexCoord2f(0,0); glVertex2f(xLeft, yImg+imgSize);
-            glEnd();
-
-            // --- imagem direita ---
-            glBindTexture(GL_TEXTURE_2D, texID[36 + vitoria]);
-            glBegin(GL_QUADS);
-                glTexCoord2f(0,1); glVertex2f(xRight, yImg);
-                glTexCoord2f(1,1); glVertex2f(xRight+imgSize, yImg);
-                glTexCoord2f(1,0); glVertex2f(xRight+imgSize, yImg+imgSize);
-                glTexCoord2f(0,0); glVertex2f(xRight, yImg+imgSize);
-            glEnd();
-
-            glDisable(GL_TEXTURE_2D);
-        }
 
         // ------- TEXTO INFERIOR -------
         string aviso = "Pressione ENTER para voltar ao menu";

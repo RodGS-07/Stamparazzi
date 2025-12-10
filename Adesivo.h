@@ -11,6 +11,7 @@ class Adesivo : public Entidade{
 
     public:
         Adesivo();
+        Adesivo(float ix, float iy, float iz, int t);
         Adesivo(float ix, float iy, float iz, int t, XYZ n);
 
         bool operator<(const Adesivo& outro) const;

@@ -6,6 +6,8 @@
 #include <GL/glext.h>
 
 Adesivo::Adesivo() : Entidade(), normal({0.0f,0.0f,1.0f}) {}
+Adesivo::Adesivo(float ix, float iy, float iz, int t)
+: Entidade(ix, iy, iz), texturaID(3+t), normal({0.0f,0.0f,1.0f}) {}
 Adesivo::Adesivo(float ix, float iy, float iz, int t, XYZ n)
 : Entidade(ix, iy, iz), texturaID(3+t), normal(n) {}
 
