@@ -23,6 +23,7 @@
 #include <time.h>
 #include <sstream>
 #include <iomanip>
+#include <random>
 
 #define XBOUNDS 100.0f
 #define YBOUNDS 100.0f
@@ -446,6 +447,13 @@ void define_objetivos(int n) {
     }
 }
 
+bool colisaoComSpawn(float x, float y, float z) {
+    AABB spawn = {{-1,0.5f,-1}, {1,2.5f,1}};
+    return (x >= spawn.min.x && x <= spawn.max.x &&
+            y >= spawn.min.y && y <= spawn.max.y &&
+            z >= spawn.min.z && z <= spawn.max.z);
+}
+
 void cria_poligonos(int n){
     //room
     limites.push_back(make_unique<Cubo>(0.0f,0.0f,0.0f,nullptr,200.0f));
@@ -824,14 +832,25 @@ void cria_poligonos(int n){
         ));
         copia.erase(it);
     } else {
+        float x, y, z;
+        random_device rd;  
+        mt19937 gen(rd()); // Mersenne Twister
+        uniform_real_distribution<float> room_dist(-97.5f, 97.5f);
+        uniform_real_distribution<float> ya_dist(2.5f, 97.5f);
+        uniform_real_distribution<float> yb_dist(-2.5f, -97.5f);
+        uniform_real_distribution<float> ang_dist(0.0f, 360.0f);
+
         randomIndex = rand() % copia.size();
         it = copia.begin();
         advance(it, randomIndex);
         id = *it - 1;
+        do {
+            x = room_dist(gen), y = ya_dist(gen), z = room_dist(gen);
+        } while(colisaoComSpawn(x,y,z));
         poligonos.push_back(make_unique<Cubo>(
-            0.0f, 1.5f, -20.0f,
-            0, 0.0f, 0.0f, 0.0f,
-            make_unique<Adesivo>(0.0f, 1.5f, -20.0f, id),
+            x, y, z,
+            0, ang_dist(gen), ang_dist(gen), ang_dist(gen),
+            make_unique<Adesivo>(x, y, z, id),
             2.0f
         ));
         copia.erase(it);
@@ -840,10 +859,13 @@ void cria_poligonos(int n){
         it = copia.begin();
         advance(it, randomIndex);
         id = *it - 1;
+        do {
+            x = room_dist(gen), y = ya_dist(gen), z = room_dist(gen);
+        } while(colisaoComSpawn(x,y,z));
         poligonos.push_back(make_unique<Piramide>(
-            10.0f, 1.5f, -20.0f,
-            0, 0.0f, 180.0f, 0.0f,
-            make_unique<Adesivo>(10.0f, 1.5f, -20.0f, id),
+            x, y, z,
+            0, ang_dist(gen), ang_dist(gen), ang_dist(gen),
+            make_unique<Adesivo>(x, y, z, id),
             4.0f, 4.0f
         ));
         copia.erase(it);
@@ -852,10 +874,13 @@ void cria_poligonos(int n){
         it = copia.begin();
         advance(it, randomIndex);
         id = *it - 1;
+        do {
+            x = room_dist(gen), y = ya_dist(gen), z = room_dist(gen);
+        } while(colisaoComSpawn(x,y,z));
         poligonos.push_back(make_unique<Esfera>(
-            20.0f, 1.5f, -20.0f,
-            0, 0.0f, 90.0f, 0.0f,
-            make_unique<Adesivo>(20.0f, 1.5f, -20.0f, id),
+            x, y, z,
+            0, ang_dist(gen), ang_dist(gen), ang_dist(gen),
+            make_unique<Adesivo>(x, y, z, id),
             2.0f, -1.0f
         ));
         copia.erase(it);
@@ -864,10 +889,13 @@ void cria_poligonos(int n){
         it = copia.begin();
         advance(it, randomIndex);
         id = *it - 1;
+        do {
+            x = room_dist(gen), y = ya_dist(gen), z = room_dist(gen);
+        } while(colisaoComSpawn(x,y,z));
         poligonos.push_back(make_unique<Cilindro>(
-            30.0f, 1.5f, -30.0f,
+            x, y, z,
             0, 0.0f, 0.0f, 0.0f,
-            make_unique<Adesivo>(30.0f, 1.5f, -30.0f, id),
+            make_unique<Adesivo>(x, y, z, id),
             2.0f, 4.0f
         ));
         copia.erase(it);
@@ -876,10 +904,13 @@ void cria_poligonos(int n){
         it = copia.begin();
         advance(it, randomIndex);
         id = *it - 1;
+        do {
+            x = room_dist(gen), y = ya_dist(gen), z = room_dist(gen);
+        } while(colisaoComSpawn(x,y,z));
         poligonos.push_back(make_unique<Cone>(
-            40.0f, 0.5f, -20.0f,
+            x, y, z,
             0, 0.0f, 0.0f, 0.0f,
-            make_unique<Adesivo>(40.0f, 0.5f, -20.0f, id),
+            make_unique<Adesivo>(x, y, z, id),
             2.0f, 4.0f
         ));
         copia.erase(it);
@@ -888,10 +919,13 @@ void cria_poligonos(int n){
         it = copia.begin();
         advance(it, randomIndex);
         id = *it - 1;
+        do {
+            x = room_dist(gen), y = ya_dist(gen), z = room_dist(gen);
+        } while(colisaoComSpawn(x,y,z));
         poligonos.push_back(make_unique<Cubo>(
-            -20, 1.5, 50,
-            0, 0.0f, 270.0f, 0.0f,
-            make_unique<Adesivo>(-20, 1.5, 50, id),
+            x, y, z,
+            0, ang_dist(gen), ang_dist(gen), ang_dist(gen),
+            make_unique<Adesivo>(x, y, z, id),
             2.0f
         ));
         copia.erase(it);
@@ -900,10 +934,13 @@ void cria_poligonos(int n){
         it = copia.begin();
         advance(it, randomIndex);
         id = *it - 1;
+        do {
+            x = room_dist(gen), y = ya_dist(gen), z = room_dist(gen);
+        } while(colisaoComSpawn(x,y,z));
         poligonos.push_back(make_unique<Piramide>(
-            20, 1.5, 50,
-            0, 0.0f, 90.0f, 0.0f,
-            make_unique<Adesivo>(20, 1.5, 50, id),
+            x, y, z,
+            0, ang_dist(gen), ang_dist(gen), ang_dist(gen),
+            make_unique<Adesivo>(x, y, z, id),
             4.0f, 4.0f
         ));
         copia.erase(it);
@@ -912,10 +949,13 @@ void cria_poligonos(int n){
         it = copia.begin();
         advance(it, randomIndex);
         id = *it - 1;
+        do {
+            x = room_dist(gen), y = ya_dist(gen), z = room_dist(gen);
+        } while(colisaoComSpawn(x,y,z));
         poligonos.push_back(make_unique<Esfera>(
-            20.0f, 11.5f, 60.0f,
-            0, 90.0f, 0.0f, 0.0f,
-            make_unique<Adesivo>(20.0f, 11.5f, 60.0f, id),
+            x, y, z,
+            0, ang_dist(gen), ang_dist(gen), ang_dist(gen),
+            make_unique<Adesivo>(x, y, z, id),
             2.0f, -1.0f
         ));
         copia.erase(it);
@@ -924,10 +964,13 @@ void cria_poligonos(int n){
         it = copia.begin();
         advance(it, randomIndex);
         id = *it - 1;
+        do {
+            x = room_dist(gen), y = ya_dist(gen), z = room_dist(gen);
+        } while(colisaoComSpawn(x,y,z));
         poligonos.push_back(make_unique<Cilindro>(
-            -30.0f, 1.5f, 30.0f,
+            x, y, z,
             0, 0.0f, 0.0f, 0.0f,
-            make_unique<Adesivo>(-30.0f, 1.5f, 30.0f, id),
+            make_unique<Adesivo>(x, y, z, id),
             2.0f, 4.0f
         ));
         copia.erase(it);
@@ -966,10 +1009,13 @@ void cria_poligonos(int n){
         it = copia.begin();
         advance(it, randomIndex);
         id = *it - 1;
+        do {
+            x = room_dist(gen), y = yb_dist(gen), z = room_dist(gen);
+        } while(colisaoComSpawn(x,y,z));
         poligonos.push_back(make_unique<Cubo>(
-            0.0f, -98.5f, -20.0f,
-            0, 0.0f, 180.0f, 0.0f,
-            make_unique<Adesivo>(0.0f, -98.5f, -20.0f, id),
+            x, y, z,
+            0, ang_dist(gen), ang_dist(gen), ang_dist(gen),
+            make_unique<Adesivo>(x, y, z, id),
             2.0f
         ));
         copia.erase(it);
@@ -978,10 +1024,13 @@ void cria_poligonos(int n){
         it = copia.begin();
         advance(it, randomIndex);
         id = *it - 1;
+        do {
+            x = room_dist(gen), y = yb_dist(gen), z = room_dist(gen);
+        } while(colisaoComSpawn(x,y,z));
         poligonos.push_back(make_unique<Piramide>(
-            10.0f, -98.5f, -20.0f,
-            0, 0.0f, 0.0f, 0.0f,
-            make_unique<Adesivo>(10.0f, -98.5f, -20.0f, id),
+            x, y, z,
+            0, ang_dist(gen), ang_dist(gen), ang_dist(gen),
+            make_unique<Adesivo>(x, y, z, id),
             4.0f, 4.0f
         ));
         copia.erase(it);
@@ -990,10 +1039,13 @@ void cria_poligonos(int n){
         it = copia.begin();
         advance(it, randomIndex);
         id = *it - 1;
+        do {
+            x = room_dist(gen), y = yb_dist(gen), z = room_dist(gen);
+        } while(colisaoComSpawn(x,y,z));
         poligonos.push_back(make_unique<Esfera>(
-            20.0f, -98.5f, -20.0f,
-            0, 90.0f, 0.0f, 0.0f,
-            make_unique<Adesivo>(20.0f, -98.5f, -20.0f, id),
+            x, y, z,
+            0, ang_dist(gen), ang_dist(gen), ang_dist(gen),
+            make_unique<Adesivo>(x, y, z, id),
             2.0f, -100.0f
         ));
         copia.erase(it);
@@ -1002,10 +1054,13 @@ void cria_poligonos(int n){
         it = copia.begin();
         advance(it, randomIndex);
         id = *it - 1;
+        do {
+            x = room_dist(gen), y = yb_dist(gen), z = room_dist(gen);
+        } while(colisaoComSpawn(x,y,z));
         poligonos.push_back(make_unique<Cilindro>(
-            30.0f, -98.5f, -30.0f,
+            x, y, z,
             0, 0.0f, 0.0f, 0.0f,
-            make_unique<Adesivo>(30.0f, -98.5f, -30.0f, id),
+            make_unique<Adesivo>(x, y, z, id),
             2.0f, 4.0f
         ));
         copia.erase(it);
@@ -1014,10 +1069,13 @@ void cria_poligonos(int n){
         it = copia.begin();
         advance(it, randomIndex);
         id = *it - 1;
+        do {
+            x = room_dist(gen), y = yb_dist(gen), z = room_dist(gen);
+        } while(colisaoComSpawn(x,y,z));
         poligonos.push_back(make_unique<Cubo>(
-            -20, -98.5, 50,
-            0, 0.0f, 0.0f, 0.0f,
-            make_unique<Adesivo>(-20, -98.5, 50, id),
+            x, y, z,
+            0, ang_dist(gen), ang_dist(gen), ang_dist(gen),
+            make_unique<Adesivo>(x, y, z, id),
             2.0f
         ));
         copia.erase(it);
@@ -1026,10 +1084,13 @@ void cria_poligonos(int n){
         it = copia.begin();
         advance(it, randomIndex);
         id = *it - 1;
+        do {
+            x = room_dist(gen), y = yb_dist(gen), z = room_dist(gen);
+        } while(colisaoComSpawn(x,y,z));
         poligonos.push_back(make_unique<Piramide>(
-            20, -98.5, 50,
-            0, 0.0f, 270.0f, 0.0f,
-            make_unique<Adesivo>(20, -98.5, 50, id),
+            x, y, z,
+            0, ang_dist(gen), ang_dist(gen), ang_dist(gen),
+            make_unique<Adesivo>(x, y, z, id),
             4.0f, 4.0f
         ));
         copia.erase(it);
@@ -1038,10 +1099,13 @@ void cria_poligonos(int n){
         it = copia.begin();
         advance(it, randomIndex);
         id = *it - 1;
+        do {
+            x = room_dist(gen), y = yb_dist(gen), z = room_dist(gen);
+        } while(colisaoComSpawn(x,y,z));
         poligonos.push_back(make_unique<Esfera>(
-            20.0f, -88.5f, 60.0f,
-            0, -90.0f, 0.0f, 0.0f,
-            make_unique<Adesivo>(20.0f, -88.5f, 60.0f, id),
+            x, y, z,
+            0, ang_dist(gen), ang_dist(gen), ang_dist(gen),
+            make_unique<Adesivo>(x, y, z, id),
             2.0f, -100.0f
         ));
         copia.erase(it);
@@ -1050,10 +1114,13 @@ void cria_poligonos(int n){
         it = copia.begin();
         advance(it, randomIndex);
         id = *it - 1;
+        do {
+            x = room_dist(gen), y = yb_dist(gen), z = room_dist(gen);
+        } while(colisaoComSpawn(x,y,z));
         poligonos.push_back(make_unique<Cilindro>(
-            -30.0f, -98.5f, 30.0f,
+            x, y, z,
             0, 0.0f, 0.0f, 0.0f,
-            make_unique<Adesivo>(-30.0f, -98.5f, 30.0f, id),
+            make_unique<Adesivo>(x, y, z, id),
             2.0f, 4.0f
         ));
         copia.erase(it);
@@ -1062,10 +1129,13 @@ void cria_poligonos(int n){
         it = copia.begin();
         advance(it, randomIndex);
         id = *it - 1;
+        do {
+            x = room_dist(gen), y = yb_dist(gen), z = room_dist(gen);
+        } while(colisaoComSpawn(x,y,z));
         poligonos.push_back(make_unique<Cone>(
-            -40.0f, -98.5f, 20.0f,
+            x, y, z,
             0, 0.0f, 0.0f, 0.0f,
-            make_unique<Adesivo>(-40.0f, -98.5f, 20.0f, id),
+            make_unique<Adesivo>(x, y, z, id),
             2.0f, 4.0f
         ));
         copia.erase(it);

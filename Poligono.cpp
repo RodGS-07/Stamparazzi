@@ -361,7 +361,7 @@ Esfera::Esfera(float ix, float iy, float iz, unique_ptr<Adesivo> a, float r, flo
     // velocidade para chegar até a altura inicial
     velocidade_inicial = sqrt(2.0f * (-grav) * (altura_inicial - chao));
 
-    y_vel = velocidade_inicial;
+    y_vel = -velocidade_inicial;
     //chao = -1.0f;         // altura do chão (pode ser o y=-1 do seu cenário)
 }
 
@@ -374,7 +374,7 @@ Esfera::Esfera(float ix, float iy, float iz, int op, float xs, float ys, float z
     // velocidade para chegar até a altura inicial
     velocidade_inicial = sqrt(2.0f * (-grav) * (altura_inicial - chao));
 
-    y_vel = velocidade_inicial;
+    y_vel = -velocidade_inicial;
     //chao = -1.0f;         // altura do chão (pode ser o y=-1 do seu cenário)
 }
 
