@@ -292,7 +292,7 @@ bool Jogador::detecta_adesivo(const Adesivo& a, const vector<unique_ptr<Poligono
     // //     glEnd();
     // // }
 
-    // // // Normal do adesivo (azul)
+    // // Normal do adesivo (azul)
     // glColor3f(0, 0, 1);
     // glBegin(GL_LINES);
     //     glVertex3f(adesivoPos.x, adesivoPos.y, adesivoPos.z);
@@ -405,6 +405,29 @@ bool Jogador::detecta_adesivo(const Adesivo& a, const vector<unique_ptr<Poligono
         va = {a.getX(),a.getY(),a.getZ()};
     float grau = Arccos((vf-vi),(va-vi)) * 180.0f / M_PI;
     bool frente = (Escalar((vi-va),a.getNormal()) > 0);
+    // if(distancia_entidades(*this,a) <= 10.0f) 
+    //     std::cout << a.getNormal().x << " " << a.getNormal().y << " " << a.getNormal().z << std::endl;
+
+    // // ==========================================
+    // // DESENHO DA NORMAL DO ADESIVO (DEBUG VISUAL)
+    // // ==========================================
+    // {
+    //     XYZ normal = a.getNormal();         // pega a normal
+    //     XYZ pos    = {a.getX(), a.getY(), a.getZ()}; // posição do adesivo
+
+    //     glDisable(GL_LIGHTING);
+    //     glColor3f(0, 0, 1);                 // azul
+
+    //     glBegin(GL_LINES);
+    //         glVertex3f(pos.x, pos.y, pos.z);    // início
+    //         glVertex3f(pos.x + normal.x * 5,
+    //                 pos.y + normal.y * 5,
+    //                 pos.z + normal.z * 5);   // fim
+    //     glEnd();
+
+    //     glEnable(GL_LIGHTING);
+    // }
+
     return frente and grau <= 20.0f and distancia_entidades(*this,a) <= 30.0f;
 }
 

@@ -476,7 +476,7 @@ void cria_poligonos(int n){
         id = *it - 1;
         poligonos.push_back(make_unique<Piramide>(
             10.0f, 1.5f, -20.0f,
-            0, 0.0f, 0.0f, 0.0f,
+            0, 0.0f, 180.0f, 0.0f,
             make_unique<Adesivo>(10.0f, 1.5f, -20.0f, id),
             4.0f, 4.0f
         ));
@@ -488,7 +488,7 @@ void cria_poligonos(int n){
         id = *it - 1;
         poligonos.push_back(make_unique<Esfera>(
             20.0f, 1.5f, -20.0f,
-            0, 0.0f, 0.0f, 0.0f,
+            0, 0.0f, 90.0f, 0.0f,
             make_unique<Adesivo>(20.0f, 1.5f, -20.0f, id),
             2.0f, -1.0f
         ));
@@ -524,7 +524,7 @@ void cria_poligonos(int n){
         id = *it - 1;
         poligonos.push_back(make_unique<Cubo>(
             -20, 1.5, 50,
-            0, 0.0f, 0.0f, 0.0f,
+            0, 0.0f, 90.0f, 0.0f,
             make_unique<Adesivo>(-20, 1.5, 50, id),
             2.0f
         ));
@@ -536,7 +536,7 @@ void cria_poligonos(int n){
         id = *it - 1;
         poligonos.push_back(make_unique<Piramide>(
             20, 1.5, 50,
-            0, 0.0f, 0.0f, 0.0f,
+            0, 0.0f, 270.0f, 0.0f,
             make_unique<Adesivo>(20, 1.5, 50, id),
             4.0f, 4.0f
         ));
@@ -548,7 +548,7 @@ void cria_poligonos(int n){
         id = *it - 1;
         poligonos.push_back(make_unique<Esfera>(
             20.0f, 11.5f, 60.0f,
-            0, 0.0f, 0.0f, 0.0f,
+            0, -90.0f, 0.0f, 0.0f,
             make_unique<Adesivo>(20.0f, 11.5f, 60.0f, id),
             2.0f, -1.0f
         ));
@@ -2143,6 +2143,7 @@ void loop_jogo(){
         int i = 0;
         for(const auto& p : poligonos){
             p->desenha_poligono(cores_poligonos[i], pause, modo_daltonico); i++;
+            //p->desenha_mascara();
         }
 
         if(modo_daltonico){
