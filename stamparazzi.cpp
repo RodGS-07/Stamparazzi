@@ -16,6 +16,7 @@
 #include <math.h>
 #include <vector>
 #include <set>
+#include <map>
 #include <unordered_map>
 #include <memory>
 #include <algorithm>
@@ -57,8 +58,18 @@ bool rodando = true;
 Uint32 inicio, fim;
 float dt;
 const Uint8* state;
-GLuint texturaTextoTempo = 0, texturaTextoObj = 0, texturaTextoPause = 0, texturaTextoMorto = 0, texturaTextoVida = 0, texBlocoBase = 0;
-int larguraTextoTempo = 0, larguraTextoObj = 0, larguraTextoPause = 0, larguraTextoMorto = 0, larguraTextoVida = 0, alturaTextoTempo = 0, alturaTextoObj = 0, alturaTextoPause = 0, alturaTextoMorto = 0, alturaTextoVida = 0;
+
+// Textura, largura, altura
+struct TextoInfo {
+    GLuint tex;
+    int w, h;
+};
+map<string, TextoInfo> textos;
+vector<string> Chaves = {"Tempo", "Objetivo", "Pause", "Morto", "Vida"};
+GLuint texBlocoBase = 0;
+//GLuint textos["Tempo"].tex = 0, textos["Objetivo"].tex = 0, textos["Pause"].tex = 0, textos["Morto"].tex = 0, textos["Vida"].tex = 0, texBlocoBase = 0;
+//int textos["Tempo"].w = 0, textos["Objetivo"].w = 0, textos["Pause"].w = 0, textos["Morto"].w = 0, textos["Vida"].w = 0, textos["Tempo"].h = 0, textos["Objetivo"].h = 0, textos["Pause"].h = 0, textos["Morto"].h = 0, textos["Vida"].h = 0;
+
 vector<int> cores_poligonos;
 vector<bool> cores_ativadas;
 unordered_map<int, GLuint> texNumero;
@@ -342,6 +353,10 @@ void inicializa_ttf(){
         teste = -1;
     }
 
+    for (const auto& k : Chaves) {
+        textos[k] = {0, 0, 0};
+    }
+
     SDL_Color preto = {0, 0, 0, 255}, branco = {1, 1, 1, 255};
     ostringstream oss;
     oss << "Tempo restante - " 
@@ -349,31 +364,31 @@ void inicializa_ttf(){
 
     string str = oss.str();
     const char* texto = str.c_str();
-    texturaTextoTempo = criaTexturaDoTexto(texto, fonte, preto, larguraTextoTempo, alturaTextoTempo);
+    textos["Tempo"].tex = criaTexturaDoTexto(texto, fonte, preto, textos["Tempo"].w, textos["Tempo"].h);
 
     oss.str(""); oss.clear();
     oss << "Adesivos faltando: " << objetivos.size() << " restantes";
     str = oss.str();
     texto = str.c_str();
-    texturaTextoObj = criaTexturaDoTexto(texto, fonte, preto, larguraTextoObj, alturaTextoObj);
+    textos["Objetivo"].tex = criaTexturaDoTexto(texto, fonte, preto, textos["Objetivo"].w, textos["Objetivo"].h);
 
     ostringstream poss;
     poss << "PAUSE";
     str = poss.str();
     texto = str.c_str();
-    texturaTextoPause = criaTexturaDoTexto(texto, fonte, preto, larguraTextoPause, alturaTextoPause);
+    textos["Pause"].tex = criaTexturaDoTexto(texto, fonte, preto, textos["Pause"].w, textos["Pause"].h);
 
     ostringstream moss;
     moss << "Voce morreu, renascendo em " << renascer;
     str = moss.str();
     texto = str.c_str();
-    texturaTextoMorto = criaTexturaDoTexto(texto, fonte, preto, larguraTextoMorto, alturaTextoMorto);
+    textos["Morto"].tex = criaTexturaDoTexto(texto, fonte, preto, textos["Morto"].w, textos["Morto"].h);
 
     ostringstream voss;
     voss << "Vidas restantes: " << vidas;
     str = voss.str();
     texto = str.c_str();
-    texturaTextoVida = criaTexturaDoTexto(texto, fonte, preto, larguraTextoVida, alturaTextoVida);
+    textos["Vida"].tex = criaTexturaDoTexto(texto, fonte, preto, textos["Vida"].w, textos["Vida"].h);
 
     cria_textura_bloco_base();
 }
@@ -420,26 +435,26 @@ void ajusta_tamanho_fonte() {
     ostringstream oss;
     oss << "Tempo restante - "
         << minutos << ":" << setw(2) << setfill('0') << segundos;
-    atualizaTexto(oss.str(), texturaTextoTempo, larguraTextoTempo, alturaTextoTempo);
+    atualizaTexto(oss.str(), textos["Tempo"].tex, textos["Tempo"].w, textos["Tempo"].h);
 
     // Vidas restantes
     oss.str(""); oss.clear();
     oss << "Vidas restantes: " << vidas;
-    atualizaTexto(oss.str(),texturaTextoVida,larguraTextoVida,alturaTextoVida);
+    atualizaTexto(oss.str(),textos["Vida"].tex,textos["Vida"].w,textos["Vida"].h);
 
     // Adesivos faltando
     oss.str(""); oss.clear();
     if(objetivos.size() != 1) oss << "Adesivos faltando: " << objetivos.size() << " restantes";
     else oss << "Adesivos faltando: 1 restante";
-    atualizaTexto(oss.str(), texturaTextoObj, larguraTextoObj, alturaTextoObj);
+    atualizaTexto(oss.str(), textos["Objetivo"].tex, textos["Objetivo"].w, textos["Objetivo"].h);
 
     // Pause
-    atualizaTexto("PAUSE", texturaTextoPause, larguraTextoPause, alturaTextoPause);
+    atualizaTexto("PAUSE", textos["Pause"].tex, textos["Pause"].w, textos["Pause"].h);
 
     // Renascer
     oss.str(""); oss.clear();
     oss << "Voce morreu, renascendo em " << renascer;
-    atualizaTexto(oss.str(), texturaTextoMorto, larguraTextoMorto, alturaTextoMorto);
+    atualizaTexto(oss.str(), textos["Morto"].tex, textos["Morto"].w, textos["Morto"].h);
 }
 
 void define_objetivos(int n) {
@@ -1215,7 +1230,7 @@ void atualiza_timer(float dt){
                 << minutos << ":" << std::setw(2) << std::setfill('0') << segundos;
 
                 string str = oss.str();
-                atualizaTexto(str,texturaTextoTempo,larguraTextoTempo,alturaTextoTempo);
+                atualizaTexto(str,textos["Tempo"].tex,textos["Tempo"].w,textos["Tempo"].h);
             }
         }
     }
@@ -1224,9 +1239,9 @@ void atualiza_timer(float dt){
 void atualiza_objetivos(const set<int>& objetivos, const vector<int>& coresPoligonos) {
 
     // Deleta textura antiga
-    if (texturaTextoObj) {
-        glDeleteTextures(1, &texturaTextoObj);
-        texturaTextoObj = 0;
+    if (textos["Objetivo"].tex) {
+        glDeleteTextures(1, &textos["Objetivo"].tex);
+        textos["Objetivo"].tex = 0;
     }
 
     // Texto sempre é atualizado, mesmo se estiver vazio
@@ -1246,8 +1261,8 @@ void atualiza_objetivos(const set<int>& objetivos, const vector<int>& coresPolig
     glGenTextures(1, &tex);
     glBindTexture(GL_TEXTURE_2D, tex);
 
-    larguraTextoObj = s->w;
-    alturaTextoObj = s->h;
+    textos["Objetivo"].w = s->w;
+    textos["Objetivo"].h = s->h;
 
     SDL_Surface* formatted = SDL_ConvertSurfaceFormat(s, SDL_PIXELFORMAT_RGBA32, 0);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, formatted->w, formatted->h,
@@ -1256,7 +1271,7 @@ void atualiza_objetivos(const set<int>& objetivos, const vector<int>& coresPolig
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    texturaTextoObj = tex;
+    textos["Objetivo"].tex = tex;
 
     SDL_FreeSurface(formatted);
     SDL_FreeSurface(s);
@@ -1527,19 +1542,19 @@ void atualiza_renascer(float dt) {
                 ostringstream oss;
                 oss << "Voce morreu, renascendo em " << renascer;
                 string str = oss.str();
-                atualizaTexto(str,texturaTextoMorto,larguraTextoMorto,alturaTextoMorto);
+                atualizaTexto(str,textos["Morto"].tex,textos["Morto"].w,textos["Morto"].h);
                 if(dif != FACIL) {
                     ostringstream voss;
                     voss << "Vidas restantes: " << vidas;
                     str = voss.str();
-                    atualizaTexto(str,texturaTextoVida,larguraTextoVida,alturaTextoVida);
+                    atualizaTexto(str,textos["Vida"].tex,textos["Vida"].w,textos["Vida"].h);
                 } else vidas = INT_MAX;
                 return;
             }
             ostringstream oss;
             oss << "Voce morreu, renascendo em " << renascer;
             string str = oss.str();
-            atualizaTexto(str,texturaTextoMorto,larguraTextoMorto,alturaTextoMorto);
+            atualizaTexto(str,textos["Morto"].tex,textos["Morto"].w,textos["Morto"].h);
         }
     }
 }
@@ -2103,11 +2118,11 @@ void loop_jogo(){
     ostringstream oss;
     oss << "Voce morreu, renascendo em " << renascer;
     string str = oss.str();
-    atualizaTexto(str,texturaTextoMorto,larguraTextoMorto,alturaTextoMorto);
+    atualizaTexto(str,textos["Morto"].tex,textos["Morto"].w,textos["Morto"].h);
     ostringstream voss;
     voss << "Vidas restantes: " << vidas;
     str = voss.str();
-    atualizaTexto(str,texturaTextoVida,larguraTextoVida,alturaTextoVida);
+    atualizaTexto(str,textos["Vida"].tex,textos["Vida"].w,textos["Vida"].h);
 
     SDL_Event evento;
     inicio = SDL_GetTicks();
@@ -2239,10 +2254,10 @@ void loop_jogo(){
         glLoadIdentity();
 
         // desenha texto
-        if(texturaTextoTempo && texturaTextoObj && texturaTextoPause && texturaTextoMorto && texturaTextoVida) {
+        if(textos["Tempo"].tex && textos["Objetivo"].tex && textos["Pause"].tex && textos["Morto"].tex && textos["Vida"].tex) {
             // sempre desenha tempo
-            desenhaTexto(texturaTextoTempo, 50, 50, larguraTextoTempo, alturaTextoTempo);
-            if(dif != FACIL) desenhaTexto(texturaTextoVida, 50, 75, larguraTextoVida, alturaTextoVida);
+            desenhaTexto(textos["Tempo"].tex, 50, 50, textos["Tempo"].w, textos["Tempo"].h);
+            if(dif != FACIL) desenhaTexto(textos["Vida"].tex, 50, 75, textos["Vida"].w, textos["Vida"].h);
 
             if (show_overlay) {
                 int w, h;
@@ -2283,50 +2298,50 @@ void loop_jogo(){
                 glMatrixMode(GL_MODELVIEW);
             } else {
                 // modo normal: apenas desenha o texto de objetivos normalmente
-                desenhaTexto(texturaTextoObj, 50, 100, larguraTextoObj, alturaTextoObj);
+                desenhaTexto(textos["Objetivo"].tex, 50, 100, textos["Objetivo"].w, textos["Objetivo"].h);
                 if(pause) {
                     int larguraJanela, alturaJanela;
                     SDL_GetWindowSize(window, &larguraJanela, &alturaJanela);
-                    int xCentro = (larguraJanela - larguraTextoPause) / 2;
-                    int yCentro = (alturaJanela - alturaTextoPause) / 2;
-                    desenhaTexto(texturaTextoPause, xCentro, yCentro, larguraTextoPause, alturaTextoPause);       
+                    int xCentro = (larguraJanela - textos["Pause"].w) / 2;
+                    int yCentro = (alturaJanela - textos["Pause"].h) / 2;
+                    desenhaTexto(textos["Pause"].tex, xCentro, yCentro, textos["Pause"].w, textos["Pause"].h);       
                 } 
                 if(!jogador.estaVivo()){
                     int larguraJanela, alturaJanela;
                     SDL_GetWindowSize(window, &larguraJanela, &alturaJanela);
-                    int xCentro = (larguraJanela - larguraTextoMorto) / 2;
-                    int yCentro = (alturaJanela - alturaTextoMorto) / 2;
-                    desenhaTexto(texturaTextoMorto, xCentro, yCentro, larguraTextoMorto, alturaTextoMorto);       
+                    int xCentro = (larguraJanela - textos["Morto"].w) / 2;
+                    int yCentro = (alturaJanela - textos["Morto"].h) / 2;
+                    desenhaTexto(textos["Morto"].tex, xCentro, yCentro, textos["Morto"].w, textos["Morto"].h);       
                     // if(!tela_cheia){
                     //     int larguraJanela, alturaJanela;
                     //     SDL_GetWindowSize(window, &larguraJanela, &alturaJanela);
-                    //     int xCentro = (larguraJanela - larguraTextoPause) / 2;
-                    //     int yCentro = (alturaJanela - alturaTextoPause) / 2;
-                    //     desenhaTexto(texturaTextoMorto, xCentro, yCentro, larguraTextoMorto, alturaTextoMorto);
-                    // } else desenhaTexto(texturaTextoMorto, 300, 300, larguraTextoMorto, alturaTextoMorto);
+                    //     int xCentro = (larguraJanela - textos["Pause"].w) / 2;
+                    //     int yCentro = (alturaJanela - textos["Pause"].h) / 2;
+                    //     desenhaTexto(textos["Morto"].tex, xCentro, yCentro, textos["Morto"].w, textos["Morto"].h);
+                    // } else desenhaTexto(textos["Morto"].tex, 300, 300, textos["Morto"].w, textos["Morto"].h);
                 }
             }
         }
-        // if(texturaTextoTempo and texturaTextoObj and texturaTextoPause and texturaTextoMorto) {
-        //     desenhaTexto(texturaTextoTempo, 50, 50, larguraTextoTempo, alturaTextoTempo);
-        //     desenhaTexto(texturaTextoObj, 50, 100, larguraTextoObj, alturaTextoObj);
+        // if(textos["Tempo"].tex and textos["Objetivo"].tex and textos["Pause"].tex and textos["Morto"].tex) {
+        //     desenhaTexto(textos["Tempo"].tex, 50, 50, textos["Tempo"].w, textos["Tempo"].h);
+        //     desenhaTexto(textos["Objetivo"].tex, 50, 100, textos["Objetivo"].w, textos["Objetivo"].h);
         //     if(pause) {
         //         if(!tela_cheia){
         //             int larguraJanela, alturaJanela;
         //             SDL_GetWindowSize(window, &larguraJanela, &alturaJanela);
-        //             int xCentro = (larguraJanela - larguraTextoPause) / 2;
-        //             int yCentro = (alturaJanela - alturaTextoPause) / 2;
-        //             desenhaTexto(texturaTextoPause, xCentro, yCentro, larguraTextoPause, alturaTextoPause);
-        //         } else desenhaTexto(texturaTextoPause, 400, 300, larguraTextoPause, alturaTextoPause);
+        //             int xCentro = (larguraJanela - textos["Pause"].w) / 2;
+        //             int yCentro = (alturaJanela - textos["Pause"].h) / 2;
+        //             desenhaTexto(textos["Pause"].tex, xCentro, yCentro, textos["Pause"].w, textos["Pause"].h);
+        //         } else desenhaTexto(textos["Pause"].tex, 400, 300, textos["Pause"].w, textos["Pause"].h);
         //     }
         //     if(!jogador.estaVivo()){
         //         if(!tela_cheia){
         //             int larguraJanela, alturaJanela;
         //             SDL_GetWindowSize(window, &larguraJanela, &alturaJanela);
-        //             int xCentro = (larguraJanela - larguraTextoPause) / 2;
-        //             int yCentro = (alturaJanela - alturaTextoPause) / 2;
-        //             desenhaTexto(texturaTextoMorto, xCentro, yCentro, larguraTextoMorto, alturaTextoMorto);
-        //         } else desenhaTexto(texturaTextoMorto, 300, 300, larguraTextoMorto, alturaTextoMorto);
+        //             int xCentro = (larguraJanela - textos["Pause"].w) / 2;
+        //             int yCentro = (alturaJanela - textos["Pause"].h) / 2;
+        //             desenhaTexto(textos["Morto"].tex, xCentro, yCentro, textos["Morto"].w, textos["Morto"].h);
+        //         } else desenhaTexto(textos["Morto"].tex, 300, 300, textos["Morto"].w, textos["Morto"].h);
         //     }
         // }
 
@@ -2551,7 +2566,10 @@ void finaliza_sdl(){
         SDL_GameControllerClose(game_controller);
         game_controller = NULL;
     }
-    glDeleteTextures(1, &texturaTextoTempo);
+    for(const auto& k : Chaves) {
+        glDeleteTextures(1, &textos[k].tex);
+    }
+    glDeleteTextures(1, &texBlocoBase);
     TTF_CloseFont(fonte);
     TTF_Quit();
     SDL_GL_DeleteContext(glContext);
