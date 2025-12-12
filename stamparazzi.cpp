@@ -73,7 +73,7 @@ TTF_Font* fonte;
 
 vector<unique_ptr<Poligono>> poligonos;
 vector<unique_ptr<Poligono>> limites;
-set<int> objetivos;
+set<int> objetivos, obstaculos;
 //Cubo room (0.0f,0.0f,0.0f,nullptr,100.0f);
 //Cubo chao (0.0f,0.0f,0.0f,100.0f,0.1f,100.0f,nullptr,1.0f);
 
@@ -422,6 +422,11 @@ void ajusta_tamanho_fonte() {
         << minutos << ":" << setw(2) << setfill('0') << segundos;
     atualizaTexto(oss.str(), texturaTextoTempo, larguraTextoTempo, alturaTextoTempo);
 
+    // Vidas restantes
+    oss.str(""); oss.clear();
+    oss << "Vidas restantes: " << vidas;
+    atualizaTexto(oss.str(),texturaTextoVida,larguraTextoVida,alturaTextoVida);
+
     // Adesivos faltando
     oss.str(""); oss.clear();
     if(objetivos.size() != 1) oss << "Adesivos faltando: " << objetivos.size() << " restantes";
@@ -445,6 +450,10 @@ void define_objetivos(int n) {
         while(objetivos.size() < n)
             objetivos.insert((rand() % (20 - 1 + 1)) + 1);
     }
+
+    if(dif == DIFICIL)
+        for(int i = 1; i <= 20; i++)
+            if(objetivos.find(i) == objetivos.end()) obstaculos.insert(i);
 }
 
 bool colisaoComSpawn(float x, float y, float z) {
@@ -495,9 +504,9 @@ void cria_poligonos(int n){
         advance(it, randomIndex);
         id = *it - 1;
         poligonos.push_back(make_unique<Esfera>(
-            20.0f, 1.5f, -20.0f,
+            20.0f, 3.0f, -20.0f,
             0, 0.0f, 90.0f, 0.0f,
-            make_unique<Adesivo>(20.0f, 1.5f, -20.0f, id),
+            make_unique<Adesivo>(20.0f, 3.0f, -20.0f, id),
             2.0f, -1.0f
         ));
         copia.erase(it);
@@ -615,9 +624,9 @@ void cria_poligonos(int n){
         advance(it, randomIndex);
         id = *it - 1;
         poligonos.push_back(make_unique<Esfera>(
-            20.0f, 1.5f, -20.0f,
+            20.0f, 3.0f, -20.0f,
             0, 0.0f, 90.0f, 0.0f,
-            make_unique<Adesivo>(20.0f, 1.5f, -20.0f, id),
+            make_unique<Adesivo>(20.0f, 3.0f, -20.0f, id),
             2.0f, -1.0f
         ));
         copia.erase(it);
@@ -753,9 +762,9 @@ void cria_poligonos(int n){
         advance(it, randomIndex);
         id = *it - 1;
         poligonos.push_back(make_unique<Esfera>(
-            20.0f, -98.5f, -20.0f,
+            20.0f, -97.0f, -20.0f,
             0, 90.0f, 0.0f, 0.0f,
-            make_unique<Adesivo>(20.0f, -98.5f, -20.0f, id),
+            make_unique<Adesivo>(20.0f, -97.0f, -20.0f, id),
             2.0f, -100.0f
         ));
         copia.erase(it);
@@ -2120,7 +2129,7 @@ void loop_jogo(){
         atualiza_objetivos(objetivos, cores_poligonos);
 
         if(!vidas) {rodando = false; mostrar_resultado("Voce perdeu todas as vidas!", false); break;}
-        if(!jogador.estaVivo()) {show_overlay = false; atualiza_renascer(dt);}
+        if(!jogador.estaVivo()) {show_overlay = false; atualiza_renascer(dt); pause=false;}
 
         while (SDL_PollEvent(&evento)) {
             if (evento.type == SDL_QUIT) {
@@ -2391,67 +2400,96 @@ void loop_jogo(){
             //p->desenha_adesivo();
         }
 
-        // 3) para cada polígono, checamos swept collision contra jogador
-        for (size_t i = 0; i < poligonos.size(); ++i) {
-            auto &p = poligonos[i];
-            AABB newBox = p->getAABB();
+        if(jogador.estaVivo()) {
+            // 3) para cada polígono, checamos swept collision contra jogador
+            for (size_t i = 0; i < poligonos.size(); ++i) {
+                auto &p = poligonos[i];
+                AABB newBox = p->getAABB();
 
-            // recuperar AABB antiga: set temporariamente posição anterior,
-            XYZ savedPos = { p->getX(), p->getY(), p->getZ() };
-            p->setX(prevPos[i].x); p->setY(prevPos[i].y); p->setZ(prevPos[i].z);
-            AABB oldBox = p->getAABB();
-            // restaura
-            p->setX(savedPos.x); p->setY(savedPos.y); p->setZ(savedPos.z);
+                // recuperar AABB antiga: set temporariamente posição anterior,
+                XYZ savedPos = { p->getX(), p->getY(), p->getZ() };
+                p->setX(prevPos[i].x); p->setY(prevPos[i].y); p->setZ(prevPos[i].z);
+                AABB oldBox = p->getAABB();
+                // restaura
+                p->setX(savedPos.x); p->setY(savedPos.y); p->setZ(savedPos.z);
 
-            // swept box = união de old e new
-            AABB swept = unionAABB(oldBox, newBox);
+                // swept box = união de old e new
+                AABB swept = unionAABB(oldBox, newBox);
 
-            // se o swept AABB colide com o jogador, houve interseção no caminho potencialmente
-            if (AABBvsAABB(swept, jogador.getMascara())) {
-                // se já está sobreposto ao final: resolvemos com MTV
-                if (AABBvsAABB(newBox, jogador.getMascara())) {
-                    // calcula mtv para separar jogador do polígono (empurrar jogador)
-                    XYZ mtv = computeMTV_AABB_vs_AABB(newBox, jogador.getMascara());
+                // se o swept AABB colide com o jogador, houve interseção no caminho potencialmente
+                if (AABBvsAABB(swept, jogador.getMascara())) {
+                    // se já está sobreposto ao final: resolvemos com MTV
+                    if (AABBvsAABB(newBox, jogador.getMascara())) {
+                        // calcula mtv para separar jogador do polígono (empurrar jogador)
+                        XYZ mtv = computeMTV_AABB_vs_AABB(newBox, jogador.getMascara());
 
-                    // tenta empurrar o jogador: primeiro salva estado do jogador
-                    XYZ playerPrev = { jogador.getX(), jogador.getY(), jogador.getZ() };
-                    AABB playerPrevMask = jogador.getMascara();
+                        // if (p->getSuperficie()==F::ESFERA) {
+                        //     // esfera empurrando de cima
+                        //     if (mtv.y > 0.0f and newBox.min.y > jogador.getMascara().max.y - 0.01f) {
+                        //         p->aplica_efeito(jogador, vidas);
+                        //         break; // não empurra, já morreu
+                        //     }
+                        //     // esfera por baixo: segue fluxo normal (empurra)
+                        // }
 
-                    // aplica deslocamento no jogador
-                    jogador.setX(jogador.getX() + mtv.x);
-                    jogador.setY(jogador.getY() + mtv.y);
-                    jogador.setZ(jogador.getZ() + mtv.z);
-                    jogador.setMascara({
-                        { jogador.getX() - 1.0f, jogador.getY() - 1.0f, jogador.getZ() - 1.0f },
-                        { jogador.getX() + 1.0f, jogador.getY() + 1.0f, jogador.getZ() + 1.0f }
-                    });
+                        // tenta empurrar o jogador: primeiro salva estado do jogador
+                        XYZ playerPrev = { jogador.getX(), jogador.getY(), jogador.getZ() };
+                        AABB playerPrevMask = jogador.getMascara();
 
-                    // verifica se, ao empurrar o jogador, ele colide com outro polígono
-                    bool bad = false;
-                    for (size_t j = 0; j < poligonos.size(); ++j) {
-                        if (j == i) continue; // ignora o polígono que empurrou
-                        if (poligonos[j]->colide_jogador(jogador.getMascara())) {
-                            bad = true;
-                            break;
+                        // aplica deslocamento no jogador
+                        jogador.setX(jogador.getX() + mtv.x);
+                        jogador.setY(jogador.getY() + mtv.y);
+                        jogador.setZ(jogador.getZ() + mtv.z);
+                        jogador.setMascara({
+                            { jogador.getX() - 1.0f, jogador.getY() - 1.0f, jogador.getZ() - 1.0f },
+                            { jogador.getX() + 1.0f, jogador.getY() + 1.0f, jogador.getZ() + 1.0f }
+                        });
+
+                        // verifica se, ao empurrar o jogador, ele colide com outro polígono
+                        bool bad = false;
+                        for (size_t j = 0; j < poligonos.size(); ++j) {
+                            if (j == i) continue; // ignora o polígono que empurrou
+                            if (poligonos[j]->colide_jogador(jogador.getMascara())) {
+                                bad = true;
+                                break;
+                            }
                         }
+
+                        for (size_t j = 0; j < limites.size(); ++j) {
+                            //if (j == i) continue; // ignora o polígono que empurrou
+                            if (limites[j]->colide_jogador(jogador.getMascara())) {
+                                bad = true;
+                                break;
+                            }
+                        }
+
+                        if (bad) {
+                            // não foi possível empurrar o jogador (bloqueado por outro obstáculo)
+                            // voltamos o jogador para o lugar e revertamos o polígono ao antigo lugar
+                            
+                            if (p->getSuperficie()==F::ESFERA) {
+                                // esfera empurrando de cima
+                                //if (mtv.y > 0.0f and newBox.min.y > jogador.getMascara().max.y - 0.01f) {
+                                    p->aplica_efeito(jogador, vidas);
+                                    continue; // não empurra, já morreu
+                                //}
+                                // esfera por baixo: segue fluxo normal (empurra)
+                            }
+                            
+                            jogador.setX(playerPrev.x); jogador.setY(playerPrev.y); jogador.setZ(playerPrev.z);
+                            jogador.setMascara(playerPrevMask);
+
+                            p->setX(prevPos[i].x); p->setY(prevPos[i].y); p->setZ(prevPos[i].z);
+
+                            // opcional: inverter velocidade do polígono ou zerá-la (p->vel *= -0.5f)
+                            // você precisa de um método na sua classe para manipular velocidade
+                        }
+                        // else: empurramos com sucesso
                     }
-
-                    if (bad) {
-                        // não foi possível empurrar o jogador (bloqueado por outro obstáculo)
-                        // voltamos o jogador para o lugar e revertamos o polígono ao antigo lugar
-                        jogador.setX(playerPrev.x); jogador.setY(playerPrev.y); jogador.setZ(playerPrev.z);
-                        jogador.setMascara(playerPrevMask);
-
-                        p->setX(prevPos[i].x); p->setY(prevPos[i].y); p->setZ(prevPos[i].z);
-
-                        // opcional: inverter velocidade do polígono ou zerá-la (p->vel *= -0.5f)
-                        // você precisa de um método na sua classe para manipular velocidade
+                    else {
+                        // swept overlapped, mas final não -- movimento passou "perto".
+                        // se quiser, pode tratar amostragens/interpolação para evitar tunneling.
                     }
-                    // else: empurramos com sucesso
-                }
-                else {
-                    // swept overlapped, mas final não -- movimento passou "perto".
-                    // se quiser, pode tratar amostragens/interpolação para evitar tunneling.
                 }
             }
         }
@@ -2474,7 +2512,7 @@ void loop_jogo(){
         }
 
         // Controla câmera
-        if(jogador.estaVivo()) jogador.controle_camera(MOVE_VEL, CAMERA_SENS,dt,vidas,pause,window,game_controller,state,poligonos,limites);
+        if(jogador.estaVivo()) jogador.controle_camera(MOVE_VEL,CAMERA_SENS,dt,vidas,pause,window,game_controller,state,poligonos,limites);
         //jogador.controle_camera(MOVE_VEL, CAMERA_SENS,dt,pause,window,game_controller,state,limites);
 
         for(const auto& p : poligonos){
@@ -2494,7 +2532,7 @@ void loop_jogo(){
                     marcax(p->getX(),p->getY(),p->getZ(),jogador.getCamYaw(),jogador.getCamPitch());
                     glEnable(GL_DEPTH_TEST);    // reativa para os próximos frames
                 }
-                jogador.tirou_foto(a,dt,flash_alpha,flash_ativo,poligonos,objetivos);
+                jogador.tirou_foto(a,dt,flash_alpha,flash_ativo,vidas,poligonos,objetivos,obstaculos);
             }  
         }
 
@@ -2550,6 +2588,7 @@ int main(int argc, char* argv[]) {
         }
 
         objetivos.clear();
+        obstaculos.clear();
         poligonos.clear();
         cores_poligonos.clear();
         jogador.nasce_jogador(0.0f,1.5f,0.0f);

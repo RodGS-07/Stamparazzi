@@ -37,7 +37,7 @@ class Jogador : public Entidade{
         float distancia_ponto(const XYZ& a, const XYZ& b);
         bool RayIntersectsAABB(const XYZ& orig, const XYZ& dir, const AABB& box);
         bool detecta_adesivo(const Adesivo& a, const vector<unique_ptr<Poligono>>& poligonos);
-        void tirou_foto(const Adesivo& a, float dt, float& flash_alpha, bool& flash_ativo,const vector<unique_ptr<Poligono>>& poligonos,set<int>& objetivos);
+        void tirou_foto(const Adesivo& a, float dt, float& flash_alpha, bool& flash_ativo, int& vidas, const vector<unique_ptr<Poligono>>& poligonos, set<int>& objetivos, set<int>& obstaculos);
         bool tenta_mover(float dx, float dy, float dz, int& vidas, const vector<unique_ptr<Poligono>>& poligonos, const vector<unique_ptr<Poligono>>& limites);
         void prende_camera();
         void move_camera(float dist, float dir, float dt, int& vidas, const vector<unique_ptr<Poligono>>& poligonos, const vector<unique_ptr<Poligono>>& limites, float val = 0.0f);

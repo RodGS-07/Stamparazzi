@@ -431,7 +431,7 @@ bool Jogador::detecta_adesivo(const Adesivo& a, const vector<unique_ptr<Poligono
     return frente and grau <= 20.0f and distancia_entidades(*this,a) <= 30.0f;
 }
 
-void Jogador::tirou_foto(const Adesivo& a, float dt, float& flash_alpha, bool& flash_ativo, const vector<unique_ptr<Poligono>>& poligonos,set<int>& objetivos){
+void Jogador::tirou_foto(const Adesivo& a, float dt, float& flash_alpha, bool& flash_ativo, int& vidas, const vector<unique_ptr<Poligono>>& poligonos, set<int>& objetivos, set<int>& obstaculos){
     if (flash_ativo and detecta_adesivo(a,poligonos)) {
         glDisable(GL_DEPTH_TEST);
         glMatrixMode(GL_PROJECTION);
@@ -468,6 +468,15 @@ void Jogador::tirou_foto(const Adesivo& a, float dt, float& flash_alpha, bool& f
             if ((*it) == a.getTexturaID() - 2) {
                 objetivos.erase(it);
                 break;
+            }
+        }
+
+        if (obstaculos.size()) {
+            for (auto it = obstaculos.begin(); it != obstaculos.end(); it++) {
+                if ((*it) == a.getTexturaID() - 2) {
+                    this->morre(vidas);
+                    break;
+                }
             }
         }
     }

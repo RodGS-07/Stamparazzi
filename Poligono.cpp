@@ -442,7 +442,7 @@ bool Esfera::colide_jogador(const AABB& s) const {
 void Esfera::aplica_efeito(Jogador& jogador, int& vidas) {
     AABB box = {{this->getX() - raio, this->getY() - raio, this->getZ() - raio}, {this->getX() + raio, this->getY() + raio, this->getZ() + raio}};
     //if(!pause) cout << jogador.getMascara().max.y << " " << box.min.y << endl;
-    if(jogador.getMascara().max.y <= this->getY()) jogador.morre(vidas);
+    if(jogador.getMascara().max.y <= box.min.y or jogador.getMascara().min.y <= this->chao) jogador.morre(vidas);
 }
 
 void Esfera::desenha_poligono(int cor, bool pause, bool modo_daltonico) {
