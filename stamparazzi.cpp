@@ -43,6 +43,7 @@ int dif = MEDIO;
 int estado_atual = MENU_PRINCIPAL;
 int timer = 90 + 30 * dif;
 int renascer = 1 + 2 * dif;
+int lista_cd = 0;
 int vidas = 2 * dif - 1;
 int minutos = timer / 60;
 int segundos = timer % 60;
@@ -65,7 +66,7 @@ struct TextoInfo {
     int w, h;
 };
 map<string, TextoInfo> textos;
-vector<string> Chaves = {"Tempo", "Objetivo", "Pause", "Morto", "Vida"};
+vector<string> Chaves = {"Tempo", "Objetivo", "Pause", "Morto", "Vida", "Lista_Cooldown"};
 GLuint texBlocoBase = 0;
 //GLuint textos["Tempo"].tex = 0, textos["Objetivo"].tex = 0, textos["Pause"].tex = 0, textos["Morto"].tex = 0, textos["Vida"].tex = 0, texBlocoBase = 0;
 //int textos["Tempo"].w = 0, textos["Objetivo"].w = 0, textos["Pause"].w = 0, textos["Morto"].w = 0, textos["Vida"].w = 0, textos["Tempo"].h = 0, textos["Objetivo"].h = 0, textos["Pause"].h = 0, textos["Morto"].h = 0, textos["Vida"].h = 0;
@@ -389,6 +390,12 @@ void inicializa_ttf(){
     str = voss.str();
     texto = str.c_str();
     textos["Vida"].tex = criaTexturaDoTexto(texto, fonte, preto, textos["Vida"].w, textos["Vida"].h);
+
+    ostringstream coss;
+    coss << "Lista disponivel";
+    str = coss.str();
+    texto = str.c_str();
+    textos["Lista_Cooldown"].tex = criaTexturaDoTexto(texto, fonte, preto, textos["Lista_Cooldown"].w, textos["Lista_Cooldown"].h);
 
     cria_textura_bloco_base();
 }
@@ -1559,6 +1566,25 @@ void atualiza_renascer(float dt) {
     }
 }
 
+void atualiza_cooldown_lista(float dt) {
+    static float acumulador = 0.0f;
+
+    if(!pause) {
+        acumulador += dt;
+        if (acumulador >= 1.0f) { // passou 1 segundo
+            acumulador -= 1.0f;
+            if (lista_cd > 0) {
+                lista_cd--;
+                ostringstream oss;
+                if(lista_cd) oss << "Lista disponivel em " << lista_cd;
+                else oss << "Lista disponivel";
+                string str = oss.str();
+                atualizaTexto(str,textos["Lista_Cooldown"].tex,textos["Lista_Cooldown"].w,textos["Lista_Cooldown"].h);
+            }
+        }
+    }
+}
+
 void desenha_menu(int menu_cursor, int quad_atual) {
 
     int w, h;
@@ -2113,6 +2139,7 @@ void loop_jogo(){
     rodando = true; pause = false;
     timer = 90 + 30 * dif;
     renascer = 1 + 2 * dif;
+    if(dif == DIFICIL) lista_cd = 0;
     if(dif == FACIL) vidas = INT_MAX;
     else vidas = 2 * dif - 1;
     ostringstream oss;
@@ -2123,6 +2150,10 @@ void loop_jogo(){
     voss << "Vidas restantes: " << vidas;
     str = voss.str();
     atualizaTexto(str,textos["Vida"].tex,textos["Vida"].w,textos["Vida"].h);
+    ostringstream coss;
+    coss << "Lista disponivel";
+    str = coss.str();
+    atualizaTexto(str,textos["Lista_Cooldown"].tex,textos["Lista_Cooldown"].w,textos["Lista_Cooldown"].h);
 
     SDL_Event evento;
     inicio = SDL_GetTicks();
@@ -2142,6 +2173,8 @@ void loop_jogo(){
 
         if(!objetivos.size()) {rodando = false; mostrar_resultado("Voce venceu!", true); break;}
         atualiza_objetivos(objetivos, cores_poligonos);
+
+        if(lista_cd and dif==DIFICIL) atualiza_cooldown_lista(dt);
 
         if(!vidas) {rodando = false; mostrar_resultado("Voce perdeu todas as vidas!", false); break;}
         if(!jogador.estaVivo()) {show_overlay = false; atualiza_renascer(dt); pause=false;}
@@ -2174,7 +2207,7 @@ void loop_jogo(){
                             ajustaProjecao(800, 600);
                         }
                         ajusta_tamanho_fonte();
-                    } else if(evento.key.keysym.sym == SDLK_ESCAPE)
+                    } else if(evento.key.keysym.sym == SDLK_ESCAPE) {
                         // alterna overlay. Se quiser o comportamento antigo (trocar primeira_pessoa),
                         // use outra tecla — aqui ESC faz overlay conforme pedido.
                         //show_overlay = !show_overlay;
@@ -2182,8 +2215,17 @@ void loop_jogo(){
                         // pause = show_overlay;
                         //SDL_SetRelativeMouseMode(show_overlay ? SDL_FALSE : SDL_TRUE);
                         //SDL_ShowCursor(show_overlay ? SDL_ENABLE : SDL_DISABLE);
-                        if(!pause and jogador.estaVivo()) {show_overlay = !show_overlay; overlay_antes = show_overlay;}
+                        if(!pause and jogador.estaVivo() and !lista_cd) {show_overlay = !show_overlay; overlay_antes = show_overlay;}
                         else if(pause) rodando = false;
+                        if(!show_overlay and dif==DIFICIL and !lista_cd and jogador.estaVivo()) {
+                            lista_cd = 10;
+                            ostringstream oss;
+                            if(lista_cd) oss << "Lista disponivel em " << lista_cd;
+                            else oss << "Lista disponivel";
+                            string str = oss.str();
+                            atualizaTexto(str,textos["Lista_Cooldown"].tex,textos["Lista_Cooldown"].w,textos["Lista_Cooldown"].h);
+                        }
+                    }
                 }
                 if(evento.type == SDL_MOUSEBUTTONDOWN and pause){
                     pause = false;
@@ -2218,8 +2260,16 @@ void loop_jogo(){
                         }
                         ajusta_tamanho_fonte();
                     } else if(evento.cbutton.button == SDL_CONTROLLER_BUTTON_BACK) {
-                        if(!pause and jogador.estaVivo()) {show_overlay = !show_overlay; overlay_antes = show_overlay;}
+                        if(!pause and jogador.estaVivo() and !lista_cd) {show_overlay = !show_overlay; overlay_antes = show_overlay;}
                         else if(pause) rodando = false;
+                        if(!show_overlay and dif==DIFICIL and !lista_cd and jogador.estaVivo()) {
+                            lista_cd = 10;
+                            ostringstream oss;
+                            if(lista_cd) oss << "Lista disponivel em " << lista_cd;
+                            else oss << "Lista disponivel";
+                            string str = oss.str();
+                            atualizaTexto(str,textos["Lista_Cooldown"].tex,textos["Lista_Cooldown"].w,textos["Lista_Cooldown"].h);
+                        }
                     }
                 }
                 if(SDL_GameControllerGetAxis(game_controller,SDL_CONTROLLER_AXIS_TRIGGERRIGHT) > 16000 and !pause and !show_overlay and jogador.estaVivo()){
@@ -2254,10 +2304,11 @@ void loop_jogo(){
         glLoadIdentity();
 
         // desenha texto
-        if(textos["Tempo"].tex && textos["Objetivo"].tex && textos["Pause"].tex && textos["Morto"].tex && textos["Vida"].tex) {
+        if(textos["Tempo"].tex && textos["Objetivo"].tex && textos["Pause"].tex && textos["Morto"].tex && textos["Vida"].tex && textos["Lista_Cooldown"].tex) {
             // sempre desenha tempo
             desenhaTexto(textos["Tempo"].tex, 50, 50, textos["Tempo"].w, textos["Tempo"].h);
             if(dif != FACIL) desenhaTexto(textos["Vida"].tex, 50, 75, textos["Vida"].w, textos["Vida"].h);
+            if(dif == DIFICIL) desenhaTexto(textos["Lista_Cooldown"].tex, 50, 125, textos["Lista_Cooldown"].w, textos["Lista_Cooldown"].h);
 
             if (show_overlay) {
                 int w, h;
