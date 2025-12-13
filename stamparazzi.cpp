@@ -462,6 +462,12 @@ void ajusta_tamanho_fonte() {
     oss.str(""); oss.clear();
     oss << "Voce morreu, renascendo em " << renascer;
     atualizaTexto(oss.str(), textos["Morto"].tex, textos["Morto"].w, textos["Morto"].h);
+
+    // Lista Cooldown
+    oss.str(""); oss.clear();
+    if(lista_cd) oss << "Lista disponivel em " << lista_cd;
+    else oss << "Lista disponivel";
+    atualizaTexto(oss.str(), textos["Lista_Cooldown"].tex, textos["Lista_Cooldown"].w, textos["Lista_Cooldown"].h);
 }
 
 void define_objetivos(int n) {
