@@ -4,7 +4,7 @@
 #include "Entidade.h"
 #include "Jogador.h"
 #include "Linear.h"
-#include "Poligono.h"
+#include "Solido.h"
 #include "Textura.h"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
@@ -71,7 +71,7 @@ GLuint texBlocoBase = 0;
 //GLuint textos["Tempo"].tex = 0, textos["Objetivo"].tex = 0, textos["Pause"].tex = 0, textos["Morto"].tex = 0, textos["Vida"].tex = 0, texBlocoBase = 0;
 //int textos["Tempo"].w = 0, textos["Objetivo"].w = 0, textos["Pause"].w = 0, textos["Morto"].w = 0, textos["Vida"].w = 0, textos["Tempo"].h = 0, textos["Objetivo"].h = 0, textos["Pause"].h = 0, textos["Morto"].h = 0, textos["Vida"].h = 0;
 
-vector<int> cores_poligonos;
+vector<int> cores_solidos;
 vector<bool> cores_ativadas;
 unordered_map<int, GLuint> texNumero;
 
@@ -83,8 +83,8 @@ TTF_Font* fonte;
 
 //Adesivo a = Adesivo(-5.0f,5.0f,10.0f,{0,0,1});
 
-vector<unique_ptr<Poligono>> poligonos;
-vector<unique_ptr<Poligono>> limites;
+vector<unique_ptr<Solido>> solidos;
+vector<unique_ptr<Solido>> limites;
 set<int> objetivos, obstaculos;
 //Cubo room (0.0f,0.0f,0.0f,nullptr,100.0f);
 //Cubo chao (0.0f,0.0f,0.0f,100.0f,0.1f,100.0f,nullptr,1.0f);
@@ -491,7 +491,7 @@ bool colisaoComSpawn(float x, float y, float z) {
             z >= spawn.min.z && z <= spawn.max.z);
 }
 
-void cria_poligonos(int n){
+void cria_solidos(int n){
     //room
     limites.push_back(make_unique<Cubo>(0.0f,0.0f,0.0f,nullptr,200.0f));
 
@@ -507,7 +507,7 @@ void cria_poligonos(int n){
         it = copia.begin();
         advance(it, randomIndex);
         id = *it - 1;
-        poligonos.push_back(make_unique<Cubo>(
+        solidos.push_back(make_unique<Cubo>(
             0.0f, 1.5f, -20.0f,
             0, 0.0f, 0.0f, 0.0f,
             make_unique<Adesivo>(0.0f, 1.5f, -20.0f, id),
@@ -519,7 +519,7 @@ void cria_poligonos(int n){
         it = copia.begin();
         advance(it, randomIndex);
         id = *it - 1;
-        poligonos.push_back(make_unique<Piramide>(
+        solidos.push_back(make_unique<Piramide>(
             10.0f, 1.5f, -20.0f,
             0, 0.0f, 180.0f, 0.0f,
             make_unique<Adesivo>(10.0f, 1.5f, -20.0f, id),
@@ -531,7 +531,7 @@ void cria_poligonos(int n){
         it = copia.begin();
         advance(it, randomIndex);
         id = *it - 1;
-        poligonos.push_back(make_unique<Esfera>(
+        solidos.push_back(make_unique<Esfera>(
             20.0f, 3.0f, -20.0f,
             0, 0.0f, 90.0f, 0.0f,
             make_unique<Adesivo>(20.0f, 3.0f, -20.0f, id),
@@ -543,7 +543,7 @@ void cria_poligonos(int n){
         it = copia.begin();
         advance(it, randomIndex);
         id = *it - 1;
-        poligonos.push_back(make_unique<Cilindro>(
+        solidos.push_back(make_unique<Cilindro>(
             30.0f, 1.5f, -30.0f,
             0, 0.0f, 0.0f, 0.0f,
             make_unique<Adesivo>(30.0f, 1.5f, -30.0f, id),
@@ -555,7 +555,7 @@ void cria_poligonos(int n){
         it = copia.begin();
         advance(it, randomIndex);
         id = *it - 1;
-        poligonos.push_back(make_unique<Cone>(
+        solidos.push_back(make_unique<Cone>(
             40.0f, 0.5f, -20.0f,
             0, 0.0f, 0.0f, 0.0f,
             make_unique<Adesivo>(40.0f, 0.5f, -20.0f, id),
@@ -567,7 +567,7 @@ void cria_poligonos(int n){
         it = copia.begin();
         advance(it, randomIndex);
         id = *it - 1;
-        poligonos.push_back(make_unique<Cubo>(
+        solidos.push_back(make_unique<Cubo>(
             -20, 1.5, 50,
             0, 0.0f, 90.0f, 0.0f,
             make_unique<Adesivo>(-20, 1.5, 50, id),
@@ -579,7 +579,7 @@ void cria_poligonos(int n){
         it = copia.begin();
         advance(it, randomIndex);
         id = *it - 1;
-        poligonos.push_back(make_unique<Piramide>(
+        solidos.push_back(make_unique<Piramide>(
             20, 1.5, 50,
             0, 0.0f, 270.0f, 0.0f,
             make_unique<Adesivo>(20, 1.5, 50, id),
@@ -591,7 +591,7 @@ void cria_poligonos(int n){
         it = copia.begin();
         advance(it, randomIndex);
         id = *it - 1;
-        poligonos.push_back(make_unique<Esfera>(
+        solidos.push_back(make_unique<Esfera>(
             20.0f, 11.5f, 60.0f,
             0, -90.0f, 0.0f, 0.0f,
             make_unique<Adesivo>(20.0f, 11.5f, 60.0f, id),
@@ -603,7 +603,7 @@ void cria_poligonos(int n){
         it = copia.begin();
         advance(it, randomIndex);
         id = *it - 1;
-        poligonos.push_back(make_unique<Cilindro>(
+        solidos.push_back(make_unique<Cilindro>(
             -30.0f, 1.5f, 30.0f,
             0, 0.0f, 0.0f, 0.0f,
             make_unique<Adesivo>(-30.0f, 1.5f, 30.0f, id),
@@ -615,7 +615,7 @@ void cria_poligonos(int n){
         it = copia.begin();
         advance(it, randomIndex);
         id = *it - 1;
-        poligonos.push_back(make_unique<Cone>(
+        solidos.push_back(make_unique<Cone>(
             -40.0f, 0.5f, 20.0f,
             0, 0.0f, 0.0f, 0.0f,
             make_unique<Adesivo>(-40.0f, 0.5f, 20.0f, id),
@@ -627,7 +627,7 @@ void cria_poligonos(int n){
         it = copia.begin();
         advance(it, randomIndex);
         id = *it - 1;
-        poligonos.push_back(make_unique<Cubo>(
+        solidos.push_back(make_unique<Cubo>(
             0.0f, 1.5f, -20.0f,
             0, 0.0f, 0.0f, 0.0f,
             make_unique<Adesivo>(0.0f, 1.5f, -20.0f, id),
@@ -639,7 +639,7 @@ void cria_poligonos(int n){
         it = copia.begin();
         advance(it, randomIndex);
         id = *it - 1;
-        poligonos.push_back(make_unique<Piramide>(
+        solidos.push_back(make_unique<Piramide>(
             10.0f, 1.5f, -20.0f,
             0, 0.0f, 180.0f, 0.0f,
             make_unique<Adesivo>(10.0f, 1.5f, -20.0f, id),
@@ -651,7 +651,7 @@ void cria_poligonos(int n){
         it = copia.begin();
         advance(it, randomIndex);
         id = *it - 1;
-        poligonos.push_back(make_unique<Esfera>(
+        solidos.push_back(make_unique<Esfera>(
             20.0f, 3.0f, -20.0f,
             0, 0.0f, 90.0f, 0.0f,
             make_unique<Adesivo>(20.0f, 3.0f, -20.0f, id),
@@ -663,7 +663,7 @@ void cria_poligonos(int n){
         it = copia.begin();
         advance(it, randomIndex);
         id = *it - 1;
-        poligonos.push_back(make_unique<Cilindro>(
+        solidos.push_back(make_unique<Cilindro>(
             30.0f, 1.5f, -30.0f,
             0, 0.0f, 0.0f, 0.0f,
             make_unique<Adesivo>(30.0f, 1.5f, -30.0f, id),
@@ -675,7 +675,7 @@ void cria_poligonos(int n){
         it = copia.begin();
         advance(it, randomIndex);
         id = *it - 1;
-        poligonos.push_back(make_unique<Cone>(
+        solidos.push_back(make_unique<Cone>(
             40.0f, 0.5f, -20.0f,
             0, 0.0f, 0.0f, 0.0f,
             make_unique<Adesivo>(40.0f, 0.5f, -20.0f, id),
@@ -687,7 +687,7 @@ void cria_poligonos(int n){
         it = copia.begin();
         advance(it, randomIndex);
         id = *it - 1;
-        poligonos.push_back(make_unique<Cubo>(
+        solidos.push_back(make_unique<Cubo>(
             -20, 1.5, 50,
             0, 0.0f, 270.0f, 0.0f,
             make_unique<Adesivo>(-20, 1.5, 50, id),
@@ -699,7 +699,7 @@ void cria_poligonos(int n){
         it = copia.begin();
         advance(it, randomIndex);
         id = *it - 1;
-        poligonos.push_back(make_unique<Piramide>(
+        solidos.push_back(make_unique<Piramide>(
             20, 1.5, 50,
             0, 0.0f, 90.0f, 0.0f,
             make_unique<Adesivo>(20, 1.5, 50, id),
@@ -711,7 +711,7 @@ void cria_poligonos(int n){
         it = copia.begin();
         advance(it, randomIndex);
         id = *it - 1;
-        poligonos.push_back(make_unique<Esfera>(
+        solidos.push_back(make_unique<Esfera>(
             20.0f, 11.5f, 60.0f,
             0, 90.0f, 0.0f, 0.0f,
             make_unique<Adesivo>(20.0f, 11.5f, 60.0f, id),
@@ -723,7 +723,7 @@ void cria_poligonos(int n){
         it = copia.begin();
         advance(it, randomIndex);
         id = *it - 1;
-        poligonos.push_back(make_unique<Cilindro>(
+        solidos.push_back(make_unique<Cilindro>(
             -30.0f, 1.5f, 30.0f,
             0, 0.0f, 0.0f, 0.0f,
             make_unique<Adesivo>(-30.0f, 1.5f, 30.0f, id),
@@ -758,14 +758,14 @@ void cria_poligonos(int n){
         t1->setConjugado(t2.get());
         t2->setConjugado(t1.get());
 
-        poligonos.push_back(move(t1));
-        poligonos.push_back(move(t2));
+        solidos.push_back(move(t1));
+        solidos.push_back(move(t2));
 
         randomIndex = rand() % copia.size();
         it = copia.begin();
         advance(it, randomIndex);
         id = *it - 1;
-        poligonos.push_back(make_unique<Cubo>(
+        solidos.push_back(make_unique<Cubo>(
             0.0f, -98.5f, -20.0f,
             0, 0.0f, 180.0f, 0.0f,
             make_unique<Adesivo>(0.0f, -98.5f, -20.0f, id),
@@ -777,7 +777,7 @@ void cria_poligonos(int n){
         it = copia.begin();
         advance(it, randomIndex);
         id = *it - 1;
-        poligonos.push_back(make_unique<Piramide>(
+        solidos.push_back(make_unique<Piramide>(
             10.0f, -98.5f, -20.0f,
             0, 0.0f, 0.0f, 0.0f,
             make_unique<Adesivo>(10.0f, -98.5f, -20.0f, id),
@@ -789,7 +789,7 @@ void cria_poligonos(int n){
         it = copia.begin();
         advance(it, randomIndex);
         id = *it - 1;
-        poligonos.push_back(make_unique<Esfera>(
+        solidos.push_back(make_unique<Esfera>(
             20.0f, -97.0f, -20.0f,
             0, 90.0f, 0.0f, 0.0f,
             make_unique<Adesivo>(20.0f, -97.0f, -20.0f, id),
@@ -801,7 +801,7 @@ void cria_poligonos(int n){
         it = copia.begin();
         advance(it, randomIndex);
         id = *it - 1;
-        poligonos.push_back(make_unique<Cilindro>(
+        solidos.push_back(make_unique<Cilindro>(
             30.0f, -98.5f, -30.0f,
             0, 0.0f, 0.0f, 0.0f,
             make_unique<Adesivo>(30.0f, -98.5f, -30.0f, id),
@@ -813,7 +813,7 @@ void cria_poligonos(int n){
         it = copia.begin();
         advance(it, randomIndex);
         id = *it - 1;
-        poligonos.push_back(make_unique<Cubo>(
+        solidos.push_back(make_unique<Cubo>(
             -20, -98.5, 50,
             0, 0.0f, 0.0f, 0.0f,
             make_unique<Adesivo>(-20, -98.5, 50, id),
@@ -825,7 +825,7 @@ void cria_poligonos(int n){
         it = copia.begin();
         advance(it, randomIndex);
         id = *it - 1;
-        poligonos.push_back(make_unique<Piramide>(
+        solidos.push_back(make_unique<Piramide>(
             20, -98.5, 50,
             0, 0.0f, 270.0f, 0.0f,
             make_unique<Adesivo>(20, -98.5, 50, id),
@@ -837,7 +837,7 @@ void cria_poligonos(int n){
         it = copia.begin();
         advance(it, randomIndex);
         id = *it - 1;
-        poligonos.push_back(make_unique<Esfera>(
+        solidos.push_back(make_unique<Esfera>(
             20.0f, -88.5f, 60.0f,
             0, -90.0f, 0.0f, 0.0f,
             make_unique<Adesivo>(20.0f, -88.5f, 60.0f, id),
@@ -849,7 +849,7 @@ void cria_poligonos(int n){
         it = copia.begin();
         advance(it, randomIndex);
         id = *it - 1;
-        poligonos.push_back(make_unique<Cilindro>(
+        solidos.push_back(make_unique<Cilindro>(
             -30.0f, -98.5f, 30.0f,
             0, 0.0f, 0.0f, 0.0f,
             make_unique<Adesivo>(-30.0f, -98.5f, 30.0f, id),
@@ -861,7 +861,7 @@ void cria_poligonos(int n){
         it = copia.begin();
         advance(it, randomIndex);
         id = *it - 1;
-        poligonos.push_back(make_unique<Cone>(
+        solidos.push_back(make_unique<Cone>(
             -40.0f, -98.5f, 20.0f,
             0, 0.0f, 0.0f, 0.0f,
             make_unique<Adesivo>(-40.0f, -98.5f, 20.0f, id),
@@ -884,7 +884,7 @@ void cria_poligonos(int n){
         do {
             x = room_dist(gen), y = ya_dist(gen), z = room_dist(gen);
         } while(colisaoComSpawn(x,y,z));
-        poligonos.push_back(make_unique<Cubo>(
+        solidos.push_back(make_unique<Cubo>(
             x, y, z,
             0, ang_dist(gen), ang_dist(gen), ang_dist(gen),
             make_unique<Adesivo>(x, y, z, id),
@@ -899,7 +899,7 @@ void cria_poligonos(int n){
         do {
             x = room_dist(gen), y = ya_dist(gen), z = room_dist(gen);
         } while(colisaoComSpawn(x,y,z));
-        poligonos.push_back(make_unique<Piramide>(
+        solidos.push_back(make_unique<Piramide>(
             x, y, z,
             0, ang_dist(gen), ang_dist(gen), ang_dist(gen),
             make_unique<Adesivo>(x, y, z, id),
@@ -914,7 +914,7 @@ void cria_poligonos(int n){
         do {
             x = room_dist(gen), y = ya_dist(gen), z = room_dist(gen);
         } while(colisaoComSpawn(x,y,z));
-        poligonos.push_back(make_unique<Esfera>(
+        solidos.push_back(make_unique<Esfera>(
             x, y, z,
             0, ang_dist(gen), ang_dist(gen), ang_dist(gen),
             make_unique<Adesivo>(x, y, z, id),
@@ -929,7 +929,7 @@ void cria_poligonos(int n){
         do {
             x = room_dist(gen), y = ya_dist(gen), z = room_dist(gen);
         } while(colisaoComSpawn(x,y,z));
-        poligonos.push_back(make_unique<Cilindro>(
+        solidos.push_back(make_unique<Cilindro>(
             x, y, z,
             0, 0.0f, 0.0f, 0.0f,
             make_unique<Adesivo>(x, y, z, id),
@@ -944,7 +944,7 @@ void cria_poligonos(int n){
         do {
             x = room_dist(gen), y = ya_dist(gen), z = room_dist(gen);
         } while(colisaoComSpawn(x,y,z));
-        poligonos.push_back(make_unique<Cone>(
+        solidos.push_back(make_unique<Cone>(
             x, y, z,
             0, 0.0f, 0.0f, 0.0f,
             make_unique<Adesivo>(x, y, z, id),
@@ -959,7 +959,7 @@ void cria_poligonos(int n){
         do {
             x = room_dist(gen), y = ya_dist(gen), z = room_dist(gen);
         } while(colisaoComSpawn(x,y,z));
-        poligonos.push_back(make_unique<Cubo>(
+        solidos.push_back(make_unique<Cubo>(
             x, y, z,
             0, ang_dist(gen), ang_dist(gen), ang_dist(gen),
             make_unique<Adesivo>(x, y, z, id),
@@ -974,7 +974,7 @@ void cria_poligonos(int n){
         do {
             x = room_dist(gen), y = ya_dist(gen), z = room_dist(gen);
         } while(colisaoComSpawn(x,y,z));
-        poligonos.push_back(make_unique<Piramide>(
+        solidos.push_back(make_unique<Piramide>(
             x, y, z,
             0, ang_dist(gen), ang_dist(gen), ang_dist(gen),
             make_unique<Adesivo>(x, y, z, id),
@@ -989,7 +989,7 @@ void cria_poligonos(int n){
         do {
             x = room_dist(gen), y = ya_dist(gen), z = room_dist(gen);
         } while(colisaoComSpawn(x,y,z));
-        poligonos.push_back(make_unique<Esfera>(
+        solidos.push_back(make_unique<Esfera>(
             x, y, z,
             0, ang_dist(gen), ang_dist(gen), ang_dist(gen),
             make_unique<Adesivo>(x, y, z, id),
@@ -1004,7 +1004,7 @@ void cria_poligonos(int n){
         do {
             x = room_dist(gen), y = ya_dist(gen), z = room_dist(gen);
         } while(colisaoComSpawn(x,y,z));
-        poligonos.push_back(make_unique<Cilindro>(
+        solidos.push_back(make_unique<Cilindro>(
             x, y, z,
             0, 0.0f, 0.0f, 0.0f,
             make_unique<Adesivo>(x, y, z, id),
@@ -1039,8 +1039,8 @@ void cria_poligonos(int n){
         t1->setConjugado(t2.get());
         t2->setConjugado(t1.get());
 
-        poligonos.push_back(move(t1));
-        poligonos.push_back(move(t2));
+        solidos.push_back(move(t1));
+        solidos.push_back(move(t2));
 
         randomIndex = rand() % copia.size();
         it = copia.begin();
@@ -1049,7 +1049,7 @@ void cria_poligonos(int n){
         do {
             x = room_dist(gen), y = yb_dist(gen), z = room_dist(gen);
         } while(colisaoComSpawn(x,y,z));
-        poligonos.push_back(make_unique<Cubo>(
+        solidos.push_back(make_unique<Cubo>(
             x, y, z,
             0, ang_dist(gen), ang_dist(gen), ang_dist(gen),
             make_unique<Adesivo>(x, y, z, id),
@@ -1064,7 +1064,7 @@ void cria_poligonos(int n){
         do {
             x = room_dist(gen), y = yb_dist(gen), z = room_dist(gen);
         } while(colisaoComSpawn(x,y,z));
-        poligonos.push_back(make_unique<Piramide>(
+        solidos.push_back(make_unique<Piramide>(
             x, y, z,
             0, ang_dist(gen), ang_dist(gen), ang_dist(gen),
             make_unique<Adesivo>(x, y, z, id),
@@ -1079,7 +1079,7 @@ void cria_poligonos(int n){
         do {
             x = room_dist(gen), y = yb_dist(gen), z = room_dist(gen);
         } while(colisaoComSpawn(x,y,z));
-        poligonos.push_back(make_unique<Esfera>(
+        solidos.push_back(make_unique<Esfera>(
             x, y, z,
             0, ang_dist(gen), ang_dist(gen), ang_dist(gen),
             make_unique<Adesivo>(x, y, z, id),
@@ -1094,7 +1094,7 @@ void cria_poligonos(int n){
         do {
             x = room_dist(gen), y = yb_dist(gen), z = room_dist(gen);
         } while(colisaoComSpawn(x,y,z));
-        poligonos.push_back(make_unique<Cilindro>(
+        solidos.push_back(make_unique<Cilindro>(
             x, y, z,
             0, 0.0f, 0.0f, 0.0f,
             make_unique<Adesivo>(x, y, z, id),
@@ -1109,7 +1109,7 @@ void cria_poligonos(int n){
         do {
             x = room_dist(gen), y = yb_dist(gen), z = room_dist(gen);
         } while(colisaoComSpawn(x,y,z));
-        poligonos.push_back(make_unique<Cubo>(
+        solidos.push_back(make_unique<Cubo>(
             x, y, z,
             0, ang_dist(gen), ang_dist(gen), ang_dist(gen),
             make_unique<Adesivo>(x, y, z, id),
@@ -1124,7 +1124,7 @@ void cria_poligonos(int n){
         do {
             x = room_dist(gen), y = yb_dist(gen), z = room_dist(gen);
         } while(colisaoComSpawn(x,y,z));
-        poligonos.push_back(make_unique<Piramide>(
+        solidos.push_back(make_unique<Piramide>(
             x, y, z,
             0, ang_dist(gen), ang_dist(gen), ang_dist(gen),
             make_unique<Adesivo>(x, y, z, id),
@@ -1139,7 +1139,7 @@ void cria_poligonos(int n){
         do {
             x = room_dist(gen), y = yb_dist(gen), z = room_dist(gen);
         } while(colisaoComSpawn(x,y,z));
-        poligonos.push_back(make_unique<Esfera>(
+        solidos.push_back(make_unique<Esfera>(
             x, y, z,
             0, ang_dist(gen), ang_dist(gen), ang_dist(gen),
             make_unique<Adesivo>(x, y, z, id),
@@ -1154,7 +1154,7 @@ void cria_poligonos(int n){
         do {
             x = room_dist(gen), y = yb_dist(gen), z = room_dist(gen);
         } while(colisaoComSpawn(x,y,z));
-        poligonos.push_back(make_unique<Cilindro>(
+        solidos.push_back(make_unique<Cilindro>(
             x, y, z,
             0, 0.0f, 0.0f, 0.0f,
             make_unique<Adesivo>(x, y, z, id),
@@ -1169,7 +1169,7 @@ void cria_poligonos(int n){
         do {
             x = room_dist(gen), y = yb_dist(gen), z = room_dist(gen);
         } while(colisaoComSpawn(x,y,z));
-        poligonos.push_back(make_unique<Cone>(
+        solidos.push_back(make_unique<Cone>(
             x, y, z,
             0, 0.0f, 0.0f, 0.0f,
             make_unique<Adesivo>(x, y, z, id),
@@ -1178,43 +1178,43 @@ void cria_poligonos(int n){
         copia.erase(it);
     }
 
-    cores_poligonos.resize(n);
+    cores_solidos.resize(n);
 
     if(dif!=FACIL){
         for(int i = 0; i < n; i++){
-            cores_poligonos[i] = rand() % (12+1);
-            if(!cores_ativadas[cores_poligonos[i]]) {i--; continue;}
-            if(poligonos[i]->getSuperficie()==F::TORUS and i<n-1) {
-                cores_poligonos[i+1]=cores_poligonos[i]; i++;
+            cores_solidos[i] = rand() % (12+1);
+            if(!cores_ativadas[cores_solidos[i]]) {i--; continue;}
+            if(solidos[i]->getSuperficie()==F::TORUS and i<n-1) {
+                cores_solidos[i+1]=cores_solidos[i]; i++;
             }
         }
     } else {
         for(int i = 0; i < n; i++) {
-            cores_poligonos[i] = rand() % (12+1);
-            if(!cores_ativadas[cores_poligonos[i]]) {i--; continue;}
+            cores_solidos[i] = rand() % (12+1);
+            if(!cores_ativadas[cores_solidos[i]]) {i--; continue;}
         }
     }
 
     // Cria vetor de pares (polígono, cor)
-    vector<pair<unique_ptr<Poligono>, int>> combinados;
-    for (size_t i = 0; i < poligonos.size(); ++i) {
-        combinados.push_back({move(poligonos[i]), cores_poligonos[i]});
+    vector<pair<unique_ptr<Solido>, int>> combinados;
+    for (size_t i = 0; i < solidos.size(); ++i) {
+        combinados.push_back({move(solidos[i]), cores_solidos[i]});
     }
 
     // Ordena pelo ID do adesivo
     sort(combinados.begin(), combinados.end(),
-        [](const pair<unique_ptr<Poligono>, int>& a,
-            const pair<unique_ptr<Poligono>, int>& b) {
+        [](const pair<unique_ptr<Solido>, int>& a,
+            const pair<unique_ptr<Solido>, int>& b) {
             if (!a.first->getAdesivo() || !b.first->getAdesivo()) return false;
             return a.first->getAdesivo()->getTexturaID() < b.first->getAdesivo()->getTexturaID();
         });
 
     // Reconstrói os vetores originais
-    poligonos.clear();
-    cores_poligonos.clear();
+    solidos.clear();
+    cores_solidos.clear();
     for (auto& par : combinados) {
-        poligonos.push_back(move(par.first));
-        cores_poligonos.push_back(par.second);
+        solidos.push_back(move(par.first));
+        cores_solidos.push_back(par.second);
     }
 }
 
@@ -1249,7 +1249,7 @@ void atualiza_timer(float dt){
     }
 }
 
-void atualiza_objetivos(const set<int>& objetivos, const vector<int>& coresPoligonos) {
+void atualiza_objetivos(const set<int>& objetivos, const vector<int>& coresSolidos) {
 
     // Deleta textura antiga
     if (textos["Objetivo"].tex) {
@@ -1324,7 +1324,7 @@ void desenha_bloco(float x, float y, float tamanho, Cor corFundo, GLuint texNume
     glDisable(GL_TEXTURE_2D);
 }
 
-void desenha_blocos_overlay(const set<int>& objetivos, const vector<int>& coresPoligonos) {
+void desenha_blocos_overlay(const set<int>& objetivos, const vector<int>& coresSolidos) {
 
     if (objetivos.empty()) return;
 
@@ -1436,8 +1436,8 @@ void desenha_blocos_overlay(const set<int>& objetivos, const vector<int>& coresP
 
         int indicePoligono = -1;
 
-        for (size_t i = 0; i < poligonos.size(); ++i) {
-            auto adesivo = poligonos[i]->getAdesivo();
+        for (size_t i = 0; i < solidos.size(); ++i) {
+            auto adesivo = solidos[i]->getAdesivo();
             if (adesivo && adesivo->getTexturaID() - 2 == objetivo) {
                 indicePoligono = (int)i;
                 break;
@@ -1446,7 +1446,7 @@ void desenha_blocos_overlay(const set<int>& objetivos, const vector<int>& coresP
 
         if (indicePoligono == -1) continue;
 
-        Cor cor = get_cor_struct(coresPoligonos[indicePoligono]);
+        Cor cor = get_cor_struct(coresSolidos[indicePoligono]);
 
         // ----- bloco -----
         glDisable(GL_TEXTURE_2D);
@@ -1497,7 +1497,7 @@ void desenha_blocos_overlay(const set<int>& objetivos, const vector<int>& coresP
         // ----- Símbolo ColorADD -----
         if (modo_daltonico) {
 
-            GLuint texSimbolo = coresPoligonos[indicePoligono] + 23;
+            GLuint texSimbolo = coresSolidos[indicePoligono] + 23;
 
             float simLarg = blocoTam * 0.55f;
             float simAlt  = simLarg;
@@ -2178,7 +2178,7 @@ void loop_jogo(){
         if(!timer) {rodando = false; mostrar_resultado("Seu tempo acabou!", false); break;}
 
         if(!objetivos.size()) {rodando = false; mostrar_resultado("Voce venceu!", true); break;}
-        atualiza_objetivos(objetivos, cores_poligonos);
+        atualiza_objetivos(objetivos, cores_solidos);
 
         if(lista_cd and dif==DIFICIL) atualiza_cooldown_lista(dt);
 
@@ -2344,7 +2344,7 @@ void loop_jogo(){
                 glEnd();
 
                 // Quadrados coloridos no centro
-                desenha_blocos_overlay(objetivos, cores_poligonos);
+                desenha_blocos_overlay(objetivos, cores_solidos);
 
                 glEnable(GL_DEPTH_TEST);
                 glEnable(GL_LIGHTING);
@@ -2460,13 +2460,13 @@ void loop_jogo(){
 
         // 1) guardamos posições antigas
         vector<XYZ> prevPos;
-        prevPos.reserve(poligonos.size());
-        for (const auto &p : poligonos) {
+        prevPos.reserve(solidos.size());
+        for (const auto &p : solidos) {
             prevPos.push_back({ p->getX(), p->getY(), p->getZ() });
         }
 
         // 2) desenhamos polígonos e máscaras e realizamos movimentos
-        for (const auto& p : poligonos){
+        for (const auto& p : solidos){
             p->realiza_movimento(dt,pause,modo_daltonico);
             //p->desenha_mascara();
             //p->desenha_adesivo();
@@ -2474,8 +2474,8 @@ void loop_jogo(){
 
         if(jogador.estaVivo()) {
             // 3) para cada polígono, checamos swept collision contra jogador
-            for (size_t i = 0; i < poligonos.size(); ++i) {
-                auto &p = poligonos[i];
+            for (size_t i = 0; i < solidos.size(); ++i) {
+                auto &p = solidos[i];
                 AABB newBox = p->getAABB();
 
                 // recuperar AABB antiga: set temporariamente posição anterior,
@@ -2519,9 +2519,9 @@ void loop_jogo(){
 
                         // verifica se, ao empurrar o jogador, ele colide com outro polígono
                         bool bad = false;
-                        for (size_t j = 0; j < poligonos.size(); ++j) {
+                        for (size_t j = 0; j < solidos.size(); ++j) {
                             if (j == i) continue; // ignora o polígono que empurrou
-                            if (poligonos[j]->colide_jogador(jogador.getMascara())) {
+                            if (solidos[j]->colide_jogador(jogador.getMascara())) {
                                 bad = true;
                                 break;
                             }
@@ -2567,27 +2567,27 @@ void loop_jogo(){
         }
 
         int i = 0;
-        for(const auto& p : poligonos){
-            p->desenha_poligono(cores_poligonos[i], pause, modo_daltonico); i++;
+        for(const auto& p : solidos){
+            p->desenha_solido(cores_solidos[i], pause, modo_daltonico); i++;
             //p->desenha_mascara();
         }
 
         if(modo_daltonico){
             i=0;
-            for(const auto& p : poligonos){
+            for(const auto& p : solidos){
                 glPushMatrix();
                 glTranslatef(p->getX(), p->getY() + 3.0f + 2.0f*(p->getSuperficie()==F::TORUS), p->getZ());
-                desenha_simbolo_coloradd(cores_poligonos[i]+23);
+                desenha_simbolo_coloradd(cores_solidos[i]+23);
                 glPopMatrix();
                 i++;
             }
         }
 
         // Controla câmera
-        if(jogador.estaVivo()) jogador.controle_camera(MOVE_VEL,CAMERA_SENS,dt,vidas,pause,window,game_controller,state,poligonos,limites);
+        if(jogador.estaVivo()) jogador.controle_camera(MOVE_VEL,CAMERA_SENS,dt,vidas,pause,window,game_controller,state,solidos,limites);
         //jogador.controle_camera(MOVE_VEL, CAMERA_SENS,dt,pause,window,game_controller,state,limites);
 
-        for(const auto& p : poligonos){
+        for(const auto& p : solidos){
             if(p->getSuperficie()==F::CONE)
                 p->aplica_efeito(jogador,vidas);
         }
@@ -2595,20 +2595,20 @@ void loop_jogo(){
         // Verifica morte do jogador
         //if(!jogador.estaVivo() and !renascer) renascer = 3;
 
-        for(const auto& p : poligonos){
+        for(const auto& p : solidos){
             Adesivo* ade = p->getAdesivo();
             if(ade!=nullptr){
                 Adesivo a = *ade;
-                if(jogador.detecta_adesivo(a,poligonos) and !pause and !show_overlay and jogador.estaVivo()){
+                if(jogador.detecta_adesivo(a,solidos) and !pause and !show_overlay and jogador.estaVivo()){
                     glDisable(GL_DEPTH_TEST);   // ignora profundidade
                     marcax(p->getX(),p->getY(),p->getZ(),jogador.getCamYaw(),jogador.getCamPitch());
                     glEnable(GL_DEPTH_TEST);    // reativa para os próximos frames
                 }
-                jogador.tirou_foto(a,dt,flash_alpha,flash_ativo,vidas,poligonos,objetivos,obstaculos);
+                jogador.tirou_foto(a,dt,flash_alpha,flash_ativo,vidas,solidos,objetivos,obstaculos);
             }  
         }
 
-        if(show_overlay and !pause and jogador.estaVivo()) desenha_blocos_overlay(objetivos, cores_poligonos);
+        if(show_overlay and !pause and jogador.estaVivo()) desenha_blocos_overlay(objetivos, cores_solidos);
         
         //jogador.tirou_foto(a,dt,flash_alpha,flash_ativo);
 
@@ -2658,14 +2658,14 @@ int main(int argc, char* argv[]) {
         if(estado_atual == SAINDO) break;
         else if(estado_atual == JOGO_PRINCIPAL){
             define_objetivos(4 + 2 * dif);
-            cria_poligonos(dif == FACIL ? 10 : 20);
+            cria_solidos(dif == FACIL ? 10 : 20);
             loop_jogo();
         }
 
         objetivos.clear();
         obstaculos.clear();
-        poligonos.clear();
-        cores_poligonos.clear();
+        solidos.clear();
+        cores_solidos.clear();
         jogador.nasce_jogador(0.0f,1.5f,0.0f);
 
         estado_atual = MENU_PRINCIPAL;

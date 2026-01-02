@@ -6,7 +6,7 @@
 #include "Entidade.h"
 #include "Draw.h"
 #include "Adesivo.h"
-#include "Poligono.h"
+#include "Solido.h"
 #include <SDL2/SDL.h>
 #include <vector>
 #include <set>
@@ -36,12 +36,12 @@ class Jogador : public Entidade{
         XYZ centroAABB(const AABB& box);
         float distancia_ponto(const XYZ& a, const XYZ& b);
         bool RayIntersectsAABB(const XYZ& orig, const XYZ& dir, const AABB& box);
-        bool detecta_adesivo(const Adesivo& a, const vector<unique_ptr<Poligono>>& poligonos);
-        void tirou_foto(const Adesivo& a, float dt, float& flash_alpha, bool& flash_ativo, int& vidas, const vector<unique_ptr<Poligono>>& poligonos, set<int>& objetivos, set<int>& obstaculos);
-        bool tenta_mover(float dx, float dy, float dz, int& vidas, const vector<unique_ptr<Poligono>>& poligonos, const vector<unique_ptr<Poligono>>& limites);
+        bool detecta_adesivo(const Adesivo& a, const vector<unique_ptr<Solido>>& poligonos);
+        void tirou_foto(const Adesivo& a, float dt, float& flash_alpha, bool& flash_ativo, int& vidas, const vector<unique_ptr<Solido>>& poligonos, set<int>& objetivos, set<int>& obstaculos);
+        bool tenta_mover(float dx, float dy, float dz, int& vidas, const vector<unique_ptr<Solido>>& poligonos, const vector<unique_ptr<Solido>>& limites);
         void prende_camera();
-        void move_camera(float dist, float dir, float dt, int& vidas, const vector<unique_ptr<Poligono>>& poligonos, const vector<unique_ptr<Poligono>>& limites, float val = 0.0f);
-        void controle_camera(float move_vel, float camera_sens, float dt, int& vidas, bool pause, SDL_Window* window, SDL_GameController* game_controller, const Uint8* state, const vector<unique_ptr<Poligono>>& poligonos, const vector<unique_ptr<Poligono>>& limites);
+        void move_camera(float dist, float dir, float dt, int& vidas, const vector<unique_ptr<Solido>>& poligonos, const vector<unique_ptr<Solido>>& limites, float val = 0.0f);
+        void controle_camera(float move_vel, float camera_sens, float dt, int& vidas, bool pause, SDL_Window* window, SDL_GameController* game_controller, const Uint8* state, const vector<unique_ptr<Solido>>& poligonos, const vector<unique_ptr<Solido>>& limites);
 };
 
 #endif

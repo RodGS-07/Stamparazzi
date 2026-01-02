@@ -1,5 +1,5 @@
 // Códigos para entidades que são Polígonos
-#include "Poligono.h"
+#include "Solido.h"
 #include "Entidade.h"
 #include "Draw.h"
 #include "Colisao.h"
@@ -9,12 +9,12 @@
 #include <memory>
 using namespace std;
 
-Poligono::Poligono(int s) : Entidade(), superficie(s) {}
-Poligono::Poligono(float ix, float iy, float iz, int s, unique_ptr<Adesivo> a) 
+Solido::Solido(int s) : Entidade(), superficie(s) {}
+Solido::Solido(float ix, float iy, float iz, int s, unique_ptr<Adesivo> a) 
 : Entidade(ix,iy,iz), superficie(s) {
     this->setAdesivo(move(a));
 }
-Poligono::Poligono(float ix, float iy, float iz, int op, float xs, float ys, float zs, int s, unique_ptr<Adesivo> a)
+Solido::Solido(float ix, float iy, float iz, int op, float xs, float ys, float zs, int s, unique_ptr<Adesivo> a)
 : Entidade(ix,iy,iz), superficie(s) {
     if(!op) {rotx = xs, roty = ys, rotz = zs;} 
     else {escalax = xs, escalay = ys, escalaz = zs;}
@@ -39,29 +39,29 @@ Poligono::Poligono(float ix, float iy, float iz, int op, float xs, float ys, flo
     }
 }
 
-int Poligono::getSuperficie() const {return this->superficie;}
+int Solido::getSuperficie() const {return this->superficie;}
 
-float Poligono::getEscalaX() const {return this->escalax;}
+float Solido::getEscalaX() const {return this->escalax;}
 
-float Poligono::getEscalaY() const {return this->escalay;}
+float Solido::getEscalaY() const {return this->escalay;}
 
-float Poligono::getEscalaZ() const {return this->escalaz;}
+float Solido::getEscalaZ() const {return this->escalaz;}
 
-float Poligono::getRotX() const {return this->rotx;}
+float Solido::getRotX() const {return this->rotx;}
 
-float Poligono::getRotY() const {return this->roty;}
+float Solido::getRotY() const {return this->roty;}
 
-float Poligono::getRotZ() const {return this->rotz;}
+float Solido::getRotZ() const {return this->rotz;}
 
-void Poligono::setEscala(float xs, float ys, float zs) {
+void Solido::setEscala(float xs, float ys, float zs) {
     escalax = xs, escalay = ys, escalaz = zs;
 }
 
-Adesivo* Poligono::getAdesivo() const {return adesivo.get();}
+Adesivo* Solido::getAdesivo() const {return adesivo.get();}
 
-void Poligono::setAdesivo(unique_ptr<Adesivo> a) {adesivo = move(a);}
+void Solido::setAdesivo(unique_ptr<Adesivo> a) {adesivo = move(a);}
 
-void Poligono::desenha_adesivo_no_poligono(const Adesivo& adesivo, float offset) {
+void Solido::desenha_adesivo_no_solido(const Adesivo& adesivo, float offset) {
     glPushMatrix();
 
     // pega normal da face
@@ -84,11 +84,11 @@ void Poligono::desenha_adesivo_no_poligono(const Adesivo& adesivo, float offset)
     glPopMatrix();
 }
 
-Cubo::Cubo() : Poligono(F::CUBO) {}
+Cubo::Cubo() : Solido(F::CUBO) {}
 Cubo::Cubo(float ix, float iy, float iz, unique_ptr<Adesivo> a, float l)
-: Poligono(ix,iy,iz,F::CUBO,move(a)), lado(l) {}
+: Solido(ix,iy,iz,F::CUBO,move(a)), lado(l) {}
 Cubo::Cubo(float ix, float iy, float iz, int op, float xs, float ys, float zs, unique_ptr<Adesivo> a, float l)
-: Poligono(ix,iy,iz,op,xs,ys,zs,F::CUBO,move(a)), lado(l) {}
+: Solido(ix,iy,iz,op,xs,ys,zs,F::CUBO,move(a)), lado(l) {}
 
 AABB Cubo::getAABB() const {
     return {{ (this->getX() - lado) * getEscalaX(), (this->getY() - lado) * getEscalaY(), (this->getZ() - lado) * getEscalaZ() },
@@ -98,7 +98,7 @@ AABB Cubo::getAABB() const {
 float Cubo::getLado() const {return this->lado;}
 
 void Cubo::realiza_movimento(float dt, bool pause, bool modo_daltonico) {
-    //desenha_poligono(cor, pause, modo_daltonico);
+    //desenha_solido(cor, pause, modo_daltonico);
     // if (getAdesivo() and (getRotX() or getRotY() or getRotZ())) {
 
     //     XYZ normal;
@@ -125,7 +125,7 @@ void Cubo::aplica_efeito(Jogador& jogador, int& vidas) {
     return;
 }
 
-void Cubo::desenha_poligono(int cor, bool pause, bool modo_daltonico) {
+void Cubo::desenha_solido(int cor, bool pause, bool modo_daltonico) {
     if(cor >= 0 and cor <= 12) muda_cor(cor);
     glPushMatrix();
     glTranslatef(this->getX(), this->getY(), this->getZ());
@@ -138,7 +138,7 @@ void Cubo::desenha_poligono(int cor, bool pause, bool modo_daltonico) {
     // if (this->getAdesivo()) {
     //     glPushMatrix();
     //     glTranslatef(0.0f, 0.0f, this->getLado()/2.0f + 0.01f);
-    //     desenha_adesivo_no_poligono(*this->getAdesivo(), this->getLado());
+    //     desenha_adesivo_no_solido(*this->getAdesivo(), this->getLado());
     //     glPopMatrix();
     // }
     glPopMatrix();
@@ -147,7 +147,7 @@ void Cubo::desenha_poligono(int cor, bool pause, bool modo_daltonico) {
 // void Cubo::desenha_adesivo() {
 //     glPushMatrix();
 //     glTranslatef(this->getX(), this->getY(), this->getZ());
-//     desenha_adesivo_no_poligono(this->getAdesivo(), this->getLado()/2.0f + 0.01f);
+//     desenha_adesivo_no_solido(this->getAdesivo(), this->getLado()/2.0f + 0.01f);
 //     glPopMatrix();
 // }
 
@@ -198,11 +198,11 @@ void Cubo::desenha_mascara() {
     glEnd();
 }
 
-Piramide::Piramide() : Poligono(F::PIRAMIDE) {}
+Piramide::Piramide() : Solido(F::PIRAMIDE) {}
 Piramide::Piramide(float ix, float iy, float iz, unique_ptr<Adesivo> a, float b, float h)
-: Poligono(ix,iy,iz,F::PIRAMIDE,move(a)), base(b), altura(h) {}
+: Solido(ix,iy,iz,F::PIRAMIDE,move(a)), base(b), altura(h) {}
 Piramide::Piramide(float ix, float iy, float iz, int op, float xs, float ys, float zs, unique_ptr<Adesivo> a, float b, float h)
-: Poligono(ix,iy,iz,op,xs,ys,zs,F::PIRAMIDE,move(a)), base(b), altura(h) {}
+: Solido(ix,iy,iz,op,xs,ys,zs,F::PIRAMIDE,move(a)), base(b), altura(h) {}
 
 AABB Piramide::getAABB() const {
     return {{(this->getX() - base/2.0f) * getEscalaX(), (this->getY() - altura/2.0f) * getEscalaY(), (this->getZ() - base/2.0f) * getEscalaZ()}, 
@@ -212,7 +212,7 @@ AABB Piramide::getAABB() const {
 float Piramide::getAltura() const {return this->altura;}
 
 void Piramide::realiza_movimento(float dt, bool pause, bool modo_daltonico) {
-    //desenha_poligono(cor, pause, modo_daltonico);
+    //desenha_solido(cor, pause, modo_daltonico);
     // if (getAdesivo() and (getRotX() or getRotY() or getRotZ())) {
 
     //     XYZ normal;
@@ -266,7 +266,7 @@ void Piramide::aplica_efeito(Jogador& jogador, int& vidas) {
     jogador.morre(vidas);
 }
 
-void Piramide::desenha_poligono(int cor, bool pause, bool modo_daltonico) {
+void Piramide::desenha_solido(int cor, bool pause, bool modo_daltonico) {
     if(cor >= 0 and cor <= 12) muda_cor(cor);
     glPushMatrix();
     glTranslatef(this->getX(), this->getY(), this->getZ());
@@ -282,7 +282,7 @@ void Piramide::desenha_poligono(int cor, bool pause, bool modo_daltonico) {
     //     //glTranslatef(0.0f, getAltura() / 2.0f, 0.0f);
 
     //     //Adesivo adesivo(0,0,0,{1,1,1}); 
-    //     desenha_adesivo_no_poligono(*this->getAdesivo(), this->getAltura()/2.0f + 0.01f);
+    //     desenha_adesivo_no_solido(*this->getAdesivo(), this->getAltura()/2.0f + 0.01f);
     //     glPopMatrix();
     // }
     glPopMatrix();
@@ -296,7 +296,7 @@ void Piramide::desenha_poligono(int cor, bool pause, bool modo_daltonico) {
 //     //glTranslatef(0.0f, getAltura() / 2.0f, 0.0f);
 
 //     //Adesivo adesivo(0,0,0,{1,1,1}); 
-//     desenha_adesivo_no_poligono(this->getAdesivo(), this->getAltura()/2.0f + 0.01f);
+//     desenha_adesivo_no_solido(this->getAdesivo(), this->getAltura()/2.0f + 0.01f);
 
 //     glPopMatrix();
 // }
@@ -351,9 +351,9 @@ void Piramide::desenha_mascara(){
     glEnd();
 }
 
-Esfera::Esfera() : Poligono(F::ESFERA) {}
+Esfera::Esfera() : Solido(F::ESFERA) {}
 Esfera::Esfera(float ix, float iy, float iz, unique_ptr<Adesivo> a, float r, float c)
-: Poligono(ix,iy,iz,F::ESFERA,move(a)), raio(r), chao(c) {
+: Solido(ix,iy,iz,F::ESFERA,move(a)), raio(r), chao(c) {
     //y_vel = 10.0f;
     grav = -9.8f;     // "gravidade"
     altura_inicial = iy;
@@ -366,7 +366,7 @@ Esfera::Esfera(float ix, float iy, float iz, unique_ptr<Adesivo> a, float r, flo
 }
 
 Esfera::Esfera(float ix, float iy, float iz, int op, float xs, float ys, float zs, unique_ptr<Adesivo> a, float r, float c)
-: Poligono(ix,iy,iz,op,xs,ys,zs,F::ESFERA,move(a)), raio(r), chao(c) {
+: Solido(ix,iy,iz,op,xs,ys,zs,F::ESFERA,move(a)), raio(r), chao(c) {
     //y_vel = 10.0f;
     grav = -9.8f;     // "gravidade"
     altura_inicial = iy;
@@ -429,7 +429,7 @@ void Esfera::realiza_movimento(float dt, bool pause, bool modo_daltonico) {
             // }
         }
     }
-    //desenha_poligono(cor, pause, modo_daltonico);
+    //desenha_solido(cor, pause, modo_daltonico);
 }
 
 bool Esfera::colide_jogador(const AABB& s) const {
@@ -445,7 +445,7 @@ void Esfera::aplica_efeito(Jogador& jogador, int& vidas) {
     if(jogador.getMascara().max.y <= box.min.y or jogador.getMascara().min.y <= this->chao) jogador.morre(vidas);
 }
 
-void Esfera::desenha_poligono(int cor, bool pause, bool modo_daltonico) {
+void Esfera::desenha_solido(int cor, bool pause, bool modo_daltonico) {
     if(cor >= 0 and cor <= 12) muda_cor(cor);
     glPushMatrix();
     glTranslatef(this->getX(), this->getY(), this->getZ());
@@ -456,7 +456,7 @@ void Esfera::desenha_poligono(int cor, bool pause, bool modo_daltonico) {
     // if(this->getAdesivo()){
     //     glPushMatrix();
     //     glTranslatef(0.0f, 0.0f, this->getRaio()/2.0f + 0.01f);
-    //     desenha_adesivo_no_poligono(*this->getAdesivo(), this->getRaio() + 0.01f);
+    //     desenha_adesivo_no_solido(*this->getAdesivo(), this->getRaio() + 0.01f);
     //     glPopMatrix();
     // }
     glPopMatrix();
@@ -465,7 +465,7 @@ void Esfera::desenha_poligono(int cor, bool pause, bool modo_daltonico) {
 // void Esfera::desenha_adesivo() {
 //     glPushMatrix();
 //     glTranslatef(this->getX(), this->getY(), this->getZ());
-//     desenha_adesivo_no_poligono(this->getAdesivo(), this->getRaio() + 0.01f);
+//     desenha_adesivo_no_solido(this->getAdesivo(), this->getRaio() + 0.01f);
 //     glPopMatrix();
 // }
 
@@ -516,15 +516,15 @@ void Esfera::desenha_mascara(){
     glEnd();
 }
 
-Cilindro::Cilindro() : Poligono(F::CILINDRO) {}
+Cilindro::Cilindro() : Solido(F::CILINDRO) {}
 Cilindro::Cilindro(float ix, float iy, float iz, unique_ptr<Adesivo> a, float r, float h)
-: Poligono(ix,iy,iz,F::CILINDRO,move(a)), raio(r), altura(h), x_vel(1.0f) {
+: Solido(ix,iy,iz,F::CILINDRO,move(a)), raio(r), altura(h), x_vel(1.0f) {
     centro_base = { this->getX(), this->getY(), this->getZ() - altura/2.0f };
     axis = { 0.0f, 0.0f, 1.0f };
     ang = 0.0f;
 }
 Cilindro::Cilindro(float ix, float iy, float iz, int op, float xs, float ys, float zs, unique_ptr<Adesivo> a, float r, float h)
-: Poligono(ix,iy,iz,op,xs,ys,zs,F::CILINDRO,move(a)), raio(r), altura(h), x_vel(1.0f) {
+: Solido(ix,iy,iz,op,xs,ys,zs,F::CILINDRO,move(a)), raio(r), altura(h), x_vel(1.0f) {
     centro_base = { this->getX(), this->getY(), this->getZ() - altura/2.0f };
     axis = { 0.0f, 0.0f, 1.0f };
     ang = 0.0f;
@@ -586,7 +586,7 @@ void Cilindro::realiza_movimento(float dt, bool pause, bool modo_daltonico) {
     //     this->getAdesivo()->setNormal({nx, n.y, nz});
     // }
 
-    //desenha_poligono(cor, pause, modo_daltonico);
+    //desenha_solido(cor, pause, modo_daltonico);
 }
 
 bool Cilindro::colide_jogador(const AABB& s) const {
@@ -612,7 +612,7 @@ void Cilindro::aplica_efeito(Jogador& jogador, int& vidas) {
     //if(jogador.getMascara().max.y <= this->getY()) jogador.morre(vidas);
 }
 
-void Cilindro::desenha_poligono(int cor, bool pause, bool modo_daltonico) {
+void Cilindro::desenha_solido(int cor, bool pause, bool modo_daltonico) {
     if(!pause) ang -= x_vel;
     if(cor >= 0 and cor <= 12) muda_cor(cor);
     glPushMatrix();
@@ -625,7 +625,7 @@ void Cilindro::desenha_poligono(int cor, bool pause, bool modo_daltonico) {
 
     //     auto n = this->getAdesivo()->getNormal();
     //     float offset = (fabs(n.y) > 0) ? this->getAltura()/2.0f : this->getRaio();
-    //     desenha_adesivo_no_poligono(*this->getAdesivo(), offset + 0.01f);
+    //     desenha_adesivo_no_solido(*this->getAdesivo(), offset + 0.01f);
 
     //     glPopMatrix();
     // }
@@ -638,7 +638,7 @@ void Cilindro::desenha_poligono(int cor, bool pause, bool modo_daltonico) {
 
 //     auto n = this->getAdesivo().getNormal();
 //     float offset = (fabs(n.y) > 0) ? this->getAltura()/2.0f : this->getRaio();
-//     desenha_adesivo_no_poligono(this->getAdesivo(), offset + 0.01f);
+//     desenha_adesivo_no_solido(this->getAdesivo(), offset + 0.01f);
 
 //     glPopMatrix();
 // }
@@ -690,14 +690,14 @@ void Cilindro::desenha_mascara(){
     glEnd();
 }
 
-Cone::Cone() : Poligono(F::CONE) {}
+Cone::Cone() : Solido(F::CONE) {}
 Cone::Cone(float ix, float iy, float iz, unique_ptr<Adesivo> a, float r, float h)
-: Poligono(ix,iy,iz,F::CONE,move(a)), raio(r), altura(h), ang(0.0f) { 
+: Solido(ix,iy,iz,F::CONE,move(a)), raio(r), altura(h), ang(0.0f) { 
     apex = { this->getX(), this->getY(), this->getZ() };
     axis = { 0.0f, 0.0f, -1.0f }; 
 }
 Cone::Cone(float ix, float iy, float iz, int op, float xs, float ys, float zs, unique_ptr<Adesivo> a, float r, float h)
-: Poligono(ix,iy,iz,op,xs,ys,zs,F::CONE,move(a)), raio(r), altura(h), ang(0.0f) { 
+: Solido(ix,iy,iz,op,xs,ys,zs,F::CONE,move(a)), raio(r), altura(h), ang(0.0f) { 
     apex = { this->getX(), this->getY(), this->getZ() };
     axis = { 0.0f, 0.0f, -1.0f }; 
 }
@@ -734,7 +734,7 @@ void Cone::realiza_movimento(float dt, bool pause, bool modo_daltonico) {
                                             apex.z - axis.z*altura - apex.z});
         }
     }
-    //desenha_poligono(cor, pause, modo_daltonico);
+    //desenha_solido(cor, pause, modo_daltonico);
 }
 
 bool Cone::colide_jogador(const AABB& s) const {
@@ -766,7 +766,7 @@ void Cone::aplica_efeito(Jogador& jogador, int& vidas) {
     }
 }
 
-void Cone::desenha_poligono(int cor, bool pause, bool modo_daltonico) {
+void Cone::desenha_solido(int cor, bool pause, bool modo_daltonico) {
     if(cor >= 0 and cor <= 12) muda_cor(cor);
     glPushMatrix();
 
@@ -790,7 +790,7 @@ void Cone::desenha_poligono(int cor, bool pause, bool modo_daltonico) {
 
         //     auto n = this->getAdesivo()->getNormal();
         //     float offset = (fabs(n.y) > 0) ? this->getAltura()/2.0f : this->getRaio();
-        //     desenha_adesivo_no_poligono(*this->getAdesivo(), offset + 0.01f);
+        //     desenha_adesivo_no_solido(*this->getAdesivo(), offset + 0.01f);
 
         //     glPopMatrix();
         // }
@@ -804,7 +804,7 @@ void Cone::desenha_poligono(int cor, bool pause, bool modo_daltonico) {
 
 //     auto n = this->getAdesivo().getNormal();
 //     float offset = (fabs(n.y) > 0) ? this->getAltura()/2.0f : this->getRaio();
-//     desenha_adesivo_no_poligono(this->getAdesivo(), offset + 0.01f);
+//     desenha_adesivo_no_solido(this->getAdesivo(), offset + 0.01f);
 
 //     glPopMatrix();
 // }
@@ -856,9 +856,9 @@ void Cone::desenha_mascara(){
     glEnd();
 }
 
-Torus::Torus() : Poligono(F::TORUS) {}
+Torus::Torus() : Solido(F::TORUS) {}
 Torus::Torus(float ix, float iy, float iz, unique_ptr<Adesivo> a, float re, float ra)
-: Poligono(ix,iy,iz,F::TORUS,move(a)) {
+: Solido(ix,iy,iz,F::TORUS,move(a)) {
     p.c = {ix,iy,iz};
     p.raio_menor = re;
     p.raio_maior = ra;
@@ -866,7 +866,7 @@ Torus::Torus(float ix, float iy, float iz, unique_ptr<Adesivo> a, float re, floa
     conjugado = nullptr;
 }
 Torus::Torus(float ix, float iy, float iz, int op, float xs, float ys, float zs, unique_ptr<Adesivo> a, float re, float ra)
-: Poligono(ix,iy,iz,op,xs,ys,zs,F::TORUS,move(a)) {
+: Solido(ix,iy,iz,op,xs,ys,zs,F::TORUS,move(a)) {
     p.c = {ix,iy,iz};
     p.raio_menor = re;
     p.raio_maior = ra;
@@ -886,7 +886,7 @@ AABB Torus::getAABB() const {
 }
 
 void Torus::realiza_movimento(float dt, bool pause, bool modo_daltonico) {
-    //desenha_poligono(cor, pause, modo_daltonico);
+    //desenha_solido(cor, pause, modo_daltonico);
     // if (getAdesivo() and (getRotX() or getRotY() or getRotZ())) {
 
     //     XYZ normal;
@@ -957,7 +957,7 @@ void Torus::aplica_efeito(Jogador& jogador, int& vidas) {
     }*/
 }
 
-void Torus::desenha_poligono(int cor, bool pause, bool modo_daltonico) {
+void Torus::desenha_solido(int cor, bool pause, bool modo_daltonico) {
     if(cor >= 0 and cor <= 12) muda_cor(cor);
     glPushMatrix();
     glTranslatef(p.c.x, p.c.y, p.c.z);
@@ -975,7 +975,7 @@ void Torus::desenha_poligono(int cor, bool pause, bool modo_daltonico) {
     //     glTranslatef(0.0f, 0.0f, offset);
 
     //     //Adesivo adesivo(0,0,0,{1,1,1}); 
-    //     desenha_adesivo_no_poligono(*this->getAdesivo(),offset);
+    //     desenha_adesivo_no_solido(*this->getAdesivo(),offset);
     //     glPopMatrix();
     // }
     glPopMatrix();
@@ -991,7 +991,7 @@ void Torus::desenha_poligono(int cor, bool pause, bool modo_daltonico) {
 //     glTranslatef(0.0f, 0.0f, offset);
 
 //     //Adesivo adesivo(0,0,0,{1,1,1}); 
-//     desenha_adesivo_no_poligono(this->getAdesivo(),offset);
+//     desenha_adesivo_no_solido(this->getAdesivo(),offset);
 // }
 
 void Torus::desenha_mascara() {
