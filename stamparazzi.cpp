@@ -1635,15 +1635,16 @@ void desenha_ajuda(int ajuda_cursor, int ajuda_pagina) {
 
     int baseTitle = 64;
     int baseOpt   = 38;
-    int baseQuads = 16;
+    int baseTutorial = 20;
     float escala = (float)h / 600.0f;
-    int titleSize = max(8, (int)round(baseTitle * escala));
-    int optSize   = max(8, (int)round(baseOpt   * escala));
-    int quadSize  = max(8, (int)round(baseQuads * escala));
+    
+    int titleSize     = max(8, (int)round(baseTitle * escala));
+    int optSize       = max(8, (int)round(baseOpt   * escala));
+    int tutorialSize  = max(8, (int)round(baseTutorial * escala));
 
-    TTF_Font* fontTitle = TTF_OpenFont("arial.ttf", titleSize);
-    TTF_Font* fontOpt   = TTF_OpenFont("arial.ttf", optSize);
-    TTF_Font* fontQuads = TTF_OpenFont("arial.ttf", quadSize);
+    TTF_Font* fontTitle    = TTF_OpenFont("arial.ttf", titleSize);
+    TTF_Font* fontOpt      = TTF_OpenFont("arial.ttf", optSize);
+    TTF_Font* fontTutorial = TTF_OpenFont("arial.ttf", tutorialSize);
 
     int lw, lh;
     float itemY[4] = { h * 0.30f, h * 0.40f, h * 0.50f, h * 0.60f};
@@ -1804,14 +1805,13 @@ void desenha_ajuda(int ajuda_cursor, int ajuda_pagina) {
         glDeleteTextures(1, &texTitulo);
 
         GLuint texTutorial;
-        float xTutorial;// = w/2 - lw/2;
+        float xTutorial;
         float yTutorial = h*0.20f;
 
         for(int i = 0; i < tutorial[ajuda_pagina].size(); i++) {
-            //int lwLinha, lhLinha;
-
-            texTutorial = criaTexturaDoTexto(tutorial[ajuda_pagina][i].c_str(), fontOpt, preto, lw, lh);
-            xTutorial = w/2 - lw/2; //(w - lwLinha) * 0.5f; // centraliza no eixo X            
+            
+            texTutorial = criaTexturaDoTexto(tutorial[ajuda_pagina][i].c_str(), fontTutorial, preto, lw, lh);
+            xTutorial = w/2 - lw/2; // centraliza no eixo X            
             
             desenhaTexto(texTutorial, xTutorial, yTutorial+i*45, lw, lh);
         }
@@ -1823,14 +1823,14 @@ void desenha_ajuda(int ajuda_cursor, int ajuda_pagina) {
 
     // --- TEXTO "ENTER" ---
     GLuint texEnter;
-    if(ajuda_pagina == AJUDA_MENU) texEnter = !game_controller ? criaTexturaDoTexto("Pressione ENTER para sair do menu de ajuda", fontOpt, preto, lw, lh) : criaTexturaDoTexto("Pressione SELECT para sair do menu de ajuda", fontOpt, preto, lw, lh);
-    else texEnter = !game_controller ? criaTexturaDoTexto("Pressione qualquer tecla para voltar ao menu de ajuda", fontOpt, preto, lw, lh) : criaTexturaDoTexto("Pressione qualquer botao para voltar ao menu de ajuda", fontOpt, preto, lw, lh);
+    if(ajuda_pagina == AJUDA_MENU) texEnter = !game_controller ? criaTexturaDoTexto("Pressione ESC para sair do menu de ajuda", fontOpt, preto, lw, lh) : criaTexturaDoTexto("Pressione SELECT para sair do menu de ajuda", fontOpt, preto, lw, lh);
+    else texEnter = !game_controller ? criaTexturaDoTexto("Pressione qualquer tecla para voltar", fontOpt, preto, lw, lh) : criaTexturaDoTexto("Pressione qualquer botao para voltar", fontOpt, preto, lw, lh);
     desenhaTexto(texEnter, w/2 - lw/2, h*0.90f, lw, lh);
     glDeleteTextures(1, &texEnter);
 
     TTF_CloseFont(fontTitle);
     TTF_CloseFont(fontOpt);
-    TTF_CloseFont(fontQuads);
+    TTF_CloseFont(fontTutorial);
 
     // restaurar
     glPopMatrix();
@@ -1898,7 +1898,7 @@ void loop_ajuda() {
                             //     //estado_atual = SAINDO;
                             // }
                         }
-                        else if (k == SDLK_RETURN)
+                        else if (k == SDLK_ESCAPE)
                         {
                             estado_atual = MENU_PRINCIPAL;
                         }
@@ -1923,6 +1923,7 @@ void loop_ajuda() {
                             SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
                             ajustaProjecao(800,600);
                         }
+                        ajusta_tamanho_fonte();
                     }
                 }
             } else { // game controller ativo
@@ -1981,6 +1982,7 @@ void loop_ajuda() {
                             SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
                             ajustaProjecao(800,600);
                         }
+                        ajusta_tamanho_fonte();
                     }
                 }
                 else if (e.type == SDL_CONTROLLERAXISMOTION and ajuda_pagina == AJUDA_MENU)
@@ -2275,7 +2277,7 @@ void desenha_menu(int menu_cursor, int quad_atual) {
     glColor3f(0,0,0);
 
     // --- TEXTO "ENTER" ---
-    GLuint texEnter = !game_controller ? criaTexturaDoTexto("Pressione ENTER para abrir o menu de ajuda", fontOpt, preto, lw, lh) : criaTexturaDoTexto("Pressione SELECT para abrir o menu de ajuda", fontOpt, preto, lw, lh);
+    GLuint texEnter = !game_controller ? criaTexturaDoTexto("Pressione ESC para abrir o menu de ajuda", fontOpt, preto, lw, lh) : criaTexturaDoTexto("Pressione SELECT para abrir o menu de ajuda", fontOpt, preto, lw, lh);
     desenhaTexto(texEnter, w/2 - lw/2, h*0.90f, lw, lh);
     glDeleteTextures(1, &texEnter);
 
@@ -2381,7 +2383,7 @@ void loop_menu() {
                             if (quad_atual >= 13) quad_atual = 12;
                         }
                     }
-                    else if (k == SDLK_RETURN) 
+                    else if (k == SDLK_ESCAPE) 
                     {
                         estado_atual = AJUDA;
                     }
@@ -2412,6 +2414,7 @@ void loop_menu() {
                             SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
                             ajustaProjecao(800,600);
                         }
+                        ajusta_tamanho_fonte();
                     }
 
                     // else if (k == SDLK_ESCAPE)
@@ -2515,6 +2518,7 @@ void loop_menu() {
                             SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
                             ajustaProjecao(800,600);
                         }
+                        ajusta_tamanho_fonte();
                     }
 
                     // // ativa cores desativadas
