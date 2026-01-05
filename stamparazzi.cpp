@@ -1690,7 +1690,16 @@ void desenha_ajuda(int ajuda_cursor, int ajuda_pagina) {
                 "deve passar pelo aro central para ativa-los"
             }, 
             {
-
+                "FACIL: 2 minutos para completar a fase, vidas infinitas,",
+                "10 solidos, 6 objetivos e 3 segundos de penalidade ao",
+                "perder uma vida",
+                "MEDIO: 2 minutos e 30 segundos para completar a fase,",
+                "3 vidas, 20 solidos, 8 objetivos e 5 segundos de",
+                "penalidade ao perder uma vida",
+                "DIFICIL: 3 minutos para completar a fase, 5 vidas, 20",
+                "solidos, 10 objetivos, 7 segundos de penalidade ao",
+                "perder uma vida, 10 segundos de recarga da lista de",
+                "objetivos apos usa-la e cada foto errada tira 1 vida"
             }
         };
     } else {
@@ -1732,7 +1741,16 @@ void desenha_ajuda(int ajuda_cursor, int ajuda_pagina) {
                 "deve passar pelo aro central para ativa-los"
             }, 
             {
-
+                "FACIL: 2 minutos para completar a fase, vidas infinitas,",
+                "10 solidos, 6 objetivos e 3 segundos de penalidade ao",
+                "perder uma vida",
+                "MEDIO: 2 minutos e 30 segundos para completar a fase,",
+                "3 vidas, 20 solidos, 8 objetivos e 5 segundos de",
+                "penalidade ao perder uma vida",
+                "DIFICIL: 3 minutos para completar a fase, 5 vidas, 20",
+                "solidos, 10 objetivos, 7 segundos de penalidade ao",
+                "perder uma vida, 10 segundos de recarga da lista de",
+                "objetivos apos usa-la e cada foto errada tira 1 vida"
             }
         };
     }
