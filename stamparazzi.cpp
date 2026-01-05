@@ -1649,6 +1649,29 @@ void desenha_ajuda(int ajuda_cursor, int ajuda_pagina) {
     float itemY[4] = { h * 0.30f, h * 0.40f, h * 0.50f, h * 0.60f};
     string textoItem[4] = {"REGRAS", "CONTROLES", "SOLIDOS GEOMETRICOS", "DIFICULDADES"};
 
+    vector<vector<string>> tutorial = {
+        {
+            "No Stamparazzi, existem varios solidos geometricos",
+            "que estao espalhados pela fase, e cada solido possui",
+            "um adesivo numerado. O jogador deve voar pela fase e", 
+            "tirar uma foto somente dos adesivos cujo numero esta",
+            "na lista de objetivos. No entanto, o jogador esta",
+            "submetido a um numero de vidas e um limite de tempo.",
+            "Se o jogador conseguir tirar todas as fotos antes",
+            "do tempo acabar, ele vence. Se o tempo acabar,",
+            "ou o jogador perder todas as vidas, ele perde."
+        }, 
+        {
+            
+        }, 
+        {
+
+        }, 
+        {
+
+        }
+    };
+
     if (ajuda_pagina == AJUDA_MENU) {
         // --- TÍTULO ---
         GLuint texTitulo = criaTexturaDoTexto("AJUDA", fontTitle, preto, lw, lh);
@@ -1693,9 +1716,23 @@ void desenha_ajuda(int ajuda_cursor, int ajuda_pagina) {
     } else {
         GLuint texTitulo = criaTexturaDoTexto(textoItem[ajuda_pagina].c_str(), fontTitle, preto, lw, lh);
         float xTitulo = w/2 - lw/2;
-        float yTitulo = h*0.10f;
+        float yTitulo = h*0.05f;
         desenhaTexto(texTitulo, xTitulo, yTitulo, lw, lh);
         glDeleteTextures(1, &texTitulo);
+
+        GLuint texTutorial;
+        float xTutorial;// = w/2 - lw/2;
+        float yTutorial = h*0.20f;
+
+        for(int i = 0; i < tutorial[ajuda_pagina].size(); i++) {
+            //int lwLinha, lhLinha;
+
+            texTutorial = criaTexturaDoTexto(tutorial[ajuda_pagina][i].c_str(), fontOpt, preto, lw, lh);
+            xTutorial = w/2 - lw/2; //(w - lwLinha) * 0.5f; // centraliza no eixo X            
+            
+            desenhaTexto(texTutorial, xTutorial, yTutorial+i*45, lw, lh);
+        }
+        glDeleteTextures(1, &texTutorial);
     }
 
     // restaurar cor preta para desenhar textos depois
