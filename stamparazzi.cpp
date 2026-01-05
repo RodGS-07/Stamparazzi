@@ -1738,7 +1738,7 @@ void desenha_ajuda(int ajuda_cursor, int ajuda_pagina) {
                 "empurrar o jogador",
                 "Cones - giram e disparam um laser que pode fazer",
                 "o jogador perder uma vida",
-                "Torus - sao portais conectados em pares; o jogador",
+                "Toros - sao portais conectados em pares; o jogador",
                 "deve passar pelo aro central para ativa-los"
             }, 
             {
