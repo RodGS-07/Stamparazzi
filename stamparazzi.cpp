@@ -1633,14 +1633,14 @@ void desenha_ajuda(int ajuda_cursor, int ajuda_pagina) {
     // --- Textos ---
     SDL_Color preto = {0,0,0,255};
 
-    int baseTitle = 64;
-    int baseOpt   = 38;
-    int baseTutorial = 20;
+    int baseTitle    = 64;
+    int baseOpt      = 38;
+    int baseTutorial = 24;
     float escala = (float)h / 600.0f;
     
-    int titleSize     = max(8, (int)round(baseTitle * escala));
-    int optSize       = max(8, (int)round(baseOpt   * escala));
-    int tutorialSize  = max(8, (int)round(baseTutorial * escala));
+    int titleSize     = max(baseTitle, (int)round(baseTitle * escala));
+    int optSize       = max(baseOpt, (int)round(baseOpt * escala));
+    int tutorialSize  = max(baseTutorial, (int)round(baseTutorial * escala));
 
     TTF_Font* fontTitle    = TTF_OpenFont("arial.ttf", titleSize);
     TTF_Font* fontOpt      = TTF_OpenFont("arial.ttf", optSize);
@@ -1813,7 +1813,7 @@ void desenha_ajuda(int ajuda_cursor, int ajuda_pagina) {
             texTutorial = criaTexturaDoTexto(tutorial[ajuda_pagina][i].c_str(), fontTutorial, preto, lw, lh);
             xTutorial = w/2 - lw/2; // centraliza no eixo X            
             
-            desenhaTexto(texTutorial, xTutorial, yTutorial+i*45, lw, lh);
+            desenhaTexto(texTutorial, xTutorial, yTutorial+i*30*escala, lw, lh);
         }
         glDeleteTextures(1, &texTutorial);
     }
@@ -2062,9 +2062,9 @@ void desenha_menu(int menu_cursor, int quad_atual) {
     int baseOpt   = 38;
     int baseQuads = 16;
     float escala = (float)h / 600.0f;
-    int titleSize = max(8, (int)round(baseTitle * escala));
-    int optSize   = max(8, (int)round(baseOpt   * escala));
-    int quadSize  = max(8, (int)round(baseQuads * escala));
+    int titleSize = max(baseTitle, (int)round(baseTitle * escala));
+    int optSize   = max(baseOpt, (int)round(baseOpt   * escala));
+    int quadSize  = max(baseQuads, (int)round(baseQuads * escala));
 
     TTF_Font* fontTitle = TTF_OpenFont("arial.ttf", titleSize);
     TTF_Font* fontOpt   = TTF_OpenFont("arial.ttf", optSize);
