@@ -36,7 +36,7 @@
 using namespace std;
 
 enum DIFICULDADE {FACIL = 1, MEDIO = 2, DIFICIL = 3};
-enum ESTADO {MENU_PRINCIPAL, AJUDA, ENSINANDO, JOGO_PRINCIPAL, SAINDO, PAUSE, VITORIA, DERROTA};
+enum ESTADO {MENU_PRINCIPAL, AJUDA, JOGO_PRINCIPAL, SAINDO, PAUSE, VITORIA, DERROTA};
 
 int teste = 0;
 int dif = MEDIO;
@@ -1591,7 +1591,16 @@ void atualiza_cooldown_lista(float dt) {
     }
 }
 
-void desenha_ajuda(int ajuda_cursor) {
+void desenha_ajuda(int ajuda_cursor, int ajuda_pagina) {
+    
+    enum AjudaPagina {
+        AJUDA_REGRAS,
+        AJUDA_CONTROLES,
+        AJUDA_SOLIDOS,
+        AJUDA_DIFICULDADES,
+        AJUDA_MENU
+    };
+    
     int w, h;
     SDL_GetWindowSize(window, &w, &h);
 
@@ -1637,58 +1646,67 @@ void desenha_ajuda(int ajuda_cursor) {
     TTF_Font* fontQuads = TTF_OpenFont("arial.ttf", quadSize);
 
     int lw, lh;
-
-    // --- TÍTULO ---
-    GLuint texTitulo = criaTexturaDoTexto("AJUDA", fontTitle, preto, lw, lh);
-    float xTitulo = w/2 - lw/2;
-    float yTitulo = h*0.10f;
-    desenhaTexto(texTitulo, xTitulo, yTitulo, lw, lh);
-    glDeleteTextures(1, &texTitulo);
-
     float itemY[4] = { h * 0.30f, h * 0.40f, h * 0.50f, h * 0.60f};
     string textoItem[4] = {"REGRAS", "CONTROLES", "SOLIDOS GEOMETRICOS", "DIFICULDADES"};
 
-    for (int i = 0; i < 4; i++)
-    {
-        GLuint tex = criaTexturaDoTexto(textoItem[i].c_str(), fontOpt, preto, lw, lh);
+    if (ajuda_pagina == AJUDA_MENU) {
+        // --- TÍTULO ---
+        GLuint texTitulo = criaTexturaDoTexto("AJUDA", fontTitle, preto, lw, lh);
+        float xTitulo = w/2 - lw/2;
+        float yTitulo = h*0.10f;
+        desenhaTexto(texTitulo, xTitulo, yTitulo, lw, lh);
+        glDeleteTextures(1, &texTitulo);
 
-        float x = w/2 - lw/2;
-        float y = itemY[i];
-
-        desenhaTexto(tex, x, y, lw, lh);
-
-        // ---------------------------------------------------
-        //   DESENHAR RETÂNGULO AO REDOR DO ITEM SELECIONADO
-        // ---------------------------------------------------
-        if (i == ajuda_cursor)
+        for (int i = 0; i < 4; i++)
         {
-            float margem = 10.0f * escala;
+            GLuint tex = criaTexturaDoTexto(textoItem[i].c_str(), fontOpt, preto, lw, lh);
 
-            float x1 = x - margem;
-            float y1 = y - margem;
-            float x2 = x + lw + margem;
-            float y2 = y + lh + margem;
+            float x = w/2 - lw/2;
+            float y = itemY[i];
 
-            glColor3f(0,0,0);
-            glLineWidth(3);
-            glBegin(GL_LINE_LOOP);
-                glVertex2f(x1, y1);
-                glVertex2f(x2, y1);
-                glVertex2f(x2, y2);
-                glVertex2f(x1, y2);
-            glEnd();
+            desenhaTexto(tex, x, y, lw, lh);
+
+            // ---------------------------------------------------
+            //   DESENHAR RETÂNGULO AO REDOR DO ITEM SELECIONADO
+            // ---------------------------------------------------
+            if (i == ajuda_cursor)
+            {
+                float margem = 10.0f * escala;
+
+                float x1 = x - margem;
+                float y1 = y - margem;
+                float x2 = x + lw + margem;
+                float y2 = y + lh + margem;
+
+                glColor3f(0,0,0);
+                glLineWidth(3);
+                glBegin(GL_LINE_LOOP);
+                    glVertex2f(x1, y1);
+                    glVertex2f(x2, y1);
+                    glVertex2f(x2, y2);
+                    glVertex2f(x1, y2);
+                glEnd();
+            }
+            glLineWidth(1);
+            glDeleteTextures(1, &tex);
         }
-        glLineWidth(1);
-        glDeleteTextures(1, &tex);
+    } else {
+        GLuint texTitulo = criaTexturaDoTexto(textoItem[ajuda_pagina].c_str(), fontTitle, preto, lw, lh);
+        float xTitulo = w/2 - lw/2;
+        float yTitulo = h*0.10f;
+        desenhaTexto(texTitulo, xTitulo, yTitulo, lw, lh);
+        glDeleteTextures(1, &texTitulo);
     }
 
     // restaurar cor preta para desenhar textos depois
     glColor3f(0,0,0);
 
     // --- TEXTO "ENTER" ---
-    GLuint texStart = !game_controller ? criaTexturaDoTexto("Pressione ENTER para sair do menu de ajuda", fontOpt, preto, lw, lh) : criaTexturaDoTexto("Pressione SELECT para sair do menu de ajuda", fontOpt, preto, lw, lh);
-    desenhaTexto(texStart, w/2 - lw/2, h*0.90f, lw, lh);
-    glDeleteTextures(1, &texStart);
+    GLuint texEnter;
+    if(ajuda_pagina == AJUDA_MENU) texEnter = !game_controller ? criaTexturaDoTexto("Pressione ENTER para sair do menu de ajuda", fontOpt, preto, lw, lh) : criaTexturaDoTexto("Pressione SELECT para sair do menu de ajuda", fontOpt, preto, lw, lh);
+    else texEnter = !game_controller ? criaTexturaDoTexto("Pressione qualquer tecla para voltar ao menu de ajuda", fontOpt, preto, lw, lh) : criaTexturaDoTexto("Pressione qualquer botao para voltar ao menu de ajuda", fontOpt, preto, lw, lh);
+    desenhaTexto(texEnter, w/2 - lw/2, h*0.90f, lw, lh);
+    glDeleteTextures(1, &texEnter);
 
     TTF_CloseFont(fontTitle);
     TTF_CloseFont(fontOpt);
@@ -1706,6 +1724,15 @@ void desenha_ajuda(int ajuda_cursor) {
 
 void loop_ajuda() {
 
+    enum AjudaPagina {
+        AJUDA_REGRAS,
+        AJUDA_CONTROLES,
+        AJUDA_SOLIDOS,
+        AJUDA_DIFICULDADES,
+        AJUDA_MENU
+    };
+
+    int ajuda_pagina = AJUDA_MENU;
     int ajuda_cursor = 0; // 0 = regras, 1 = controles, 2 = sólidos, 3 = dificuldades
     const int ajuda_opcoes = 4;
 
@@ -1725,37 +1752,42 @@ void loop_ajuda() {
                 if (e.type == SDL_KEYDOWN) {
                     SDL_Keycode k = e.key.keysym.sym;
 
-                    // mover cursor para cima / baixo
-                    if (k == SDLK_UP)
-                    {
-                        ajuda_cursor--;
-                        if (ajuda_cursor < 0) ajuda_cursor = 0;
-                    }
-                    else if (k == SDLK_DOWN)
-                    {
-                        ajuda_cursor++;
-                        if (ajuda_cursor >= ajuda_opcoes) ajuda_cursor = ajuda_opcoes - 1;
-                    }
+                    if (ajuda_pagina == AJUDA_MENU) {
+                        // mover cursor para cima / baixo
+                        if (k == SDLK_UP)
+                        {
+                            ajuda_cursor--;
+                            if (ajuda_cursor < 0) ajuda_cursor = 0;
+                        }
+                        else if (k == SDLK_DOWN)
+                        {
+                            ajuda_cursor++;
+                            if (ajuda_cursor >= ajuda_opcoes) ajuda_cursor = ajuda_opcoes - 1;
+                        }
 
-                    // escolher opção
-                    else if (k == SDLK_SPACE)
-                    {
-                        // if (ajuda_cursor == 0)
-                        // {
-                        //     //estado_atual = JOGO_PRINCIPAL;
-                        // }
-                        // else if (ajuda_cursor == 3)
-                        // {
-                        //     //estado_atual = SAINDO;
-                        // }
-                    }
-                    else if (k == SDLK_RETURN)
-                    {
-                        estado_atual = MENU_PRINCIPAL;
+                        // escolher opção
+                        else if (k == SDLK_SPACE)
+                        {
+                            ajuda_pagina = ajuda_cursor;
+                            // if (ajuda_cursor == 0)
+                            // {
+                            //     //estado_atual = JOGO_PRINCIPAL;
+                            // }
+                            // else if (ajuda_cursor == 3)
+                            // {
+                            //     //estado_atual = SAINDO;
+                            // }
+                        }
+                        else if (k == SDLK_RETURN)
+                        {
+                            estado_atual = MENU_PRINCIPAL;
+                        }
+                    } else {
+                        ajuda_pagina = AJUDA_MENU;
                     }
 
                     // alternar fullscreen
-                    else if (k == SDLK_F11)
+                    if (k == SDLK_F11)
                     {
                         tela_cheia = !tela_cheia;
                         if (tela_cheia)
@@ -1778,33 +1810,39 @@ void loop_ajuda() {
                 {
                     int b = e.cbutton.button;
 
-                    // mover cursor
-                    if (b == SDL_CONTROLLER_BUTTON_DPAD_UP)
-                    {
-                        ajuda_cursor--;
-                        if (ajuda_cursor < 0) ajuda_cursor = 0;
-                    }
-                    else if (b == SDL_CONTROLLER_BUTTON_DPAD_DOWN)
-                    {
-                        ajuda_cursor++;
-                        if (ajuda_cursor >= ajuda_opcoes) ajuda_cursor = ajuda_opcoes - 1;
+                    if (ajuda_pagina == AJUDA_MENU) {
+                        // mover cursor
+                        if (b == SDL_CONTROLLER_BUTTON_DPAD_UP)
+                        {
+                            ajuda_cursor--;
+                            if (ajuda_cursor < 0) ajuda_cursor = 0;
+                        }
+                        else if (b == SDL_CONTROLLER_BUTTON_DPAD_DOWN)
+                        {
+                            ajuda_cursor++;
+                            if (ajuda_cursor >= ajuda_opcoes) ajuda_cursor = ajuda_opcoes - 1;
+                        }
+
+                        // iniciar ou fechar jogo
+                        else if (b == SDL_CONTROLLER_BUTTON_A)
+                        {
+                            ajuda_pagina = ajuda_cursor;
+                            // if (ajuda_cursor == 0)
+                            // {
+                            //     estado_atual = JOGO_PRINCIPAL;
+                            // }
+                            // else if (ajuda_cursor == 3)
+                            // {
+                            //     estado_atual = SAINDO;
+                            // }
+                        }
+                        if (b == SDL_CONTROLLER_BUTTON_BACK) {
+                            estado_atual = MENU_PRINCIPAL;
+                        }
+                    } else {
+                        ajuda_pagina = AJUDA_MENU;
                     }
 
-                    // iniciar ou fechar jogo
-                    else if (b == SDL_CONTROLLER_BUTTON_A)
-                    {
-                        // if (ajuda_cursor == 0)
-                        // {
-                        //     estado_atual = JOGO_PRINCIPAL;
-                        // }
-                        // else if (ajuda_cursor == 3)
-                        // {
-                        //     estado_atual = SAINDO;
-                        // }
-                    }
-                    if (b == SDL_CONTROLLER_BUTTON_BACK) {
-                        estado_atual = MENU_PRINCIPAL;
-                    }
                     // fullscreen
                     if (SDL_GameControllerGetButton(game_controller, SDL_CONTROLLER_BUTTON_LEFTSHOULDER) &&
                         SDL_GameControllerGetButton(game_controller, SDL_CONTROLLER_BUTTON_RIGHTSHOULDER))
@@ -1825,7 +1863,7 @@ void loop_ajuda() {
                         }
                     }
                 }
-                else if (e.type == SDL_CONTROLLERAXISMOTION)
+                else if (e.type == SDL_CONTROLLERAXISMOTION and ajuda_pagina == AJUDA_MENU)
                 {
                     // -----------------------
                     // EIXO VERTICAL (UP/DOWN)
@@ -1858,7 +1896,7 @@ void loop_ajuda() {
         glClearColor(1,1,1,1);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        desenha_ajuda(ajuda_cursor);
+        desenha_ajuda(ajuda_cursor, ajuda_pagina);
 
         SDL_GL_SwapWindow(window);
     }
@@ -2013,6 +2051,13 @@ void desenha_menu(int menu_cursor, int quad_atual) {
         glDeleteTextures(1, &tex);
     }
 
+    // --- CORES ATIVADAS ---
+    GLuint texAtivadas = criaTexturaDoTexto("Escolha as cores ativadas para os solidos geometricos", fontQuads, preto, lw, lh);
+    float xAtivadas = w/2 - lw/2;
+    float yAtivadas = h*0.725f;
+    desenhaTexto(texAtivadas, xAtivadas, yAtivadas, lw, lh);
+    glDeleteTextures(1, &texAtivadas);
+
     // -------------------------------------------
     // DESENHAR QUADRADOS DE TODAS AS 13 CORES
     // -------------------------------------------
@@ -2025,7 +2070,7 @@ void desenha_menu(int menu_cursor, int quad_atual) {
 
     float totalWidth = totalCores * sqSize + (totalCores - 1) * sqSpace;
     float startX = (w - totalWidth) * 0.5f;   // centralizar horizontalmente
-    float ySquares = h * 0.70f;               // posição vertical (70% da tela)
+    float ySquares = h * 0.775f;               // posição vertical (70% da tela)
 
     for (int i = 0; i < totalCores; i++)
     {
@@ -2110,9 +2155,9 @@ void desenha_menu(int menu_cursor, int quad_atual) {
     glColor3f(0,0,0);
 
     // --- TEXTO "ENTER" ---
-    GLuint texStart = !game_controller ? criaTexturaDoTexto("Pressione ENTER para abrir o menu de ajuda", fontOpt, preto, lw, lh) : criaTexturaDoTexto("Pressione SELECT para abrir o menu de ajuda", fontOpt, preto, lw, lh);
-    desenhaTexto(texStart, w/2 - lw/2, h*0.90f, lw, lh);
-    glDeleteTextures(1, &texStart);
+    GLuint texEnter = !game_controller ? criaTexturaDoTexto("Pressione ENTER para abrir o menu de ajuda", fontOpt, preto, lw, lh) : criaTexturaDoTexto("Pressione SELECT para abrir o menu de ajuda", fontOpt, preto, lw, lh);
+    desenhaTexto(texEnter, w/2 - lw/2, h*0.90f, lw, lh);
+    glDeleteTextures(1, &texEnter);
 
     TTF_CloseFont(fontTitle);
     TTF_CloseFont(fontOpt);
