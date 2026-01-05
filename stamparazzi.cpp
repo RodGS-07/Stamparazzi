@@ -36,7 +36,7 @@
 using namespace std;
 
 enum DIFICULDADE {FACIL = 1, MEDIO = 2, DIFICIL = 3};
-enum ESTADO {MENU_PRINCIPAL, JOGO_PRINCIPAL, SAINDO, PAUSE, VITORIA, DERROTA};
+enum ESTADO {MENU_PRINCIPAL, AJUDA, ENSINANDO, JOGO_PRINCIPAL, SAINDO, PAUSE, VITORIA, DERROTA};
 
 int teste = 0;
 int dif = MEDIO;
@@ -1591,6 +1591,279 @@ void atualiza_cooldown_lista(float dt) {
     }
 }
 
+void desenha_ajuda(int ajuda_cursor) {
+    int w, h;
+    SDL_GetWindowSize(window, &w, &h);
+
+    glDisable(GL_LIGHTING);
+    glDisable(GL_DEPTH_TEST);
+
+    glViewport(0, 0, w, h);
+
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    glOrtho(0, w, h, 0, -1, 1);
+
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    // fundo
+    glColor4f(0.5,0.5,1,1);
+    glBegin(GL_QUADS);
+        glVertex2i(0,0);
+        glVertex2i(w,0);
+        glVertex2i(w,h);
+        glVertex2i(0,h);
+    glEnd();
+
+    // --- Textos ---
+    SDL_Color preto = {0,0,0,255};
+
+    int baseTitle = 64;
+    int baseOpt   = 38;
+    int baseQuads = 16;
+    float escala = (float)h / 600.0f;
+    int titleSize = max(8, (int)round(baseTitle * escala));
+    int optSize   = max(8, (int)round(baseOpt   * escala));
+    int quadSize  = max(8, (int)round(baseQuads * escala));
+
+    TTF_Font* fontTitle = TTF_OpenFont("arial.ttf", titleSize);
+    TTF_Font* fontOpt   = TTF_OpenFont("arial.ttf", optSize);
+    TTF_Font* fontQuads = TTF_OpenFont("arial.ttf", quadSize);
+
+    int lw, lh;
+
+    // --- TÍTULO ---
+    GLuint texTitulo = criaTexturaDoTexto("AJUDA", fontTitle, preto, lw, lh);
+    float xTitulo = w/2 - lw/2;
+    float yTitulo = h*0.10f;
+    desenhaTexto(texTitulo, xTitulo, yTitulo, lw, lh);
+    glDeleteTextures(1, &texTitulo);
+
+    float itemY[4] = { h * 0.30f, h * 0.40f, h * 0.50f, h * 0.60f};
+    string textoItem[4] = {"REGRAS", "CONTROLES", "SOLIDOS GEOMETRICOS", "DIFICULDADES"};
+
+    for (int i = 0; i < 4; i++)
+    {
+        GLuint tex = criaTexturaDoTexto(textoItem[i].c_str(), fontOpt, preto, lw, lh);
+
+        float x = w/2 - lw/2;
+        float y = itemY[i];
+
+        desenhaTexto(tex, x, y, lw, lh);
+
+        // ---------------------------------------------------
+        //   DESENHAR RETÂNGULO AO REDOR DO ITEM SELECIONADO
+        // ---------------------------------------------------
+        if (i == ajuda_cursor)
+        {
+            float margem = 10.0f * escala;
+
+            float x1 = x - margem;
+            float y1 = y - margem;
+            float x2 = x + lw + margem;
+            float y2 = y + lh + margem;
+
+            glColor3f(0,0,0);
+            glLineWidth(3);
+            glBegin(GL_LINE_LOOP);
+                glVertex2f(x1, y1);
+                glVertex2f(x2, y1);
+                glVertex2f(x2, y2);
+                glVertex2f(x1, y2);
+            glEnd();
+        }
+        glLineWidth(1);
+        glDeleteTextures(1, &tex);
+    }
+
+    // restaurar cor preta para desenhar textos depois
+    glColor3f(0,0,0);
+
+    // --- TEXTO "ENTER" ---
+    GLuint texStart = !game_controller ? criaTexturaDoTexto("Pressione ENTER para sair do menu de ajuda", fontOpt, preto, lw, lh) : criaTexturaDoTexto("Pressione SELECT para sair do menu de ajuda", fontOpt, preto, lw, lh);
+    desenhaTexto(texStart, w/2 - lw/2, h*0.90f, lw, lh);
+    glDeleteTextures(1, &texStart);
+
+    TTF_CloseFont(fontTitle);
+    TTF_CloseFont(fontOpt);
+    TTF_CloseFont(fontQuads);
+
+    // restaurar
+    glPopMatrix();
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+
+    glEnable(GL_LIGHTING);
+    glEnable(GL_DEPTH_TEST);
+}
+
+void loop_ajuda() {
+
+    int ajuda_cursor = 0; // 0 = regras, 1 = controles, 2 = sólidos, 3 = dificuldades
+    const int ajuda_opcoes = 4;
+
+    const int DEADZONE = 16000;
+    bool eixoY_ativo = false;
+
+    SDL_Event e;
+
+    while (estado_atual == AJUDA) {
+
+        while (SDL_PollEvent(&e)) {
+            if (e.type == SDL_QUIT) {estado_atual = MENU_PRINCIPAL; break;}
+
+            atualiza_controller(e);
+
+            if(!game_controller){
+                if (e.type == SDL_KEYDOWN) {
+                    SDL_Keycode k = e.key.keysym.sym;
+
+                    // mover cursor para cima / baixo
+                    if (k == SDLK_UP)
+                    {
+                        ajuda_cursor--;
+                        if (ajuda_cursor < 0) ajuda_cursor = 0;
+                    }
+                    else if (k == SDLK_DOWN)
+                    {
+                        ajuda_cursor++;
+                        if (ajuda_cursor >= ajuda_opcoes) ajuda_cursor = ajuda_opcoes - 1;
+                    }
+
+                    // escolher opção
+                    else if (k == SDLK_SPACE)
+                    {
+                        // if (ajuda_cursor == 0)
+                        // {
+                        //     //estado_atual = JOGO_PRINCIPAL;
+                        // }
+                        // else if (ajuda_cursor == 3)
+                        // {
+                        //     //estado_atual = SAINDO;
+                        // }
+                    }
+                    else if (k == SDLK_RETURN)
+                    {
+                        estado_atual = MENU_PRINCIPAL;
+                    }
+
+                    // alternar fullscreen
+                    else if (k == SDLK_F11)
+                    {
+                        tela_cheia = !tela_cheia;
+                        if (tela_cheia)
+                        {
+                            SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
+                            int w, h; SDL_GetWindowSize(window, &w, &h);
+                            ajustaProjecao(w,h);
+                        }
+                        else
+                        {
+                            SDL_SetWindowFullscreen(window, 0);
+                            SDL_SetWindowSize(window, 800, 600);
+                            SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+                            ajustaProjecao(800,600);
+                        }
+                    }
+                }
+            } else { // game controller ativo
+                if (e.type == SDL_CONTROLLERBUTTONDOWN)
+                {
+                    int b = e.cbutton.button;
+
+                    // mover cursor
+                    if (b == SDL_CONTROLLER_BUTTON_DPAD_UP)
+                    {
+                        ajuda_cursor--;
+                        if (ajuda_cursor < 0) ajuda_cursor = 0;
+                    }
+                    else if (b == SDL_CONTROLLER_BUTTON_DPAD_DOWN)
+                    {
+                        ajuda_cursor++;
+                        if (ajuda_cursor >= ajuda_opcoes) ajuda_cursor = ajuda_opcoes - 1;
+                    }
+
+                    // iniciar ou fechar jogo
+                    else if (b == SDL_CONTROLLER_BUTTON_A)
+                    {
+                        // if (ajuda_cursor == 0)
+                        // {
+                        //     estado_atual = JOGO_PRINCIPAL;
+                        // }
+                        // else if (ajuda_cursor == 3)
+                        // {
+                        //     estado_atual = SAINDO;
+                        // }
+                    }
+                    if (b == SDL_CONTROLLER_BUTTON_BACK) {
+                        estado_atual = MENU_PRINCIPAL;
+                    }
+                    // fullscreen
+                    if (SDL_GameControllerGetButton(game_controller, SDL_CONTROLLER_BUTTON_LEFTSHOULDER) &&
+                        SDL_GameControllerGetButton(game_controller, SDL_CONTROLLER_BUTTON_RIGHTSHOULDER))
+                    {
+                        tela_cheia = !tela_cheia;
+                        if (tela_cheia)
+                        {
+                            SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
+                            int w,h; SDL_GetWindowSize(window,&w,&h);
+                            ajustaProjecao(w,h);
+                        }
+                        else
+                        {
+                            SDL_SetWindowFullscreen(window, 0);
+                            SDL_SetWindowSize(window, 800, 600);
+                            SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+                            ajustaProjecao(800,600);
+                        }
+                    }
+                }
+                else if (e.type == SDL_CONTROLLERAXISMOTION)
+                {
+                    // -----------------------
+                    // EIXO VERTICAL (UP/DOWN)
+                    // -----------------------
+                    if (e.caxis.axis == SDL_CONTROLLER_AXIS_LEFTY)
+                    {
+                        if (!eixoY_ativo)
+                        {
+                            if (e.caxis.value < -DEADZONE) // cima
+                            {
+                                ajuda_cursor--;
+                                if (ajuda_cursor < 0) ajuda_cursor = 0;
+                                eixoY_ativo = true;
+                            }
+                            else if (e.caxis.value > DEADZONE) // baixo
+                            {
+                                ajuda_cursor++;
+                                if (ajuda_cursor >= ajuda_opcoes) ajuda_cursor = ajuda_opcoes - 1;
+                                eixoY_ativo = true;
+                            }
+                        }
+
+                        // voltou ao neutro → libera novo movimento
+                        if (abs(e.caxis.value) < DEADZONE)
+                            eixoY_ativo = false;
+                    }
+                }
+            }
+        }
+        glClearColor(1,1,1,1);
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        desenha_ajuda(ajuda_cursor);
+
+        SDL_GL_SwapWindow(window);
+    }
+}
+
 void desenha_menu(int menu_cursor, int quad_atual) {
 
     int w, h;
@@ -1629,9 +1902,9 @@ void desenha_menu(int menu_cursor, int quad_atual) {
     int baseOpt   = 38;
     int baseQuads = 16;
     float escala = (float)h / 600.0f;
-    int titleSize = std::max(8, (int)round(baseTitle * escala));
-    int optSize   = std::max(8, (int)round(baseOpt   * escala));
-    int quadSize  = std::max(8, (int)round(baseQuads * escala));
+    int titleSize = max(8, (int)round(baseTitle * escala));
+    int optSize   = max(8, (int)round(baseOpt   * escala));
+    int quadSize  = max(8, (int)round(baseQuads * escala));
 
     TTF_Font* fontTitle = TTF_OpenFont("arial.ttf", titleSize);
     TTF_Font* fontOpt   = TTF_OpenFont("arial.ttf", optSize);
@@ -1943,6 +2216,10 @@ void loop_menu() {
                             if (quad_atual >= 13) quad_atual = 12;
                         }
                     }
+                    else if (k == SDLK_RETURN) 
+                    {
+                        estado_atual = AJUDA;
+                    }
 
                     // if (k == SDLK_SPACE and menu_cursor == 2)
                     //     cores_ativadas[quad_atual] = !cores_ativadas[quad_atual];
@@ -2050,6 +2327,11 @@ void loop_menu() {
                         }
                     }
 
+                    else if (b == SDL_CONTROLLER_BUTTON_BACK)
+                    {
+                        estado_atual = AJUDA;
+                    }
+
                     // fullscreen
                     if (SDL_GameControllerGetButton(game_controller, SDL_CONTROLLER_BUTTON_LEFTSHOULDER) &&
                         SDL_GameControllerGetButton(game_controller, SDL_CONTROLLER_BUTTON_RIGHTSHOULDER))
@@ -2083,8 +2365,7 @@ void loop_menu() {
                     //     estado_atual = JOGO_PRINCIPAL;
 
                     // // sair
-                    // if (b == SDL_CONTROLLER_BUTTON_BACK)
-                    //     estado_atual = SAINDO;
+                    
                 } else if (e.type == SDL_CONTROLLERAXISMOTION) 
                 {
                     // -----------------------
@@ -2785,18 +3066,26 @@ int main(int argc, char* argv[]) {
         SDL_ShowCursor(SDL_DISABLE);
 
         loop_menu();
+
         if(estado_atual == SAINDO) break;
+        else if(estado_atual == AJUDA) loop_ajuda();
         else if(estado_atual == JOGO_PRINCIPAL){
             define_objetivos(4 + 2 * dif);
             cria_solidos(dif == FACIL ? 10 : 20);
             loop_jogo();
+
+            objetivos.clear();
+            obstaculos.clear();
+            solidos.clear();
+            cores_solidos.clear();
+            jogador.nasce_jogador(0.0f,1.5f,0.0f);
         }
 
-        objetivos.clear();
-        obstaculos.clear();
-        solidos.clear();
-        cores_solidos.clear();
-        jogador.nasce_jogador(0.0f,1.5f,0.0f);
+        // objetivos.clear();
+        // obstaculos.clear();
+        // solidos.clear();
+        // cores_solidos.clear();
+        // jogador.nasce_jogador(0.0f,1.5f,0.0f);
 
         estado_atual = MENU_PRINCIPAL;
     }
