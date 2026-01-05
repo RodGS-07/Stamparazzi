@@ -1649,28 +1649,71 @@ void desenha_ajuda(int ajuda_cursor, int ajuda_pagina) {
     float itemY[4] = { h * 0.30f, h * 0.40f, h * 0.50f, h * 0.60f};
     string textoItem[4] = {"REGRAS", "CONTROLES", "SOLIDOS GEOMETRICOS", "DIFICULDADES"};
 
-    vector<vector<string>> tutorial = {
-        {
-            "No Stamparazzi, existem varios solidos geometricos",
-            "que estao espalhados pela fase, e cada solido possui",
-            "um adesivo numerado. O jogador deve voar pela fase e", 
-            "tirar uma foto somente dos adesivos cujo numero esta",
-            "na lista de objetivos. No entanto, o jogador esta",
-            "submetido a um numero de vidas e um limite de tempo.",
-            "Se o jogador conseguir tirar todas as fotos antes",
-            "do tempo acabar, ele vence. Se o tempo acabar,",
-            "ou o jogador perder todas as vidas, ele perde."
-        }, 
-        {
-            
-        }, 
-        {
+    vector<vector<string>> tutorial;
 
-        }, 
-        {
+    if (!game_controller) {
+        tutorial = {
+            {
+                "No Stamparazzi, existem varios solidos geometricos",
+                "que estao espalhados pela fase, e cada solido possui",
+                "um adesivo numerado. O jogador deve voar pela fase e", 
+                "tirar uma foto somente dos adesivos cujo numero esta",
+                "na lista de objetivos. No entanto, o jogador esta",
+                "submetido a um numero de vidas e um limite de tempo.",
+                "Se o jogador conseguir tirar todas as fotos antes",
+                "do tempo acabar, ele vence. Se o tempo acabar,",
+                "ou o jogador perder todas as vidas, ele perde."
+            }, 
+            {
+                "Use as setas ou WASD para se mover para os lados, para",
+                "frente e para tras, SHIFT para voar para cima e CTRL para",
+                "voar para baixo. Movimente o mouse para mudar a direcao",
+                "em que voce esta olhando. Quando voce estiver perto de",
+                "um adesivo, clique com o botao esquerdo do mouse para",
+                "tirar uma foto. Tambem e possivel apertar ESC para abrir",
+                "a lista de objetivos e P para pausar e despausar o jogo.",
+                "Clicar em tela de pause faz o jogo voltar e apertar ESC",
+                "enquanto o jogo esta pausado encerra a partida."
+            }, 
+            {
 
-        }
-    };
+            }, 
+            {
+
+            }
+        };
+    } else {
+        tutorial = {
+            {
+                "No Stamparazzi, existem varios solidos geometricos",
+                "que estao espalhados pela fase, e cada solido possui",
+                "um adesivo numerado. O jogador deve voar pela fase e", 
+                "tirar uma foto somente dos adesivos cujo numero esta",
+                "na lista de objetivos. No entanto, o jogador esta",
+                "submetido a um numero de vidas e um limite de tempo.",
+                "Se o jogador conseguir tirar todas as fotos antes",
+                "do tempo acabar, ele vence. Se o tempo acabar,",
+                "ou o jogador perder todas as vidas, ele perde."
+            }, 
+            {
+                "Use os direcionais ou o analOgico esquerdo para se",
+                "mover para os lados, para frente e para tras, L1/LB para",
+                "voar para baixo e R1/RB para voar para cima. Movimente o",
+                "analogico direito para mudar a direcao em que voce esta",
+                "olhando. Quando voce estiver perto de um adesivo, aperte",
+                "R2/RT para tirar uma foto. Tambem e possivel apertar",
+                "SELECT para abrir a lista de objetivos e START para pausar",
+                "e despausar o jogo. Apertar SELECT enquanto o jogo esta",
+                "pausado encerra a partida."
+            }, 
+            {
+
+            }, 
+            {
+
+            }
+        };
+    }
 
     if (ajuda_pagina == AJUDA_MENU) {
         // --- TÍTULO ---
