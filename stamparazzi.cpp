@@ -1676,7 +1676,18 @@ void desenha_ajuda(int ajuda_cursor, int ajuda_pagina) {
                 "enquanto o jogo esta pausado encerra a partida."
             }, 
             {
-
+                "Existem 6 solidos geometricos no Stamparazzi:",
+                "Cubos - sao paredes, estao sempre parados",
+                "Piramides - estao sempre paradas, mas se o jogador",
+                "tocar nelas, ele perde uma vida",
+                "Esferas - estao sempre quicando; se uma delas cair",
+                "em cima do jogador, ele perde uma vida",
+                "Cilindros - rolam de um lado para o outro, e podem",
+                "empurrar o jogador",
+                "Cones - giram e disparam um laser que pode fazer",
+                "o jogador perder uma vida",
+                "Torus - sao portais conectados em pares; o jogador",
+                "deve passar pelo aro central para ativa-los"
             }, 
             {
 
@@ -1707,7 +1718,18 @@ void desenha_ajuda(int ajuda_cursor, int ajuda_pagina) {
                 "pausado encerra a partida."
             }, 
             {
-
+                "Existem 6 solidos geometricos no Stamparazzi:",
+                "Cubos - sao paredes, estao sempre parados",
+                "Piramides - estao sempre paradas, mas se o jogador",
+                "tocar nelas, ele perde uma vida",
+                "Esferas - estao sempre quicando; se uma delas cair",
+                "em cima do jogador, ele perde uma vida",
+                "Cilindros - rolam de um lado para o outro, e podem",
+                "empurrar o jogador",
+                "Cones - giram e disparam um laser que pode fazer",
+                "o jogador perder uma vida",
+                "Torus - sao portais conectados em pares; o jogador",
+                "deve passar pelo aro central para ativa-los"
             }, 
             {
 
