@@ -70,8 +70,6 @@ struct TextoInfo {
 map<string, TextoInfo> textos;
 vector<string> Chaves = {"Tempo", "Objetivo", "Pause", "Morto", "Vida", "Lista_Cooldown"};
 GLuint texBlocoBase = 0;
-//GLuint textos["Tempo"].tex = 0, textos["Objetivo"].tex = 0, textos["Pause"].tex = 0, textos["Morto"].tex = 0, textos["Vida"].tex = 0, texBlocoBase = 0;
-//int textos["Tempo"].w = 0, textos["Objetivo"].w = 0, textos["Pause"].w = 0, textos["Morto"].w = 0, textos["Vida"].w = 0, textos["Tempo"].h = 0, textos["Objetivo"].h = 0, textos["Pause"].h = 0, textos["Morto"].h = 0, textos["Vida"].h = 0;
 
 vector<int> cores_solidos;
 vector<bool> cores_ativadas;
@@ -82,6 +80,8 @@ SDL_Renderer* renderer;
 SDL_GLContext glContext;
 SDL_GameController* game_controller = NULL;
 TTF_Font* fonte;
+Mix_Chunk* efeito_sonoro;
+Mix_Music* musica_background;
 
 //Adesivo a = Adesivo(-5.0f,5.0f,10.0f,{0,0,1});
 
@@ -227,6 +227,7 @@ void inicializa_sdl(){
     if (SDL_Init(SDL_INIT_EVERYTHING) < 0) {
         cerr << "Erro ao inicializar SDL2: " << SDL_GetError() << endl;
         teste = -1;
+        return;
     }
 
     // Cria a janela com contexto OpenGL
@@ -238,6 +239,7 @@ void inicializa_sdl(){
         cerr << "Erro ao criar janela: " << SDL_GetError() << endl;
         SDL_Quit();
         teste = -1;
+        return;
     }
 
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
@@ -248,6 +250,7 @@ void inicializa_sdl(){
         SDL_DestroyWindow(window);
         SDL_Quit();
         teste = -1;
+        return;
     }
 
     SDL_SetRelativeMouseMode(SDL_TRUE);  // ativa mouse relativo
@@ -338,6 +341,7 @@ void inicializa_ttf(){
     if(TTF_Init() < 0){
         cerr << "Erro ao inicializar SDL_ttf: " << TTF_GetError() << endl;
         teste = -1;
+        return;
     }
 
     // Carregar fonte
@@ -354,6 +358,7 @@ void inicializa_ttf(){
     if (!fonte) {
         std::cerr << "Erro ao carregar fonte: " << TTF_GetError() << std::endl;
         teste = -1;
+        return;
     }
 
     for (const auto& k : Chaves) {
@@ -400,6 +405,20 @@ void inicializa_ttf(){
     textos["Lista_Cooldown"].tex = criaTexturaDoTexto(texto, fonte, preto, textos["Lista_Cooldown"].w, textos["Lista_Cooldown"].h);
 
     cria_textura_bloco_base();
+}
+
+void inicializa_mixer(){
+    if(!Mix_Init(MIX_INIT_MP3 | MIX_INIT_OGG)) {
+        cerr << "Erro ao inicializar SDL_mixer." << endl;
+        teste = -1;
+        return;
+    }
+
+    if(Mix_OpenAudio(22050, MIX_DEFAULT_FORMAT, 2, 4096) == -1) {
+        cerr << "Erro ao abrir audio." << endl;
+        teste = -1;
+        return;
+    }
 }
 
 void atualizaTexto(const string& texto, GLuint& texturaTexto, int& larguraTexto, int& alturaTexto){
@@ -3201,16 +3220,28 @@ void loop_jogo(){
 }
 
 void finaliza_sdl(){
+
+    // desativa controles conectados
     if(game_controller) {
         SDL_GameControllerClose(game_controller);
         game_controller = NULL;
     }
+
+    // deleta texturas dos textos da fase
     for(const auto& k : Chaves) {
         glDeleteTextures(1, &textos[k].tex);
     }
     glDeleteTextures(1, &texBlocoBase);
+
+    // desativa SDL_mixer
+    Mix_CloseAudio();
+    Mix_Quit();
+
+    // desativa SDL_ttf
     TTF_CloseFont(fonte);
     TTF_Quit();
+
+    // desativa SDL2
     SDL_GL_DeleteContext(glContext);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
@@ -3226,6 +3257,8 @@ int main(int argc, char* argv[]) {
     inicializa_opengl(argc, argv);
 
     inicializa_ttf(); if(teste == -1) return teste;
+
+    inicializa_mixer(); if(teste == -1) return teste;
 
 	SDL_ShowCursor(SDL_ENABLE);
 
