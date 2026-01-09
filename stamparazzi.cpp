@@ -1,4 +1,5 @@
 #include "Adesivo.h"
+#include "Audio.h"
 #include "Colisao.h"
 #include "Draw.h"
 #include "Entidade.h"
@@ -8,6 +9,7 @@
 #include "Textura.h"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
+#include <SDL2/SDL_mixer.h>
 #include <GL/glut.h>
 #include <GL/glu.h>
 #include <GL/glext.h>
