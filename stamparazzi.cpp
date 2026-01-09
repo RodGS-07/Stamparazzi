@@ -349,7 +349,7 @@ void inicializa_ttf(){
 
     int novo_tam = max(18, (int)(18 * escala));  
 
-    fonte = TTF_OpenFont("arial.ttf", novo_tam); // precisa de um .ttf na mesma pasta
+    fonte = TTF_OpenFont("Fontes/arial.ttf", novo_tam); // precisa de um .ttf na mesma pasta
     //cout << (fonte==NULL) << endl;
     if (!fonte) {
         std::cerr << "Erro ao carregar fonte: " << TTF_GetError() << std::endl;
@@ -431,7 +431,7 @@ void ajusta_tamanho_fonte() {
     }
 
     // abre fonte nova no tamanho proporcional
-    fonte = TTF_OpenFont("arial.ttf", novo_tam);
+    fonte = TTF_OpenFont("Fontes/arial.ttf", novo_tam);
     if (!fonte) {
         cerr << "Erro ao ajustar fonte: " << TTF_GetError() << endl;
         return;
@@ -1338,7 +1338,7 @@ void desenha_blocos_overlay(const set<int>& objetivos, const vector<int>& coresS
 
     // Fonte proporcional
     int tamFonte = max(14, (int)(32 * escala));
-    TTF_Font* fnt = TTF_OpenFont("arial.ttf", tamFonte);
+    TTF_Font* fnt = TTF_OpenFont("Fontes/arial.ttf", tamFonte);
 
     // ----- Projeção 2D -----
     glDisable(GL_LIGHTING);
@@ -1644,9 +1644,9 @@ void desenha_ajuda(int ajuda_cursor, int ajuda_pagina) {
     int optSize       = max(baseOpt, (int)round(baseOpt * escala));
     int tutorialSize  = max(baseTutorial, (int)round(baseTutorial * escala));
 
-    TTF_Font* fontTitle    = TTF_OpenFont("arial.ttf", titleSize);
-    TTF_Font* fontOpt      = TTF_OpenFont("arial.ttf", optSize);
-    TTF_Font* fontTutorial = TTF_OpenFont("arial.ttf", tutorialSize);
+    TTF_Font* fontTitle    = TTF_OpenFont("Fontes/arial.ttf", titleSize);
+    TTF_Font* fontOpt      = TTF_OpenFont("Fontes/arial.ttf", optSize);
+    TTF_Font* fontTutorial = TTF_OpenFont("Fontes/arial.ttf", tutorialSize);
 
     int lw, lh;
     float itemY[4] = { h * 0.30f, h * 0.40f, h * 0.50f, h * 0.60f};
@@ -2068,9 +2068,9 @@ void desenha_menu(int menu_cursor, int quad_atual) {
     int optSize   = max(baseOpt, (int)round(baseOpt   * escala));
     int quadSize  = max(baseQuads, (int)round(baseQuads * escala));
 
-    TTF_Font* fontTitle = TTF_OpenFont("arial.ttf", titleSize);
-    TTF_Font* fontOpt   = TTF_OpenFont("arial.ttf", optSize);
-    TTF_Font* fontQuads = TTF_OpenFont("arial.ttf", quadSize);
+    TTF_Font* fontTitle = TTF_OpenFont("Fontes/arial.ttf", titleSize);
+    TTF_Font* fontOpt   = TTF_OpenFont("Fontes/arial.ttf", optSize);
+    TTF_Font* fontQuads = TTF_OpenFont("Fontes/arial.ttf", quadSize);
 
     int lw, lh;
 
@@ -2687,9 +2687,9 @@ void mostrar_resultado(string s, bool vitoria) {
         int lw, lh;
 
         // Fonte maior
-        TTF_Font* fntBig = TTF_OpenFont("arial.ttf", 48);
+        TTF_Font* fntBig = TTF_OpenFont("Fontes/arial.ttf", 48);
         // Fonte menor
-        TTF_Font* fntSmall = TTF_OpenFont("arial.ttf", 28);
+        TTF_Font* fntSmall = TTF_OpenFont("Fontes/arial.ttf", 28);
 
         // ------- TEXTO PRINCIPAL --------
         GLuint texMsg = criaTexturaDoTexto(s.c_str(), fntBig, preto, lw, lh);
