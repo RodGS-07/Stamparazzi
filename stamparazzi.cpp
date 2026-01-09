@@ -414,7 +414,7 @@ void inicializa_mixer(){
         return;
     }
 
-    if(Mix_OpenAudio(22050, MIX_DEFAULT_FORMAT, 2, 4096) == -1) {
+    if(Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) == -1) {
         cerr << "Erro ao abrir audio." << endl;
         teste = -1;
         return;
