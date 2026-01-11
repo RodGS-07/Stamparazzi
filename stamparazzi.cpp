@@ -83,6 +83,9 @@ TTF_Font* fonte;
 Mix_Chunk* efeito_sonoro;
 Mix_Music* musica_background;
 
+unordered_map<string, Mix_Chunk*> sons;
+unordered_map<string, Mix_Music*> musicas;
+
 //Adesivo a = Adesivo(-5.0f,5.0f,10.0f,{0,0,1});
 
 vector<unique_ptr<Solido>> solidos;
@@ -419,6 +422,18 @@ void inicializa_mixer(){
         teste = -1;
         return;
     }
+
+    for(const char* s : soundFileNames){
+        string str = "Audio/Efeitos_Sonoros/";
+        str += s;
+        sons[s] = Mix_LoadWAV(str.c_str());
+    }
+
+    // for(const char* m : musicFileNames){
+    //     string str = "Audio/Musicas/";
+    //     str += m;
+    //     musicas[m] = Mix_LoadMUS(str.c_str());
+    // }
 }
 
 void atualizaTexto(const string& texto, GLuint& texturaTexto, int& larguraTexto, int& alturaTexto){
@@ -1738,7 +1753,7 @@ void desenha_ajuda(int ajuda_cursor, int ajuda_pagina) {
                 "ou o jogador perder todas as vidas, ele perde."
             }, 
             {
-                "Use os direcionais ou o analOgico esquerdo para se",
+                "Use os direcionais ou o analogico esquerdo para se",
                 "mover para os lados, para frente e para tras, L1/LB para",
                 "voar para baixo e R1/RB para voar para cima. Movimente o",
                 "analogico direito para mudar a direcao em que voce esta",
@@ -1899,17 +1914,20 @@ void loop_ajuda() {
                         {
                             ajuda_cursor--;
                             if (ajuda_cursor < 0) ajuda_cursor = 0;
+                            Mix_PlayChannel(-1, sons["mixkit-trocar-cursor.wav"], 0);
                         }
                         else if (k == SDLK_DOWN)
                         {
                             ajuda_cursor++;
                             if (ajuda_cursor >= ajuda_opcoes) ajuda_cursor = ajuda_opcoes - 1;
+                            Mix_PlayChannel(-1, sons["mixkit-trocar-cursor.wav"], 0);
                         }
 
                         // escolher opção
                         else if (k == SDLK_SPACE)
                         {
                             ajuda_pagina = ajuda_cursor;
+                            Mix_PlayChannel(-1, sons["mixkit-confirmar.wav"], 0);
                             // if (ajuda_cursor == 0)
                             // {
                             //     //estado_atual = JOGO_PRINCIPAL;
@@ -1922,9 +1940,11 @@ void loop_ajuda() {
                         else if (k == SDLK_ESCAPE)
                         {
                             estado_atual = MENU_PRINCIPAL;
+                            Mix_PlayChannel(-1, sons["mixkit-voltar.wav"], 0);
                         }
                     } else {
                         ajuda_pagina = AJUDA_MENU;
+                        Mix_PlayChannel(-1, sons["mixkit-voltar.wav"], 0);
                     }
 
                     // alternar fullscreen
@@ -1958,17 +1978,20 @@ void loop_ajuda() {
                         {
                             ajuda_cursor--;
                             if (ajuda_cursor < 0) ajuda_cursor = 0;
+                            Mix_PlayChannel(-1, sons["mixkit-trocar-cursor.wav"], 0);
                         }
                         else if (b == SDL_CONTROLLER_BUTTON_DPAD_DOWN)
                         {
                             ajuda_cursor++;
                             if (ajuda_cursor >= ajuda_opcoes) ajuda_cursor = ajuda_opcoes - 1;
+                            Mix_PlayChannel(-1, sons["mixkit-trocar-cursor.wav"], 0);
                         }
 
                         // iniciar ou fechar jogo
                         else if (b == SDL_CONTROLLER_BUTTON_A)
                         {
                             ajuda_pagina = ajuda_cursor;
+                            Mix_PlayChannel(-1, sons["mixkit-confirmar.wav"], 0);
                             // if (ajuda_cursor == 0)
                             // {
                             //     estado_atual = JOGO_PRINCIPAL;
@@ -1980,9 +2003,11 @@ void loop_ajuda() {
                         }
                         if (b == SDL_CONTROLLER_BUTTON_BACK) {
                             estado_atual = MENU_PRINCIPAL;
+                            Mix_PlayChannel(-1, sons["mixkit-voltar.wav"], 0);
                         }
                     } else {
                         ajuda_pagina = AJUDA_MENU;
+                        Mix_PlayChannel(-1, sons["mixkit-voltar.wav"], 0);
                     }
 
                     // fullscreen
@@ -2019,12 +2044,14 @@ void loop_ajuda() {
                             {
                                 ajuda_cursor--;
                                 if (ajuda_cursor < 0) ajuda_cursor = 0;
+                                Mix_PlayChannel(-1, sons["mixkit-trocar-cursor.wav"], 0);
                                 eixoY_ativo = true;
                             }
                             else if (e.caxis.value > DEADZONE) // baixo
                             {
                                 ajuda_cursor++;
                                 if (ajuda_cursor >= ajuda_opcoes) ajuda_cursor = ajuda_opcoes - 1;
+                                Mix_PlayChannel(-1, sons["mixkit-trocar-cursor.wav"], 0);
                                 eixoY_ativo = true;
                             }
                         }
@@ -2345,11 +2372,13 @@ void loop_menu() {
                     {
                         menu_cursor--;
                         if (menu_cursor < 0) menu_cursor = 0;
+                        Mix_PlayChannel(-1, sons["mixkit-trocar-cursor.wav"], 0);
                     }
                     else if (k == SDLK_DOWN)
                     {
                         menu_cursor++;
                         if (menu_cursor >= menu_opcoes) menu_cursor = menu_opcoes - 1;
+                        Mix_PlayChannel(-1, sons["mixkit-trocar-cursor.wav"], 0);
                     }
 
                     // iniciar ou fechar jogo
@@ -2366,6 +2395,8 @@ void loop_menu() {
                         else if (menu_cursor == 4)
                         {
                             cores_ativadas[quad_atual] = !cores_ativadas[quad_atual];
+                            if (cores_ativadas[quad_atual]) Mix_PlayChannel(-1, sons["mixkit-confirmar.wav"], 0);
+                            else Mix_PlayChannel(-1, sons["mixkit-voltar.wav"], 0);
                         }
                     }
 
@@ -2376,15 +2407,18 @@ void loop_menu() {
                         {
                             dif--;
                             if (dif < FACIL) dif = FACIL;
+                            Mix_PlayChannel(-1, sons["mixkit-trocar-cursor.wav"], 0);
                         }
                         else if (menu_cursor == 2) // modo daltonico
                         {
                             modo_daltonico = false;
+                            Mix_PlayChannel(-1, sons["mixkit-trocar-cursor.wav"], 0);
                         }
                         else if (menu_cursor == 4)
                         {
                             quad_atual--;
                             if (quad_atual < 0) quad_atual = 0;
+                            Mix_PlayChannel(-1, sons["mixkit-trocar-cursor.wav"], 0);
                         }
                     }
                     else if (k == SDLK_RIGHT)
@@ -2393,20 +2427,24 @@ void loop_menu() {
                         {
                             dif++;
                             if (dif > DIFICIL) dif = DIFICIL;
+                            Mix_PlayChannel(-1, sons["mixkit-trocar-cursor.wav"], 0);
                         }
                         else if (menu_cursor == 2)
                         {
                             modo_daltonico = true;
+                            Mix_PlayChannel(-1, sons["mixkit-trocar-cursor.wav"], 0);
                         }
                         else if (menu_cursor == 4)
                         {
                             quad_atual++;
                             if (quad_atual >= 13) quad_atual = 12;
+                            Mix_PlayChannel(-1, sons["mixkit-trocar-cursor.wav"], 0);
                         }
                     }
                     else if (k == SDLK_ESCAPE) 
                     {
                         estado_atual = AJUDA;
+                        Mix_PlayChannel(-1, sons["mixkit-ajuda-menu.wav"], 0);
                     }
 
                     // if (k == SDLK_SPACE and menu_cursor == 2)
@@ -2454,11 +2492,13 @@ void loop_menu() {
                     {
                         menu_cursor--;
                         if (menu_cursor < 0) menu_cursor = 0;
+                        Mix_PlayChannel(-1, sons["mixkit-trocar-cursor.wav"], 0);
                     }
                     else if (b == SDL_CONTROLLER_BUTTON_DPAD_DOWN)
                     {
                         menu_cursor++;
                         if (menu_cursor >= menu_opcoes) menu_cursor = menu_opcoes - 1;
+                        Mix_PlayChannel(-1, sons["mixkit-trocar-cursor.wav"], 0);
                     }
 
                     // iniciar ou fechar jogo
@@ -2475,6 +2515,8 @@ void loop_menu() {
                         else if (menu_cursor == 4)
                         {
                             cores_ativadas[quad_atual] = !cores_ativadas[quad_atual];
+                            if (cores_ativadas[quad_atual]) Mix_PlayChannel(-1, sons["mixkit-confirmar.wav"], 0);
+                            else Mix_PlayChannel(-1, sons["mixkit-voltar.wav"], 0);
                         }
                     }
 
@@ -2488,11 +2530,13 @@ void loop_menu() {
                             {
                                 dif--;
                                 if (dif < FACIL) dif = FACIL;
+                                Mix_PlayChannel(-1, sons["mixkit-trocar-cursor.wav"], 0);
                             }
                             else
                             {
                                 dif++;
                                 if (dif > DIFICIL) dif = DIFICIL;
+                                Mix_PlayChannel(-1, sons["mixkit-trocar-cursor.wav"], 0);
                             }
                         }
                         else if (menu_cursor == 2) // daltônico
@@ -2500,6 +2544,7 @@ void loop_menu() {
                             if (b == SDL_CONTROLLER_BUTTON_DPAD_LEFT)
                                 modo_daltonico = 0;
                             else modo_daltonico = 1;
+                            Mix_PlayChannel(-1, sons["mixkit-trocar-cursor.wav"], 0);
                         }
                         else if (menu_cursor == 4)
                         {
@@ -2513,12 +2558,14 @@ void loop_menu() {
                                 quad_atual++;
                                 if (quad_atual >= 13) quad_atual = 12;
                             }
+                            Mix_PlayChannel(-1, sons["mixkit-trocar-cursor.wav"], 0);
                         }
                     }
 
                     else if (b == SDL_CONTROLLER_BUTTON_BACK)
                     {
                         estado_atual = AJUDA;
+                        Mix_PlayChannel(-1, sons["mixkit-ajuda-menu.wav"], 0);
                     }
 
                     // fullscreen
@@ -2569,12 +2616,14 @@ void loop_menu() {
                             {
                                 menu_cursor--;
                                 if (menu_cursor < 0) menu_cursor = 0;
+                                Mix_PlayChannel(-1, sons["mixkit-trocar-cursor.wav"], 0);
                                 eixoY_ativo = true;
                             }
                             else if (e.caxis.value > DEADZONE) // baixo
                             {
                                 menu_cursor++;
                                 if (menu_cursor >= menu_opcoes) menu_cursor = menu_opcoes - 1;
+                                Mix_PlayChannel(-1, sons["mixkit-trocar-cursor.wav"], 0);
                                 eixoY_ativo = true;
                             }
                         }
@@ -2597,13 +2646,16 @@ void loop_menu() {
                                 if (menu_cursor == 1) {
                                     dif--;
                                     if (dif < FACIL) dif = FACIL;
+                                    Mix_PlayChannel(-1, sons["mixkit-trocar-cursor.wav"], 0);
                                 }
                                 else if (menu_cursor == 2) {
                                     modo_daltonico = 0;
+                                    Mix_PlayChannel(-1, sons["mixkit-trocar-cursor.wav"], 0);
                                 }
                                 else if (menu_cursor == 4) {
                                     quad_atual--;
                                     if (quad_atual < 0) quad_atual = 0;
+                                    Mix_PlayChannel(-1, sons["mixkit-trocar-cursor.wav"], 0);
                                 }
                                 eixoX_ativo = true;
                             }
@@ -2613,13 +2665,16 @@ void loop_menu() {
                                 if (menu_cursor == 1) {
                                     dif++;
                                     if (dif > DIFICIL) dif = DIFICIL;
+                                    Mix_PlayChannel(-1, sons["mixkit-trocar-cursor.wav"], 0);
                                 }
                                 else if (menu_cursor == 2) {
                                     modo_daltonico = 1;
+                                    Mix_PlayChannel(-1, sons["mixkit-trocar-cursor.wav"], 0);
                                 }
                                 else if (menu_cursor == 4) {
                                     quad_atual++;
                                     if (quad_atual >= 13) quad_atual = 12;
+                                    Mix_PlayChannel(-1, sons["mixkit-trocar-cursor.wav"], 0);
                                 }
                                 eixoX_ativo = true;
                             }
@@ -3234,6 +3289,12 @@ void finaliza_sdl(){
     glDeleteTextures(1, &texBlocoBase);
 
     // desativa SDL_mixer
+    for(const char* s : soundFileNames)
+        Mix_FreeChunk(sons[s]);
+
+    // for(const char* m : musicFileNames)
+    //     Mix_FreeMusic(musicas[m]);
+
     Mix_CloseAudio();
     Mix_Quit();
 
