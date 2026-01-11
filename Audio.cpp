@@ -8,6 +8,6 @@ const char* soundFileNames[QTDSOM] = {   //nomes dos arquivos dos sons
     "mixkit-voltar.wav"
 };
 
-// const char* musicFileNames[QTDMUS] = {   //nomes dos arquivos das músicas
-
-// };
+const char* musicFileNames[QTDMUS] = {   //nomes dos arquivos das músicas
+    "mixkit-menus.mp3"
+};

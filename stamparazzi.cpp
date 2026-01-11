@@ -80,8 +80,6 @@ SDL_Renderer* renderer;
 SDL_GLContext glContext;
 SDL_GameController* game_controller = NULL;
 TTF_Font* fonte;
-Mix_Chunk* efeito_sonoro;
-Mix_Music* musica_background;
 
 unordered_map<string, Mix_Chunk*> sons;
 unordered_map<string, Mix_Music*> musicas;
@@ -429,11 +427,13 @@ void inicializa_mixer(){
         sons[s] = Mix_LoadWAV(str.c_str());
     }
 
-    // for(const char* m : musicFileNames){
-    //     string str = "Audio/Musicas/";
-    //     str += m;
-    //     musicas[m] = Mix_LoadMUS(str.c_str());
-    // }
+    for(const char* m : musicFileNames){
+        string str = "Audio/Musicas/";
+        str += m;
+        musicas[m] = Mix_LoadMUS(str.c_str());
+    }
+
+    if(!Mix_PlayingMusic()) Mix_PlayMusic(musicas["mixkit-menus.mp3"], -1);
 }
 
 void atualizaTexto(const string& texto, GLuint& texturaTexto, int& larguraTexto, int& alturaTexto){
@@ -2699,6 +2699,9 @@ void loop_menu() {
 
 void mostrar_resultado(string s, bool vitoria) {
     // --- Loop até o jogador pressionar ENTER ---
+
+    Mix_PlayMusic(musicas["mixkit-menus.mp3"], -1);
+
     SDL_Event e;
 
     while (true) {
@@ -2711,11 +2714,23 @@ void mostrar_resultado(string s, bool vitoria) {
                 return;
             }
 
-            if (e.type == SDL_KEYDOWN) {
-                if (e.key.keysym.sym == SDLK_RETURN) {
-                    // VOLTAR PARA O MENU
-                    estado_atual = MENU_PRINCIPAL;
-                    return;
+            if (!game_controller) {
+                if (e.type == SDL_KEYDOWN) {
+                    if (e.key.keysym.sym == SDLK_RETURN) {
+                        // VOLTAR PARA O MENU
+                        estado_atual = MENU_PRINCIPAL;
+                        return;
+                    }
+                }
+            } else {
+                if (e.type == SDL_CONTROLLERBUTTONDOWN) {
+                    int b = e.cbutton.button;
+
+                    if (b == SDL_CONTROLLER_BUTTON_A) {
+                        // VOLTAR PARA O MENU
+                        estado_atual = MENU_PRINCIPAL;
+                        return;
+                    }
                 }
             }
         }
@@ -2774,7 +2789,7 @@ void mostrar_resultado(string s, bool vitoria) {
         glDeleteTextures(1, &texMsg);
 
         // ------- TEXTO INFERIOR -------
-        string aviso = "Pressione ENTER para voltar ao menu";
+        string aviso = !game_controller ? "Pressione ENTER para voltar ao menu" : "Pressione A para voltar ao menu";
         GLuint texSub = criaTexturaDoTexto(aviso.c_str(), fntSmall, preto, lw, lh);
 
         desenhaTexto(texSub, w/2 - lw/2, h*0.60f, lw, lh);
