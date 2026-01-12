@@ -5,6 +5,7 @@
 #include "Draw.h"
 #include "Colisao.h"
 #include "Adesivo.h"
+#include <SDL2/SDL_mixer.h>
 #include <memory>
 
 using namespace std;
@@ -43,6 +44,7 @@ class Solido : public Entidade{
         virtual void desenha_solido(int cor, bool pause, bool modo_daltonico) = 0;
         //virtual void desenha_adesivo() = 0;
         virtual void desenha_mascara() = 0;
+        virtual void finaliza_som() = 0;
         virtual ~Solido() = default;
 };
 
@@ -63,6 +65,7 @@ class Cubo : public Solido{
         void desenha_solido(int cor, bool pause, bool modo_daltonico) override;
         //void desenha_adesivo() override;
         void desenha_mascara();
+        void finaliza_som();
 };
 
 class Piramide : public Solido{
@@ -82,6 +85,7 @@ class Piramide : public Solido{
         void desenha_solido(int cor, bool pause, bool modo_daltonico) override;
         //void desenha_adesivo() override;
         void desenha_mascara();
+        void finaliza_som();
 };
 
 class Esfera : public Solido{
@@ -101,6 +105,7 @@ class Esfera : public Solido{
         void desenha_solido(int cor, bool pause, bool modo_daltonico) override;
         //void desenha_adesivo() override;
         void desenha_mascara();
+        void finaliza_som();
 };
 
 class Cilindro : public Solido{
@@ -122,6 +127,7 @@ class Cilindro : public Solido{
         void desenha_solido(int cor, bool pause, bool modo_daltonico) override;
         //void desenha_adesivo() override;
         void desenha_mascara();
+        void finaliza_som();
 };
 
 class Cone : public Solido{
@@ -143,12 +149,14 @@ class Cone : public Solido{
         void desenha_solido(int cor, bool pause, bool modo_daltonico) override;
         //void desenha_adesivo() override;
         void desenha_mascara();
+        void finaliza_som();
 };
 
 class Torus : public Solido{
     private:
         Portal p;
         Torus* conjugado;
+        Mix_Chunk* som_teleporte = Mix_LoadWAV("Audio/Efeitos_Sonoros/mixkit-teleporte.wav");
 
     public:
         Torus();
@@ -164,6 +172,7 @@ class Torus : public Solido{
         void desenha_solido(int cor, bool pause, bool modo_daltonico) override;
         //void desenha_adesivo() override;
         void desenha_mascara();
+        void finaliza_som();
 };
 
 #endif

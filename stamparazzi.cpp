@@ -3328,6 +3328,11 @@ void finaliza_sdl(){
     // for(const char* m : musicFileNames)
     //     Mix_FreeMusic(musicas[m]);
 
+    for (const auto& p : solidos)
+        p->finaliza_som();
+
+    jogador.finaliza_som();
+
     Mix_CloseAudio();
     Mix_Quit();
 

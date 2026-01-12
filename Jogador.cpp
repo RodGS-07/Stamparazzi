@@ -7,6 +7,7 @@
 #include "Adesivo.h"
 #include "Solido.h"
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_mixer.h>
 #include <vector>
 #include <memory>
 #include <set>
@@ -60,6 +61,8 @@ void Jogador::nasce_jogador(float ix, float iy, float iz){
 void Jogador::morre(int& vidas){
     morto = true;
     vidas--;
+    if(!som_morte) som_morte = Mix_LoadWAV("Audio/Efeitos_Sonoros/mixkit-perde-vida.wav");
+    Mix_PlayChannel(-1, som_morte, 0);
 }
 
 void Jogador::desenha_mascara(int stacks, int fatias){
@@ -607,4 +610,8 @@ void Jogador::controle_camera(float move_vel, float camera_sens, float dt, int& 
     //this->mascara = {{this->getX()-1.0f,this->getY()-1.0f,this->getZ()-1.0f},
     //        {this->getX()+1.0f,this->getY()+1.0f,this->getZ()+1.0f}};
     //this->mascara = {{this->getX(),this->getY(),this->getZ()},1.0f};
+}
+
+void Jogador::finaliza_som() {
+    Mix_FreeChunk(som_morte);
 }

@@ -5,6 +5,7 @@
 #include "Colisao.h"
 #include "Adesivo.h"
 #include "Jogador.h"
+#include <SDL2/SDL_mixer.h>
 #include <iostream>
 #include <memory>
 using namespace std;
@@ -198,6 +199,10 @@ void Cubo::desenha_mascara() {
     glEnd();
 }
 
+void Cubo::finaliza_som() {
+    return;
+}
+
 Piramide::Piramide() : Solido(F::PIRAMIDE) {}
 Piramide::Piramide(float ix, float iy, float iz, unique_ptr<Adesivo> a, float b, float h)
 : Solido(ix,iy,iz,F::PIRAMIDE,move(a)), base(b), altura(h) {}
@@ -351,6 +356,10 @@ void Piramide::desenha_mascara(){
     glEnd();
 }
 
+void Piramide::finaliza_som() {
+    return;
+}
+
 Esfera::Esfera() : Solido(F::ESFERA) {}
 Esfera::Esfera(float ix, float iy, float iz, unique_ptr<Adesivo> a, float r, float c)
 : Solido(ix,iy,iz,F::ESFERA,move(a)), raio(r), chao(c) {
@@ -442,7 +451,9 @@ bool Esfera::colide_jogador(const AABB& s) const {
 void Esfera::aplica_efeito(Jogador& jogador, int& vidas) {
     AABB box = {{this->getX() - raio, this->getY() - raio, this->getZ() - raio}, {this->getX() + raio, this->getY() + raio, this->getZ() + raio}};
     //if(!pause) cout << jogador.getMascara().max.y << " " << box.min.y << endl;
-    if(jogador.getMascara().max.y <= box.min.y or jogador.getMascara().min.y <= this->chao) jogador.morre(vidas);
+    if(jogador.getMascara().max.y <= box.min.y or jogador.getMascara().min.y <= this->chao) {
+        jogador.morre(vidas);
+    }
 }
 
 void Esfera::desenha_solido(int cor, bool pause, bool modo_daltonico) {
@@ -514,6 +525,10 @@ void Esfera::desenha_mascara(){
     glVertex3f(mascara.max.x,mascara.max.y,mascara.max.z);
     glVertex3f(mascara.max.x,mascara.min.y,mascara.max.z);
     glEnd();
+}
+
+void Esfera::finaliza_som() {
+    return;
 }
 
 Cilindro::Cilindro() : Solido(F::CILINDRO) {}
@@ -690,6 +705,10 @@ void Cilindro::desenha_mascara(){
     glEnd();
 }
 
+void Cilindro::finaliza_som() {
+    return;
+}
+
 Cone::Cone() : Solido(F::CONE) {}
 Cone::Cone(float ix, float iy, float iz, unique_ptr<Adesivo> a, float r, float h)
 : Solido(ix,iy,iz,F::CONE,move(a)), raio(r), altura(h), ang(0.0f) { 
@@ -856,6 +875,10 @@ void Cone::desenha_mascara(){
     glEnd();
 }
 
+void Cone::finaliza_som() {
+    return;
+}
+
 Torus::Torus() : Solido(F::TORUS) {}
 Torus::Torus(float ix, float iy, float iz, unique_ptr<Adesivo> a, float re, float ra)
 : Solido(ix,iy,iz,F::TORUS,move(a)) {
@@ -929,6 +952,9 @@ void Torus::aplica_efeito(Jogador& jogador, int& vidas) {
         jogador.setZ(dz);
         jogador.setMascara({{jogador.getX() - 1.0f, jogador.getY() - 1.0f, jogador.getZ() - 1.0f},
                             {jogador.getX() + 1.0f, jogador.getY() + 1.0f, jogador.getZ() + 1.0f}});
+        
+        Mix_PlayChannel(-1, som_teleporte, 0);
+        
         // jogador.setX(jogador.getX() + dx);
         // jogador.setY(jogador.getY() + dy);
         // jogador.setZ(jogador.getZ() + dz);
@@ -1039,4 +1065,8 @@ void Torus::desenha_mascara() {
     glVertex3f(mascara.max.x,mascara.max.y,mascara.max.z);
     glVertex3f(mascara.max.x,mascara.min.y,mascara.max.z);
     glEnd();
+}
+
+void Torus::finaliza_som() {
+    Mix_FreeChunk(som_teleporte);
 }

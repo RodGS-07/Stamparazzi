@@ -8,6 +8,7 @@
 #include "Adesivo.h"
 #include "Solido.h"
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_mixer.h>
 #include <vector>
 #include <set>
 #include <memory>
@@ -19,6 +20,7 @@ class Jogador : public Entidade{
         float cam_yaw, cam_pitch;
         bool morto;
         AABB mascara; //Sphere mascara;
+        Mix_Chunk* som_morte;
 
     public:
         Jogador();
@@ -42,6 +44,7 @@ class Jogador : public Entidade{
         void prende_camera();
         void move_camera(float dist, float dir, float dt, int& vidas, const vector<unique_ptr<Solido>>& poligonos, const vector<unique_ptr<Solido>>& limites, float val = 0.0f);
         void controle_camera(float move_vel, float camera_sens, float dt, int& vidas, bool pause, SDL_Window* window, SDL_GameController* game_controller, const Uint8* state, const vector<unique_ptr<Solido>>& poligonos, const vector<unique_ptr<Solido>>& limites);
+        void finaliza_som();
 };
 
 #endif
