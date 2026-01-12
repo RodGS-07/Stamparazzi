@@ -3161,99 +3161,229 @@ void loop_jogo(){
             //p->desenha_adesivo();
         }
 
-        if(jogador.estaVivo()) {
-            // 3) para cada polígono, checamos swept collision contra jogador
+        if (jogador.estaVivo()) {
+
             for (size_t i = 0; i < solidos.size(); ++i) {
-                auto &p = solidos[i];
+
+                auto& p = solidos[i];
+
+                // AABB atual
                 AABB newBox = p->getAABB();
 
-                // recuperar AABB antiga: set temporariamente posição anterior,
+                // AABB antiga
                 XYZ savedPos = { p->getX(), p->getY(), p->getZ() };
-                p->setX(prevPos[i].x); p->setY(prevPos[i].y); p->setZ(prevPos[i].z);
+                p->setX(prevPos[i].x);
+                p->setY(prevPos[i].y);
+                p->setZ(prevPos[i].z);
                 AABB oldBox = p->getAABB();
-                // restaura
-                p->setX(savedPos.x); p->setY(savedPos.y); p->setZ(savedPos.z);
+                p->setX(savedPos.x);
+                p->setY(savedPos.y);
+                p->setZ(savedPos.z);
 
-                // swept box = união de old e new
+                // Swept AABB
                 AABB swept = unionAABB(oldBox, newBox);
 
-                // se o swept AABB colide com o jogador, houve interseção no caminho potencialmente
-                if (AABBvsAABB(swept, jogador.getMascara())) {
-                    // se já está sobreposto ao final: resolvemos com MTV
-                    if (AABBvsAABB(newBox, jogador.getMascara())) {
-                        // calcula mtv para separar jogador do polígono (empurrar jogador)
-                        XYZ mtv = computeMTV_AABB_vs_AABB(newBox, jogador.getMascara());
+                if (!AABBvsAABB(swept, jogador.getMascara()))
+                    continue;
 
-                        // if (p->getSuperficie()==F::ESFERA) {
-                        //     // esfera empurrando de cima
-                        //     if (mtv.y > 0.0f and newBox.min.y > jogador.getMascara().max.y - 0.01f) {
-                        //         p->aplica_efeito(jogador, vidas);
-                        //         break; // não empurra, já morreu
-                        //     }
-                        //     // esfera por baixo: segue fluxo normal (empurra)
-                        // }
+                if (!AABBvsAABB(newBox, jogador.getMascara()))
+                    continue;
 
-                        // tenta empurrar o jogador: primeiro salva estado do jogador
+                // MTV
+                XYZ mtv = computeMTV_AABB_vs_AABB(newBox, jogador.getMascara());
+
+                // ===============================
+                // CASO: ESFERA
+                // ===============================
+                if (p->getSuperficie() == F::ESFERA) {
+
+                    // esfera matou se caiu de cima
+                    bool caiuDeCima =
+                        mtv.y < 0.0f &&
+                        oldBox.min.y >= jogador.getMascara().max.y - 0.05f;
+
+                    if (caiuDeCima) {
+                        p->aplica_efeito(jogador, vidas);
+                        continue;
+                    } else {
+                        // salva estado do jogador
                         XYZ playerPrev = { jogador.getX(), jogador.getY(), jogador.getZ() };
                         AABB playerPrevMask = jogador.getMascara();
-
-                        // aplica deslocamento no jogador
+                        
+                        // empurra jogador
                         jogador.setX(jogador.getX() + mtv.x);
                         jogador.setY(jogador.getY() + mtv.y);
                         jogador.setZ(jogador.getZ() + mtv.z);
+
                         jogador.setMascara({
                             { jogador.getX() - 1.0f, jogador.getY() - 1.0f, jogador.getZ() - 1.0f },
                             { jogador.getX() + 1.0f, jogador.getY() + 1.0f, jogador.getZ() + 1.0f }
                         });
 
-                        // verifica se, ao empurrar o jogador, ele colide com outro polígono
-                        bool bad = false;
+                        // verifica colisão apenas com OUTROS sólidos
+                        bool bloqueado = false;
                         for (size_t j = 0; j < solidos.size(); ++j) {
-                            if (j == i) continue; // ignora o polígono que empurrou
+                            if (j == i) continue;
                             if (solidos[j]->colide_jogador(jogador.getMascara())) {
-                                bad = true;
+                                bloqueado = true;
                                 break;
                             }
                         }
 
-                        for (size_t j = 0; j < limites.size(); ++j) {
-                            //if (j == i) continue; // ignora o polígono que empurrou
-                            if (limites[j]->colide_jogador(jogador.getMascara())) {
-                                bad = true;
-                                break;
-                            }
-                        }
-
-                        if (bad) {
-                            // não foi possível empurrar o jogador (bloqueado por outro obstáculo)
-                            // voltamos o jogador para o lugar e revertamos o polígono ao antigo lugar
-                            
-                            if (p->getSuperficie()==F::ESFERA) {
-                                // esfera empurrando de cima
-                                //if (mtv.y > 0.0f and newBox.min.y > jogador.getMascara().max.y - 0.01f) {
-                                    p->aplica_efeito(jogador, vidas);
-                                    continue; // não empurra, já morreu
-                                //}
-                                // esfera por baixo: segue fluxo normal (empurra)
-                            }
-                            
-                            jogador.setX(playerPrev.x); jogador.setY(playerPrev.y); jogador.setZ(playerPrev.z);
+                        if (bloqueado) {
+                            // restaura jogador
+                            jogador.setX(playerPrev.x);
+                            jogador.setY(playerPrev.y);
+                            jogador.setZ(playerPrev.z);
                             jogador.setMascara(playerPrevMask);
 
-                            p->setX(prevPos[i].x); p->setY(prevPos[i].y); p->setZ(prevPos[i].z);
-
-                            // opcional: inverter velocidade do polígono ou zerá-la (p->vel *= -0.5f)
-                            // você precisa de um método na sua classe para manipular velocidade
+                            // cilindro continua se movendo (empurra junto)
+                            jogador.setX(jogador.getX() + (newBox.min.x - oldBox.min.x));
+                            jogador.setZ(jogador.getZ() + (newBox.min.z - oldBox.min.z));
                         }
-                        // else: empurramos com sucesso
                     }
-                    else {
-                        // swept overlapped, mas final não -- movimento passou "perto".
-                        // se quiser, pode tratar amostragens/interpolação para evitar tunneling.
+
+                    // caso contrário, esfera não empurra
+                    continue;
+                }
+
+                // ===============================
+                // CASO: CILINDRO
+                // ===============================
+                if (p->getSuperficie() == F::CILINDRO) {
+
+                    // salva estado do jogador
+                    XYZ playerPrev = { jogador.getX(), jogador.getY(), jogador.getZ() };
+                    AABB playerPrevMask = jogador.getMascara();
+
+                    // empurra jogador
+                    jogador.setX(jogador.getX() + mtv.x);
+                    jogador.setY(jogador.getY() + mtv.y);
+                    jogador.setZ(jogador.getZ() + mtv.z);
+
+                    jogador.setMascara({
+                        { jogador.getX() - 1.0f, jogador.getY() - 1.0f, jogador.getZ() - 1.0f },
+                        { jogador.getX() + 1.0f, jogador.getY() + 1.0f, jogador.getZ() + 1.0f }
+                    });
+
+                    // verifica colisão apenas com OUTROS sólidos
+                    bool bloqueado = false;
+                    for (size_t j = 0; j < solidos.size(); ++j) {
+                        if (j == i) continue;
+                        if (solidos[j]->colide_jogador(jogador.getMascara())) {
+                            bloqueado = true;
+                            break;
+                        }
+                    }
+
+                    if (bloqueado) {
+                        // restaura jogador
+                        jogador.setX(playerPrev.x);
+                        jogador.setY(playerPrev.y);
+                        jogador.setZ(playerPrev.z);
+                        jogador.setMascara(playerPrevMask);
+
+                        // cilindro continua se movendo (empurra junto)
+                        jogador.setX(jogador.getX() + (newBox.min.x - oldBox.min.x));
+                        jogador.setZ(jogador.getZ() + (newBox.min.z - oldBox.min.z));
                     }
                 }
             }
         }
+
+        // if(jogador.estaVivo()) {
+        //     // 3) para cada polígono, checamos swept collision contra jogador
+        //     for (size_t i = 0; i < solidos.size(); ++i) {
+        //         auto &p = solidos[i];
+        //         AABB newBox = p->getAABB();
+
+        //         // recuperar AABB antiga: set temporariamente posição anterior,
+        //         XYZ savedPos = { p->getX(), p->getY(), p->getZ() };
+        //         p->setX(prevPos[i].x); p->setY(prevPos[i].y); p->setZ(prevPos[i].z);
+        //         AABB oldBox = p->getAABB();
+        //         // restaura
+        //         p->setX(savedPos.x); p->setY(savedPos.y); p->setZ(savedPos.z);
+
+        //         // swept box = união de old e new
+        //         AABB swept = unionAABB(oldBox, newBox);
+
+        //         // se o swept AABB colide com o jogador, houve interseção no caminho potencialmente
+        //         if (AABBvsAABB(swept, jogador.getMascara())) {
+        //             // se já está sobreposto ao final: resolvemos com MTV
+        //             if (AABBvsAABB(newBox, jogador.getMascara())) {
+        //                 // calcula mtv para separar jogador do polígono (empurrar jogador)
+        //                 XYZ mtv = computeMTV_AABB_vs_AABB(newBox, jogador.getMascara());
+
+        //                 // if (p->getSuperficie()==F::ESFERA) {
+        //                 //     // esfera empurrando de cima
+        //                 //     if (mtv.y > 0.0f and newBox.min.y > jogador.getMascara().max.y - 0.01f) {
+        //                 //         p->aplica_efeito(jogador, vidas);
+        //                 //         break; // não empurra, já morreu
+        //                 //     }
+        //                 //     // esfera por baixo: segue fluxo normal (empurra)
+        //                 // }
+
+        //                 // tenta empurrar o jogador: primeiro salva estado do jogador
+        //                 XYZ playerPrev = { jogador.getX(), jogador.getY(), jogador.getZ() };
+        //                 AABB playerPrevMask = jogador.getMascara();
+
+        //                 // aplica deslocamento no jogador
+        //                 jogador.setX(jogador.getX() + mtv.x);
+        //                 jogador.setY(jogador.getY() + mtv.y);
+        //                 jogador.setZ(jogador.getZ() + mtv.z);
+        //                 jogador.setMascara({
+        //                     { jogador.getX() - 1.0f, jogador.getY() - 1.0f, jogador.getZ() - 1.0f },
+        //                     { jogador.getX() + 1.0f, jogador.getY() + 1.0f, jogador.getZ() + 1.0f }
+        //                 });
+
+        //                 // verifica se, ao empurrar o jogador, ele colide com outro polígono
+        //                 bool bad = false;
+        //                 for (size_t j = 0; j < solidos.size(); ++j) {
+        //                     if (j == i) continue; // ignora o polígono que empurrou
+        //                     if (solidos[j]->colide_jogador(jogador.getMascara())) {
+        //                         bad = true;
+        //                         break;
+        //                     }
+        //                 }
+
+        //                 for (size_t j = 0; j < limites.size(); ++j) {
+        //                     //if (j == i) continue; // ignora o polígono que empurrou
+        //                     if (limites[j]->colide_jogador(jogador.getMascara())) {
+        //                         bad = true;
+        //                         break;
+        //                     }
+        //                 }
+
+        //                 if (bad) {
+        //                     // não foi possível empurrar o jogador (bloqueado por outro obstáculo)
+        //                     // voltamos o jogador para o lugar e revertamos o polígono ao antigo lugar
+                            
+        //                     if (p->getSuperficie()==F::ESFERA) {
+        //                         // esfera empurrando de cima
+        //                         //if (mtv.y > 0.0f and newBox.min.y > jogador.getMascara().max.y - 0.01f) {
+        //                             p->aplica_efeito(jogador, vidas);
+        //                             continue; // não empurra, já morreu
+        //                         //}
+        //                         // esfera por baixo: segue fluxo normal (empurra)
+        //                     }
+                            
+        //                     jogador.setX(playerPrev.x); jogador.setY(playerPrev.y); jogador.setZ(playerPrev.z);
+        //                     jogador.setMascara(playerPrevMask);
+
+        //                     p->setX(prevPos[i].x); p->setY(prevPos[i].y); p->setZ(prevPos[i].z);
+
+        //                     // opcional: inverter velocidade do polígono ou zerá-la (p->vel *= -0.5f)
+        //                     // você precisa de um método na sua classe para manipular velocidade
+        //                 }
+        //                 // else: empurramos com sucesso
+        //             }
+        //             else {
+        //                 // swept overlapped, mas final não -- movimento passou "perto".
+        //                 // se quiser, pode tratar amostragens/interpolação para evitar tunneling.
+        //             }
+        //         }
+        //     }
+        // }
 
         int i = 0;
         for(const auto& p : solidos){
