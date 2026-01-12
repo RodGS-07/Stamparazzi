@@ -425,12 +425,22 @@ void inicializa_mixer(){
         string str = "Audio/Efeitos_Sonoros/";
         str += s;
         sons[s] = Mix_LoadWAV(str.c_str());
+
+        // if (!sons[s]) {
+        //     cerr << "Erro ao carregar som " << str << ": "
+        //         << Mix_GetError() << endl;
+        // }
     }
 
     for(const char* m : musicFileNames){
         string str = "Audio/Musicas/";
         str += m;
         musicas[m] = Mix_LoadMUS(str.c_str());
+
+        // if (!musicas[m]) {
+        //     cerr << "Erro ao carregar musica " << str << ": "
+        //         << Mix_GetError() << endl;
+        // }
     }
 
     if(!Mix_PlayingMusic()) Mix_PlayMusic(musicas["mixkit-menus.mp3"], -1);
@@ -2354,6 +2364,8 @@ void loop_menu() {
     bool eixoY_ativo = false;
     bool eixoX_ativo = false;
 
+    if(!Mix_PlayingMusic()) Mix_PlayMusic(musicas["mixkit-menus.mp3"], -1);
+
     while (estado_atual == MENU_PRINCIPAL) {
 
         while (SDL_PollEvent(&e)) {
@@ -2700,7 +2712,11 @@ void loop_menu() {
 void mostrar_resultado(string s, bool vitoria) {
     // --- Loop até o jogador pressionar ENTER ---
 
-    Mix_PlayMusic(musicas["mixkit-menus.mp3"], -1);
+    Mix_HaltMusic();
+
+    if (vitoria) Mix_PlayChannel(-1, sons["mixkit-vitoria.wav"], 0);
+    else Mix_PlayChannel(-1, sons["mixkit-derrota.wav"], 0);
+    //Mix_PlayMusic(musicas["mixkit-menus.mp3"], -1);
 
     SDL_Event e;
 
