@@ -2928,6 +2928,7 @@ void loop_jogo(){
                     if(evento.button.button == SDL_BUTTON_LEFT){
                         flash_alpha = 1.0f;
                         flash_ativo = true;
+                        Mix_PlayChannel(-1, sons["mixkit-tirar-foto.wav"], 0);
                     }
                 }
                 if (evento.type == SDL_WINDOWEVENT && evento.window.event == SDL_WINDOWEVENT_RESIZED || evento.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
@@ -2968,6 +2969,7 @@ void loop_jogo(){
                 if(SDL_GameControllerGetAxis(game_controller,SDL_CONTROLLER_AXIS_TRIGGERRIGHT) > 16000 and !pause and !show_overlay and jogador.estaVivo()){
                     flash_alpha = 1.0f;
                     flash_ativo = true;
+                    Mix_PlayChannel(-1, sons["mixkit-tirar-foto.wav"], 0);
                 }
             }
         }
