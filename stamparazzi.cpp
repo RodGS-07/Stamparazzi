@@ -1291,6 +1291,9 @@ void atualiza_timer(float dt){
                 string str = oss.str();
                 atualizaTexto(str,textos["Tempo"].tex,textos["Tempo"].w,textos["Tempo"].h);
             }
+
+            if (timer > 0 and timer <= 10 and timer%8 == 2) 
+                Mix_PlayChannel(-1, sons["mixkit-alarme-final.wav"], 0);
         }
     }
 }
@@ -1909,6 +1912,9 @@ void loop_ajuda() {
 
     while (estado_atual == AJUDA) {
 
+        if (Mix_GetMusicPosition(musicas["mixkit-menus.mp3"]) >= 95.0) 
+            Mix_SetMusicPosition(0.0);
+
         while (SDL_PollEvent(&e)) {
             if (e.type == SDL_QUIT) {estado_atual = MENU_PRINCIPAL; break;}
 
@@ -2368,6 +2374,9 @@ void loop_menu() {
 
     while (estado_atual == MENU_PRINCIPAL) {
 
+        if (Mix_GetMusicPosition(musicas["mixkit-menus.mp3"]) >= 95.0) 
+            Mix_SetMusicPosition(0.0);
+
         while (SDL_PollEvent(&e)) {
             if (e.type == SDL_QUIT) {estado_atual = SAINDO; break;}
 
@@ -2713,6 +2722,7 @@ void mostrar_resultado(string s, bool vitoria) {
     // --- Loop até o jogador pressionar ENTER ---
 
     Mix_HaltMusic();
+    Mix_HaltChannel(-1);
 
     if (vitoria) Mix_PlayChannel(-1, sons["mixkit-vitoria.wav"], 0);
     else Mix_PlayChannel(-1, sons["mixkit-derrota.wav"], 0);
@@ -3209,7 +3219,7 @@ void loop_jogo(){
                         // salva estado do jogador
                         XYZ playerPrev = { jogador.getX(), jogador.getY(), jogador.getZ() };
                         AABB playerPrevMask = jogador.getMascara();
-                        
+
                         // empurra jogador
                         jogador.setX(jogador.getX() + mtv.x);
                         jogador.setY(jogador.getY() + mtv.y);

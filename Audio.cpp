@@ -3,6 +3,7 @@
 
 const char* soundFileNames[QTDSOM] = {   //nomes dos arquivos dos sons
     "mixkit-ajuda-menu.wav",
+    "mixkit-alarme-final.wav",
     "mixkit-confirmar.wav",
     "mixkit-derrota.wav",
     "mixkit-perde-vida.wav",
