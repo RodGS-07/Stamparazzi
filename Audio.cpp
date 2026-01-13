@@ -4,8 +4,11 @@
 const char* soundFileNames[QTDSOM] = {   //nomes dos arquivos dos sons
     "mixkit-ajuda-menu.wav",
     "mixkit-alarme-final.wav",
+    "mixkit-bola-quicando.wav",
+    "mixkit-cilindro-rolando.wav",
     "mixkit-confirmar.wav",
     "mixkit-derrota.wav",
+    "mixkit-estatica-laser.wav",
     "mixkit-perde-vida.wav",
     "mixkit-teleporte.wav",
     "mixkit-tirar-foto.wav",
@@ -15,5 +18,6 @@ const char* soundFileNames[QTDSOM] = {   //nomes dos arquivos dos sons
 };
 
 const char* musicFileNames[QTDMUS] = {   //nomes dos arquivos das músicas
-    "mixkit-menus.mp3"
+    "mixkit-menus.mp3",
+    "mixkit-nivel.mp3"
 };
