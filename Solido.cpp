@@ -785,7 +785,10 @@ void Cone::realiza_movimento(XYZ j, float dt, float dist, bool pause, bool modo_
         // ============================
         // CONTROLE DO SOM DO LASER
         // ============================
-        if (dist <= 25.0f) {
+        XYZ v = j - apex;
+        XYZ cross = v * axis;
+        float distLaser = !cross / !axis;
+        if (distLaser <= 20.0f) {
             // só toca se não estiver tocando
             if (canal_laser == -1 || !Mix_Playing(canal_laser)) {
                 canal_laser = Mix_PlayChannel(-1, som_laser, -1); // loop infinito
