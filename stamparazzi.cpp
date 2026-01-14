@@ -3172,7 +3172,7 @@ void loop_jogo(){
 
         // 2) desenhamos polígonos e máscaras e realizamos movimentos
         for (const auto& p : solidos){
-            p->realiza_movimento(dt,distancia_entidades(jogador, *p),pause,modo_daltonico);
+            p->realiza_movimento({jogador.getX(), jogador.getY(), jogador.getZ()}, dt,distancia_entidades(jogador, *p),pause,modo_daltonico);
             //p->desenha_mascara();
             //p->desenha_adesivo();
         }

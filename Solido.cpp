@@ -98,7 +98,7 @@ AABB Cubo::getAABB() const {
 
 float Cubo::getLado() const {return this->lado;}
 
-void Cubo::realiza_movimento(float dt, float dist, bool pause, bool modo_daltonico) {
+void Cubo::realiza_movimento(XYZ j, float dt, float dist, bool pause, bool modo_daltonico) {
     //desenha_solido(cor, pause, modo_daltonico);
     // if (getAdesivo() and (getRotX() or getRotY() or getRotZ())) {
 
@@ -216,7 +216,7 @@ AABB Piramide::getAABB() const {
 
 float Piramide::getAltura() const {return this->altura;}
 
-void Piramide::realiza_movimento(float dt, float dist, bool pause, bool modo_daltonico) {
+void Piramide::realiza_movimento(XYZ j, float dt, float dist, bool pause, bool modo_daltonico) {
     //desenha_solido(cor, pause, modo_daltonico);
     // if (getAdesivo() and (getRotX() or getRotY() or getRotZ())) {
 
@@ -394,7 +394,7 @@ AABB Esfera::getAABB() const {
 
 float Esfera::getRaio() const {return this->raio;}
 
-void Esfera::realiza_movimento(float dt, float dist, bool pause, bool modo_daltonico) {
+void Esfera::realiza_movimento(XYZ j, float dt, float dist, bool pause, bool modo_daltonico) {
 
     if(!pause){
         // Atualiza velocidade com gravidade
@@ -556,7 +556,7 @@ float Cilindro::getRaio() const {return this->raio;}
 
 float Cilindro::getAltura() const {return this->altura;}
 
-void Cilindro::realiza_movimento(float dt, float dist, bool pause, bool modo_daltonico) {
+void Cilindro::realiza_movimento(XYZ j, float dt, float dist, bool pause, bool modo_daltonico) {
     float novaX = this->getX() + dt * 10.0f * x_vel;
 
     // Verifica se ultrapassou a borda
@@ -761,7 +761,7 @@ float Cone::getRaio() const {return this->raio;}
 
 float Cone::getAltura() const {return this->altura;}
 
-void Cone::realiza_movimento(float dt, float dist, bool pause, bool modo_daltonico) {
+void Cone::realiza_movimento(XYZ j, float dt, float dist, bool pause, bool modo_daltonico) {
     if(!pause){
         ang += 10.0f * dt;
 
@@ -960,7 +960,7 @@ AABB Torus::getAABB() const {
     };
 }
 
-void Torus::realiza_movimento(float dt, float dist, bool pause, bool modo_daltonico) {
+void Torus::realiza_movimento(XYZ j, float dt, float dist, bool pause, bool modo_daltonico) {
     //desenha_solido(cor, pause, modo_daltonico);
     // if (getAdesivo() and (getRotX() or getRotY() or getRotZ())) {
 
