@@ -114,7 +114,7 @@ class Cilindro : public Solido{
         float raio, altura, x_vel, ang;
         XYZ centro_base, axis;
         int canal_rolo = -1;
-        Mix_Chunk* som_rolo = Mix_LoadWAV("Audio/Efeitos_Sonoros/mixkit-cilindro-rolando.wav");
+        Mix_Chunk* som_rolo = Mix_LoadWAV("Audio/Efeitos_Sonoros/mixkit-cilindro-rolando-bike.wav");
 
     public:
         Cilindro();
