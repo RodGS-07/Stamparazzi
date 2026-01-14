@@ -98,7 +98,7 @@ AABB Cubo::getAABB() const {
 
 float Cubo::getLado() const {return this->lado;}
 
-void Cubo::realiza_movimento(float dt, bool pause, bool modo_daltonico) {
+void Cubo::realiza_movimento(float dt, float dist, bool pause, bool modo_daltonico) {
     //desenha_solido(cor, pause, modo_daltonico);
     // if (getAdesivo() and (getRotX() or getRotY() or getRotZ())) {
 
@@ -216,7 +216,7 @@ AABB Piramide::getAABB() const {
 
 float Piramide::getAltura() const {return this->altura;}
 
-void Piramide::realiza_movimento(float dt, bool pause, bool modo_daltonico) {
+void Piramide::realiza_movimento(float dt, float dist, bool pause, bool modo_daltonico) {
     //desenha_solido(cor, pause, modo_daltonico);
     // if (getAdesivo() and (getRotX() or getRotY() or getRotZ())) {
 
@@ -394,7 +394,7 @@ AABB Esfera::getAABB() const {
 
 float Esfera::getRaio() const {return this->raio;}
 
-void Esfera::realiza_movimento(float dt, bool pause, bool modo_daltonico) {
+void Esfera::realiza_movimento(float dt, float dist, bool pause, bool modo_daltonico) {
 
     if(!pause){
         // Atualiza velocidade com gravidade
@@ -409,6 +409,7 @@ void Esfera::realiza_movimento(float dt, bool pause, bool modo_daltonico) {
             //cout << this->getAdesivo()->getTexturaID() << " colidiu com chao" << endl;
             this->setY(chao + raio);
             y_vel = velocidade_inicial; // sempre restaura a energia total
+            if(dist <= 25.0f) Mix_PlayChannel(-1, som_batida, 0);
         }
         // if (this->getY() - raio <= chao) {
         //     this->setY(chao + raio);
@@ -528,7 +529,7 @@ void Esfera::desenha_mascara(){
 }
 
 void Esfera::finaliza_som() {
-    return;
+    Mix_FreeChunk(som_batida);
 }
 
 Cilindro::Cilindro() : Solido(F::CILINDRO) {}
@@ -555,7 +556,7 @@ float Cilindro::getRaio() const {return this->raio;}
 
 float Cilindro::getAltura() const {return this->altura;}
 
-void Cilindro::realiza_movimento(float dt, bool pause, bool modo_daltonico) {
+void Cilindro::realiza_movimento(float dt, float dist, bool pause, bool modo_daltonico) {
     float novaX = this->getX() + dt * 10.0f * x_vel;
 
     // Verifica se ultrapassou a borda
@@ -568,7 +569,35 @@ void Cilindro::realiza_movimento(float dt, bool pause, bool modo_daltonico) {
         x_vel = 1.0f;
     }
 
-    if(!pause) this->setX(novaX);
+    if(!pause) {
+        this->setX(novaX);
+
+        // ============================
+        // CONTROLE DO SOM DO ROLO
+        // ============================
+        if (dist <= 25.0f) {
+            // só toca se não estiver tocando
+            if (canal_rolo == -1 || !Mix_Playing(canal_rolo)) {
+                canal_rolo = Mix_PlayChannel(-1, som_rolo, -1); // loop infinito
+            }
+        } else {
+            // jogador saiu da área → para o som
+            if (canal_rolo != -1) {
+                Mix_HaltChannel(canal_rolo);
+                canal_rolo = -1;
+            }
+        }
+
+        // if(dist <= 25.0f) {
+        //     Mix_SetPosition();
+        // }
+    } else {
+        // jogador deu pause → para o som
+        if (canal_rolo != -1) {
+            Mix_HaltChannel(canal_rolo);
+            canal_rolo = -1;
+        }
+    }
 
     if(!pause and this->getAdesivo()) {
         this->getAdesivo()->setX(this->getX());
@@ -706,7 +735,7 @@ void Cilindro::desenha_mascara(){
 }
 
 void Cilindro::finaliza_som() {
-    return;
+    Mix_FreeChunk(som_rolo);
 }
 
 Cone::Cone() : Solido(F::CONE) {}
@@ -732,7 +761,7 @@ float Cone::getRaio() const {return this->raio;}
 
 float Cone::getAltura() const {return this->altura;}
 
-void Cone::realiza_movimento(float dt, bool pause, bool modo_daltonico) {
+void Cone::realiza_movimento(float dt, float dist, bool pause, bool modo_daltonico) {
     if(!pause){
         ang += 10.0f * dt;
 
@@ -751,6 +780,29 @@ void Cone::realiza_movimento(float dt, bool pause, bool modo_daltonico) {
             this->getAdesivo()->setNormal({apex.x - axis.x*altura - apex.x,
                                             apex.y - axis.y*altura - apex.y,
                                             apex.z - axis.z*altura - apex.z});
+        }
+
+        // ============================
+        // CONTROLE DO SOM DO LASER
+        // ============================
+        if (dist <= 25.0f) {
+            // só toca se não estiver tocando
+            if (canal_laser == -1 || !Mix_Playing(canal_laser)) {
+                canal_laser = Mix_PlayChannel(-1, som_laser, -1); // loop infinito
+            }
+        } else {
+            // jogador saiu da área → para o som
+            if (canal_laser != -1) {
+                Mix_HaltChannel(canal_laser);
+                canal_laser = -1;
+            }
+        }
+        //if(dist <= 25.0f) Mix_PlayChannel(-1, som_laser, 0);
+    } else {
+        // jogador deu pause → para o som
+        if (canal_laser != -1) {
+            Mix_HaltChannel(canal_laser);
+            canal_laser = -1;
         }
     }
     //desenha_solido(cor, pause, modo_daltonico);
@@ -876,7 +928,7 @@ void Cone::desenha_mascara(){
 }
 
 void Cone::finaliza_som() {
-    return;
+    Mix_FreeChunk(som_laser);
 }
 
 Torus::Torus() : Solido(F::TORUS) {}
@@ -908,7 +960,7 @@ AABB Torus::getAABB() const {
     };
 }
 
-void Torus::realiza_movimento(float dt, bool pause, bool modo_daltonico) {
+void Torus::realiza_movimento(float dt, float dist, bool pause, bool modo_daltonico) {
     //desenha_solido(cor, pause, modo_daltonico);
     // if (getAdesivo() and (getRotX() or getRotY() or getRotZ())) {
 

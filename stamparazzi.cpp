@@ -443,6 +443,8 @@ void inicializa_mixer(){
         // }
     }
 
+    Mix_VolumeMusic(MIX_MAX_VOLUME/4);
+
     if(!Mix_PlayingMusic()) Mix_PlayMusic(musicas["mixkit-menus.mp3"], -1);
 }
 
@@ -2370,7 +2372,8 @@ void loop_menu() {
     bool eixoY_ativo = false;
     bool eixoX_ativo = false;
 
-    if(!Mix_PlayingMusic()) Mix_PlayMusic(musicas["mixkit-menus.mp3"], -1);
+    Mix_PlayMusic(musicas["mixkit-menus.mp3"], -1);
+    //if(!Mix_PlayingMusic()) Mix_PlayMusic(musicas["mixkit-menus.mp3"], -1);
 
     while (estado_atual == MENU_PRINCIPAL) {
 
@@ -2862,6 +2865,9 @@ void loop_jogo(){
     inicio = SDL_GetTicks();
     bool overlay_antes = show_overlay;
 
+    //if(!Mix_PlayingMusic()) Mix_PlayMusic(musicas["mixkit-nivel.mp3"], -1);
+    Mix_PlayMusic(musicas["mixkit-nivel.mp3"], -1);
+
     while (rodando) {
 
         if(pause) show_overlay = false;
@@ -3166,7 +3172,7 @@ void loop_jogo(){
 
         // 2) desenhamos polígonos e máscaras e realizamos movimentos
         for (const auto& p : solidos){
-            p->realiza_movimento(dt,pause,modo_daltonico);
+            p->realiza_movimento(dt,distancia_entidades(jogador, *p),pause,modo_daltonico);
             //p->desenha_mascara();
             //p->desenha_adesivo();
         }

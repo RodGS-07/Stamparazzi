@@ -38,7 +38,7 @@ class Solido : public Entidade{
         void setAdesivo(unique_ptr<Adesivo> a);
         void desenha_adesivo_no_solido(const Adesivo& adesivo, float offset);
         virtual AABB getAABB() const = 0;
-        virtual void realiza_movimento(float dt, bool pause, bool modo_daltonico)= 0;
+        virtual void realiza_movimento(float dt, float dist, bool pause, bool modo_daltonico)= 0;
         virtual bool colide_jogador(const AABB& s) const = 0;
         virtual void aplica_efeito(Jogador& jogador, int& vidas) = 0;
         virtual void desenha_solido(int cor, bool pause, bool modo_daltonico) = 0;
@@ -59,7 +59,7 @@ class Cubo : public Solido{
 
         AABB getAABB() const override;
         float getLado() const;
-        void realiza_movimento(float dt, bool pause, bool modo_daltonico) override;
+        void realiza_movimento(float dt, float dist, bool pause, bool modo_daltonico) override;
         bool colide_jogador(const AABB& s) const override;
         void aplica_efeito(Jogador& jogador, int& vidas) override;
         void desenha_solido(int cor, bool pause, bool modo_daltonico) override;
@@ -79,7 +79,7 @@ class Piramide : public Solido{
 
         AABB getAABB() const override;
         float getAltura() const;
-        void realiza_movimento(float dt, bool pause, bool modo_daltonico) override;
+        void realiza_movimento(float dt, float dist, bool pause, bool modo_daltonico) override;
         bool colide_jogador(const AABB& s) const override;
         void aplica_efeito(Jogador& jogador, int& vidas) override;
         void desenha_solido(int cor, bool pause, bool modo_daltonico) override;
@@ -91,6 +91,7 @@ class Piramide : public Solido{
 class Esfera : public Solido{
     private:
         float raio, y_vel, grav, chao, altura_inicial, velocidade_inicial;
+        Mix_Chunk* som_batida = Mix_LoadWAV("Audio/Efeitos_Sonoros/mixkit-bola-quicando.wav");
 
     public:
         Esfera();
@@ -99,7 +100,7 @@ class Esfera : public Solido{
 
         AABB getAABB() const override;
         float getRaio() const;
-        void realiza_movimento(float dt, bool pause, bool modo_daltonico) override;
+        void realiza_movimento(float dt, float dist, bool pause, bool modo_daltonico) override;
         bool colide_jogador(const AABB& s) const override;
         void aplica_efeito(Jogador& jogador, int& vidas) override;
         void desenha_solido(int cor, bool pause, bool modo_daltonico) override;
@@ -112,6 +113,8 @@ class Cilindro : public Solido{
     private:
         float raio, altura, x_vel, ang;
         XYZ centro_base, axis;
+        int canal_rolo = -1;
+        Mix_Chunk* som_rolo = Mix_LoadWAV("Audio/Efeitos_Sonoros/mixkit-cilindro-rolando.wav");
 
     public:
         Cilindro();
@@ -121,7 +124,7 @@ class Cilindro : public Solido{
         AABB getAABB() const override;
         float getRaio() const;
         float getAltura() const;
-        void realiza_movimento(float dt, bool pause, bool modo_daltonico) override;
+        void realiza_movimento(float dt, float dist, bool pause, bool modo_daltonico) override;
         bool colide_jogador(const AABB& s) const override;
         void aplica_efeito(Jogador& jogador, int& vidas) override;
         void desenha_solido(int cor, bool pause, bool modo_daltonico) override;
@@ -134,6 +137,8 @@ class Cone : public Solido{
     private:
         float raio, altura, ang;
         XYZ apex, axis;
+        int canal_laser = -1;
+        Mix_Chunk* som_laser = Mix_LoadWAV("Audio/Efeitos_Sonoros/mixkit-estatica-laser.wav");
 
     public:
         Cone();
@@ -143,7 +148,7 @@ class Cone : public Solido{
         AABB getAABB() const override;
         float getRaio() const;
         float getAltura() const;
-        void realiza_movimento(float dt, bool pause, bool modo_daltonico) override;
+        void realiza_movimento(float dt, float dist, bool pause, bool modo_daltonico) override;
         bool colide_jogador(const AABB& s) const override;
         void aplica_efeito(Jogador& jogador, int& vidas) override;
         void desenha_solido(int cor, bool pause, bool modo_daltonico) override;
@@ -166,7 +171,7 @@ class Torus : public Solido{
         Torus* getConjugado() const;
         void setConjugado(Torus* t);
         AABB getAABB() const override;
-        void realiza_movimento(float dt, bool pause, bool modo_daltonico) override;
+        void realiza_movimento(float dt, float dist, bool pause, bool modo_daltonico) override;
         bool colide_jogador(const AABB& s) const override;
         void aplica_efeito(Jogador& jogador, int& vidas) override;
         void desenha_solido(int cor, bool pause, bool modo_daltonico) override;
