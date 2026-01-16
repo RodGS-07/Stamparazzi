@@ -14,9 +14,9 @@ using namespace std;
 GLuint texID[QTDTEXT];  // ID para as texturas
 
 const char* textureFileNames[QTDTEXT] = {   //nomes dos arquivos das texturas
-    "Imagens/ChatGPT/chatgpt_chao.png",
-    "Imagens/ChatGPT/chatgpt_parede.png",
-    "Imagens/ChatGPT/chatgpt_teto.png",
+    "Imagens/Limites/freepik-chao-quadriculado.jpg",
+    "Imagens/Limites/freepik-parede-quadriculada.jpg",
+    "Imagens/Limites/freepik-sol-teto.jpg",
     "Imagens/Adesivos/adesivo_photopea01.png",
     "Imagens/Adesivos/adesivo_photopea02.png",
     "Imagens/Adesivos/adesivo_photopea03.png",
@@ -215,36 +215,36 @@ void desenha_paredes() {
     // Parede frente
     glNormal3f(0, 0, -1);
     glTexCoord2f(0, 0); glVertex3f(-tamanho, -tamanho, tamanho);
-    glTexCoord2f(5, 0); glVertex3f(tamanho, -tamanho, tamanho);
-    glTexCoord2f(5, 5); glVertex3f(tamanho, tamanho, tamanho);
-    glTexCoord2f(0, 5); glVertex3f(-tamanho, tamanho, tamanho);
+    glTexCoord2f(1, 0); glVertex3f(tamanho, -tamanho, tamanho);
+    glTexCoord2f(1, 1); glVertex3f(tamanho, tamanho, tamanho);
+    glTexCoord2f(0, 1); glVertex3f(-tamanho, tamanho, tamanho);
     glEnd();
 
     glBegin(GL_QUADS);
     // Parede traseira
     glNormal3f(0, 0, 1);
     glTexCoord2f(0, 0); glVertex3f(-tamanho, -tamanho, -tamanho);
-    glTexCoord2f(5, 0); glVertex3f(tamanho, -tamanho, -tamanho);
-    glTexCoord2f(5, 5); glVertex3f(tamanho, tamanho, -tamanho);
-    glTexCoord2f(0, 5); glVertex3f(-tamanho, tamanho, -tamanho);
+    glTexCoord2f(1, 0); glVertex3f(tamanho, -tamanho, -tamanho);
+    glTexCoord2f(1, 1); glVertex3f(tamanho, tamanho, -tamanho);
+    glTexCoord2f(0, 1); glVertex3f(-tamanho, tamanho, -tamanho);
     glEnd();
 
     // Parede direita
     glBegin(GL_QUADS);
     glNormal3f(-1, 0, 0);
     glTexCoord2f(0, 0); glVertex3f(tamanho, -tamanho, tamanho);
-    glTexCoord2f(5, 0); glVertex3f(tamanho, -tamanho, -tamanho);
-    glTexCoord2f(5, 5); glVertex3f(tamanho, tamanho, -tamanho);
-    glTexCoord2f(0, 5); glVertex3f(tamanho, tamanho, tamanho);
+    glTexCoord2f(1, 0); glVertex3f(tamanho, -tamanho, -tamanho);
+    glTexCoord2f(1, 1); glVertex3f(tamanho, tamanho, -tamanho);
+    glTexCoord2f(0, 1); glVertex3f(tamanho, tamanho, tamanho);
     glEnd();
 
     // Parede esquerda
     glBegin(GL_QUADS);
     glNormal3f(1, 0, 0);
     glTexCoord2f(0, 0); glVertex3f(-tamanho, -tamanho, -tamanho);
-    glTexCoord2f(5, 0); glVertex3f(-tamanho, -tamanho, tamanho);
-    glTexCoord2f(5, 5); glVertex3f(-tamanho, tamanho, tamanho);
-    glTexCoord2f(0, 5); glVertex3f(-tamanho, tamanho, -tamanho);
+    glTexCoord2f(1, 0); glVertex3f(-tamanho, -tamanho, tamanho);
+    glTexCoord2f(1, 1); glVertex3f(-tamanho, tamanho, tamanho);
+    glTexCoord2f(0, 1); glVertex3f(-tamanho, tamanho, -tamanho);
     glEnd();
 
     glBindTexture(GL_TEXTURE_2D, texID[2]); // teto
@@ -252,18 +252,18 @@ void desenha_paredes() {
     glBegin(GL_QUADS);
     glNormal3f(0, -1, 0);
     glTexCoord2f(0, 0); glVertex3f(-tamanho, tamanho, -tamanho);
-    glTexCoord2f(5, 0); glVertex3f(-tamanho, tamanho, tamanho);
-    glTexCoord2f(5, 5); glVertex3f(tamanho, tamanho, tamanho);
-    glTexCoord2f(0, 5); glVertex3f(tamanho, tamanho, -tamanho);
+    glTexCoord2f(1, 0); glVertex3f(-tamanho, tamanho, tamanho);
+    glTexCoord2f(1, 1); glVertex3f(tamanho, tamanho, tamanho);
+    glTexCoord2f(0, 1); glVertex3f(tamanho, tamanho, -tamanho);
     glEnd();
 
     // Teto inferior
     glBegin(GL_QUADS);
     glNormal3f(0, 1, 0);
     glTexCoord2f(0, 0); glVertex3f(-tamanho, -tamanho, -tamanho);
-    glTexCoord2f(5, 0); glVertex3f(-tamanho, -tamanho, tamanho);
-    glTexCoord2f(5, 5); glVertex3f(tamanho, -tamanho, tamanho);
-    glTexCoord2f(0, 5); glVertex3f(tamanho, -tamanho, -tamanho);
+    glTexCoord2f(1, 0); glVertex3f(-tamanho, -tamanho, tamanho);
+    glTexCoord2f(1, 1); glVertex3f(tamanho, -tamanho, tamanho);
+    glTexCoord2f(0, 1); glVertex3f(tamanho, -tamanho, -tamanho);
     glEnd();
 
     glDisable(GL_TEXTURE_2D);
@@ -310,16 +310,16 @@ void desenha_chao() {
     // Topo (chão visível)
     glNormal3f(0,1,0);
     glTexCoord2f(0,0); glVertex3f(-1, 1, -1);
-    glTexCoord2f(4,0); glVertex3f( 1, 1, -1);
-    glTexCoord2f(4,4); glVertex3f( 1, 1,  1);
-    glTexCoord2f(0,4); glVertex3f(-1, 1,  1);
+    glTexCoord2f(1,0); glVertex3f( 1, 1, -1);
+    glTexCoord2f(1,1); glVertex3f( 1, 1,  1);
+    glTexCoord2f(0,1); glVertex3f(-1, 1,  1);
 
     // Base 
     glNormal3f(0,-1,0);
     glTexCoord2f(0,0); glVertex3f(-1, -1, -1);
-    glTexCoord2f(4,0); glVertex3f( 1, -1, -1);
-    glTexCoord2f(4,4); glVertex3f( 1, -1,  1);
-    glTexCoord2f(0,4); glVertex3f(-1, -1,  1);
+    glTexCoord2f(1,0); glVertex3f( 1, -1, -1);
+    glTexCoord2f(1,1); glVertex3f( 1, -1,  1);
+    glTexCoord2f(0,1); glVertex3f(-1, -1,  1);
 
     glEnd();
 

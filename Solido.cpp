@@ -771,7 +771,18 @@ void Cone::realiza_movimento(XYZ j, float dt, float dist, bool pause, bool modo_
         axis = { -sinA, 0.0f, -cosA };  // vetor rotacionado em Y
 
         // Atualiza ápice (sempre no topo do cone no mundo)
-        apex = { this->getX(), this->getY(), this->getZ()};
+        XYZ pos = { this->getX(), this->getY(), this->getZ() };
+
+        // eixo PRECISA estar normalizado
+        axis = axis / !axis;
+
+        // ápice real do cone
+        apex = {
+            pos.x - axis.x * altura / 2.0f,
+            pos.y - axis.y * altura / 2.0f,
+            pos.z - axis.z * altura / 2.0f
+        };
+        //apex = { this->getX(), this->getY(), this->getZ()};
 
         // -----------------------------
         // 2. Atualiza o Adesivo (posição + normal)
@@ -788,7 +799,7 @@ void Cone::realiza_movimento(XYZ j, float dt, float dist, bool pause, bool modo_
         XYZ v = j - apex;
         XYZ cross = v * axis;
         float distLaser = !cross / !axis;
-        if (distLaser <= 20.0f) {
+        if (distLaser <= 15.0f) {
             // só toca se não estiver tocando
             if (canal_laser == -1 || !Mix_Playing(canal_laser)) {
                 canal_laser = Mix_PlayChannel(-1, som_laser, -1); // loop infinito
