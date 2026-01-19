@@ -14,9 +14,9 @@ using namespace std;
 GLuint texID[QTDTEXT];  // ID para as texturas
 
 const char* textureFileNames[QTDTEXT] = {   //nomes dos arquivos das texturas
-    "Imagens/Limites/freepik-chao-quadriculado.jpg",
-    "Imagens/Limites/freepik-parede-quadriculada.jpg",
-    "Imagens/Limites/freepik-sol-teto.jpg",
+    "Imagens/Limites/freepik-chao-quadriculado.png",
+    "Imagens/Limites/freepik-parede-quadriculada.png",
+    "Imagens/Limites/freepik-sol-teto.png",
     "Imagens/Adesivos/adesivo_photopea01.png",
     "Imagens/Adesivos/adesivo_photopea02.png",
     "Imagens/Adesivos/adesivo_photopea03.png",
@@ -257,6 +257,7 @@ void desenha_paredes() {
     glTexCoord2f(0, 1); glVertex3f(tamanho, tamanho, -tamanho);
     glEnd();
 
+    glBindTexture(GL_TEXTURE_2D, texID[0]); // chao
     // Teto inferior
     glBegin(GL_QUADS);
     glNormal3f(0, 1, 0);
