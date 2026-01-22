@@ -3434,15 +3434,22 @@ void loop_jogo(){
             Adesivo* ade = p->getAdesivo();
             if(ade!=nullptr){
                 Adesivo a = *ade;
-                if(jogador.detecta_adesivo(a,solidos) and !pause and !show_overlay and jogador.estaVivo()){
+                if(jogador.detecta_adesivo(a,solidos,window) and !pause and !show_overlay and jogador.estaVivo()){
                     glDisable(GL_DEPTH_TEST);   // ignora profundidade
                     marcax(p->getX(),p->getY(),p->getZ(),jogador.getCamYaw(),jogador.getCamPitch());
                     glEnable(GL_DEPTH_TEST);    // reativa para os próximos frames
-                }
-                jogador.tirou_foto(a,dt,flash_alpha,flash_ativo,vidas,solidos,objetivos,obstaculos);
+                    jogador.tirou_foto(a,dt,flash_alpha,flash_ativo,vidas,solidos,objetivos,obstaculos);
+                }   
             }  
         }
 
+        // for (const auto& p : solidos){
+        //     Adesivo* ade = p->getAdesivo();
+        //     if(ade!=nullptr)
+        //         jogador.debugAdesivo(*ade);
+        // }
+
+        if(jogador.estaVivo() and !pause and !show_overlay) jogador.desenha_mira(window);
         if(show_overlay and !pause and jogador.estaVivo()) desenha_blocos_overlay(objetivos, cores_solidos);
         
         //jogador.tirou_foto(a,dt,flash_alpha,flash_ativo);

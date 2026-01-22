@@ -16,6 +16,9 @@ GLfloat operator!(const XYZ& v);
 // Diferença de vetores
 XYZ operator-(const XYZ& o, const XYZ& d);
 
+// Vetor oposto
+XYZ operator-(const XYZ& v);
+
 // Soma de vetores
 XYZ operator+(const XYZ& o, const XYZ& d);
 

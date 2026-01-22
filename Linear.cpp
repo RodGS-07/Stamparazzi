@@ -12,6 +12,9 @@ GLfloat operator!(const XYZ& v){//Norma
 XYZ operator-(const XYZ& o,const XYZ& d){//Diferença de Vetores(ou pontos)
     return (XYZ(o.x-d.x,o.y-d.y,o.z-d.z));
 }
+XYZ operator-(const XYZ& v){// Vetor oposto
+    return (XYZ(-v.x,-v.y,-v.z));
+}
 XYZ operator+(const XYZ& o,const XYZ& d){//Soma de Vetores(ou pontos)
     return (XYZ(d.x+o.x,d.y+o.y,d.z+o.z));
 }
