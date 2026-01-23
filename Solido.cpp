@@ -28,9 +28,11 @@ Solido::Solido(float ix, float iy, float iz, int op, float xs, float ys, float z
         float rz = rotz * M_PI / 180.0f;
 
         // A ordem das rotações deve ser a mesma que você usa para desenhar!
-        if(rotx!=0.0f) normal = rotX(normal, rx);
-        if(roty!=0.0f) normal = rotY(normal, ry);
         if(rotz!=0.0f) normal = rotZ(normal, rz);
+        if(roty!=0.0f) normal = rotY(normal, ry);
+        if(rotx!=0.0f) normal = rotX(normal, rx);
+
+        normal = normal / !normal;
 
         adesivo->setNormal(normal);
 

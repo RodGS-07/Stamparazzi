@@ -334,6 +334,15 @@ bool Jogador::detecta_adesivo(const Adesivo& a, const vector<unique_ptr<Solido>>
     XYZ normal = a.getNormal();
     normal = normal / !normal;
 
+    //Normal do adesivo (azul)
+    // glColor3f(0, 0, 1);
+    // glBegin(GL_LINES);
+    //     glVertex3f(adesivoPos.x, adesivoPos.y, adesivoPos.z);
+    //     glVertex3f(adesivoPos.x + normal.x * 5,
+    //                adesivoPos.y + normal.y * 5,
+    //                adesivoPos.z + normal.z * 5);
+    // glEnd();
+
     // =============================
     // 2) Distância máxima
     // =============================
