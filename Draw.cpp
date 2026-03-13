@@ -738,7 +738,7 @@ void desenha_cilindro(float raio, float altura, int fatias, int stacks, bool tam
     glDepthMask(GL_TRUE);
     glDisable(GL_TEXTURE_2D);
 
-    if(tampas){
+    //if(tampas){
         // Tampa inferior
         glBegin(GL_TRIANGLE_FAN);
         glVertex3f(0, 0, -half);
@@ -892,7 +892,7 @@ void desenha_cilindro(float raio, float altura, int fatias, int stacks, bool tam
                 glVertex3f(x, y, offset);
             }
         glEnd();
-    }
+    //}
 
     glDisable(GL_TEXTURE_2D);
     glDisable(GL_POLYGON_OFFSET_FILL);
@@ -1143,12 +1143,12 @@ void desenha_torus(float R, float r, int fatias, int stacks, int id_adesivo, boo
     }
 
     // ---------- Define posição e lado do adesivo ----------
-    bool ladoDireito = 1; // 1 = direito
+    // bool ladoDireito = 1; // 1 = direito
 
-    float angulo = ladoDireito ? M_PI / 2 : -M_PI / 2; // +90° ou -90°
-    float xAdesivo = R * cos(angulo);
-    float yAdesivo = R * sin(angulo);
-    float zAdesivo = 0.0f;
+    // float angulo = ladoDireito ? M_PI / 2 : -M_PI / 2; // +90° ou -90°
+    // float xAdesivo = R * cos(angulo);
+    // float yAdesivo = R * sin(angulo);
+    // float zAdesivo = 0.0f;
 
     float offset, tamanho, s;
 

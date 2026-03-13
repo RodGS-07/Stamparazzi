@@ -276,26 +276,26 @@ void Jogador::desenha_mira(SDL_Window* window){
     // //glDisable();
 }
 
-// retorna o centro de uma AABB
-XYZ Jogador::centroAABB(const AABB& box) {
-    return XYZ(
-        (box.min.x + box.max.x) * 0.5f,
-        (box.min.y + box.max.y) * 0.5f,
-        (box.min.z + box.max.z) * 0.5f
-    );
-}
+// // retorna o centro de uma AABB
+// XYZ Jogador::centroAABB(const AABB& box) {
+//     return XYZ(
+//         (box.min.x + box.max.x) * 0.5f,
+//         (box.min.y + box.max.y) * 0.5f,
+//         (box.min.z + box.max.z) * 0.5f
+//     );
+// }
 
-// distância euclidiana entre dois pontos
-float Jogador::distancia_ponto(const XYZ& a, const XYZ& b) {
-    // usa operador ! já definido em Linear.cpp para norma
-    return !(a - b);
+// // distância euclidiana entre dois pontos
+// float Jogador::distancia_ponto(const XYZ& a, const XYZ& b) {
+//     // usa operador ! já definido em Linear.cpp para norma
+//     return !(a - b);
 
-    // ou, explicitamente:
-    // float dx = a.x - b.x;
-    // float dy = a.y - b.y;
-    // float dz = a.z - b.z;
-    // return sqrtf(dx*dx + dy*dy + dz*dz);
-}
+//     // ou, explicitamente:
+//     // float dx = a.x - b.x;
+//     // float dy = a.y - b.y;
+//     // float dz = a.z - b.z;
+//     // return sqrtf(dx*dx + dy*dy + dz*dz);
+// }
 
 bool Jogador::RayIntersectsAABB(const XYZ& orig, const XYZ& dir, const AABB& box, float& t) {
     float tmin = (box.min.x - orig.x) / dir.x;

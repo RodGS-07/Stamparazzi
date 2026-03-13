@@ -16,33 +16,33 @@ bool AABBvsAABB(const AABB& a, const AABB& b) {
 }
 
 // checa esfera x esfera
-bool SphereVsSphere(const Sphere &a, const Sphere &b) {
-    float dx = a.c.x - b.c.x;
-    float dy = a.c.y - b.c.y;
-    float dz = a.c.z - b.c.z;
-    float dist2 = dx*dx + dy*dy + dz*dz;
-    float rsum = a.r + b.r;
-    return dist2 <= (rsum * rsum);
-}
+// bool SphereVsSphere(const Sphere &a, const Sphere &b) {
+//     float dx = a.c.x - b.c.x;
+//     float dy = a.c.y - b.c.y;
+//     float dz = a.c.z - b.c.z;
+//     float dist2 = dx*dx + dy*dy + dz*dz;
+//     float rsum = a.r + b.r;
+//     return dist2 <= (rsum * rsum);
+// }
 
 // checa esfera x AABB (closest point)
-bool SphereVsAABB(const Sphere &s, const AABB &b) {
-    float cx = s.c.x;
-    float cy = s.c.y;
-    float cz = s.c.z;
+// bool SphereVsAABB(const Sphere &s, const AABB &b) {
+//     float cx = s.c.x;
+//     float cy = s.c.y;
+//     float cz = s.c.z;
 
-    // closest point on AABB to sphere center
-    float closestX = max(b.min.x, min(cx, b.max.x));
-    float closestY = max(b.min.y, min(cy, b.max.y));
-    float closestZ = max(b.min.z, min(cz, b.max.z));
+//     // closest point on AABB to sphere center
+//     float closestX = max(b.min.x, min(cx, b.max.x));
+//     float closestY = max(b.min.y, min(cy, b.max.y));
+//     float closestZ = max(b.min.z, min(cz, b.max.z));
 
-    float dx = closestX - cx;
-    float dy = closestY - cy;
-    float dz = closestZ - cz;
+//     float dx = closestX - cx;
+//     float dy = closestY - cy;
+//     float dz = closestZ - cz;
 
-    float dist2 = dx*dx + dy*dy + dz*dz;
-    return dist2 <= (s.r * s.r);
-}
+//     float dist2 = dx*dx + dy*dy + dz*dz;
+//     return dist2 <= (s.r * s.r);
+// }
 
 bool SegmentVsAABB(const XYZ& p0, const XYZ& p1, const AABB& box) {
     XYZ dir = p1 - p0;
@@ -97,32 +97,32 @@ float SegmentSegmentDist2(const XYZ& A0,const XYZ& A1,
     return Length2(dP);
 }
 
-bool CapsuleVsCapsule(const Capsule& c1,const Capsule& c2){
-    float s,t;
-    float dist2 = SegmentSegmentDist2(c1.A,c1.B,c2.A,c2.B,s,t);
-    float rsum = c1.r + c2.r;
-    return dist2 <= rsum*rsum;
-}
+// bool CapsuleVsCapsule(const Capsule& c1,const Capsule& c2){
+//     float s,t;
+//     float dist2 = SegmentSegmentDist2(c1.A,c1.B,c2.A,c2.B,s,t);
+//     float rsum = c1.r + c2.r;
+//     return dist2 <= rsum*rsum;
+// }
 
-bool SphereVsCylinder(const Sphere& s,const Cylinder& cyl){
-    // projeção do centro da esfera no eixo
-    float t = Escalar(s.c - cyl.base, cyl.axis);
-    t = Clamp(t,0.0f,cyl.h);
-    XYZ Q = cyl.base + cyl.axis*t;
-    XYZ d = s.c - Q;
-    float dist2 = Length2(d);
-    return dist2 <= (s.r + cyl.R)*(s.r + cyl.R);
-}
+// bool SphereVsCylinder(const Sphere& s,const Cylinder& cyl){
+//     // projeção do centro da esfera no eixo
+//     float t = Escalar(s.c - cyl.base, cyl.axis);
+//     t = Clamp(t,0.0f,cyl.h);
+//     XYZ Q = cyl.base + cyl.axis*t;
+//     XYZ d = s.c - Q;
+//     float dist2 = Length2(d);
+//     return dist2 <= (s.r + cyl.R)*(s.r + cyl.R);
+// }
 
-bool PointInConeBound(const XYZ& P,const ConeBound& cone){
-    XYZ v = P - cone.apex;
-    float t = Escalar(v,cone.axis);
-    if(t<0 || t>cone.h) return false;
-    float r = (t/cone.h)*cone.R; // raio local
-    XYZ proj = cone.apex + cone.axis*t;
-    float dist2 = Length2(P - proj);
-    return dist2 <= r*r;
-}
+// bool PointInConeBound(const XYZ& P,const ConeBound& cone){
+//     XYZ v = P - cone.apex;
+//     float t = Escalar(v,cone.axis);
+//     if(t<0 || t>cone.h) return false;
+//     float r = (t/cone.h)*cone.R; // raio local
+//     XYZ proj = cone.apex + cone.axis*t;
+//     float dist2 = Length2(P - proj);
+//     return dist2 <= r*r;
+// }
 
 // -----------------------------------------------------------
 // Closest point on triangle (Ericson) + Sphere vs Triangle
@@ -171,46 +171,46 @@ XYZ ClosestPointOnTriangle(const XYZ& A, const XYZ& B, const XYZ& C, const XYZ& 
     return A + AB * v + AC * w;
 }
 
-bool SphereVsTriangle(const Sphere& s, const XYZ& A, const XYZ& B, const XYZ& C) {
-    XYZ cp = ClosestPointOnTriangle(A,B,C,s.c);
-    XYZ d = cp - s.c;
-    return Length2(d) <= (s.r * s.r);
-}
+// bool SphereVsTriangle(const Sphere& s, const XYZ& A, const XYZ& B, const XYZ& C) {
+//     XYZ cp = ClosestPointOnTriangle(A,B,C,s.c);
+//     XYZ d = cp - s.c;
+//     return Length2(d) <= (s.r * s.r);
+// }
 
 // -----------------------------------------------------------
 // Sphere vs Cone bounded (approx / robust test)
 // cone.axis must be normalized, cone.apex at apex, h = height, R = base radius
 // -----------------------------------------------------------
-bool SphereVsCone(const Sphere& s, const ConeBound& cone) {
-    // vector from apex to sphere center
-    XYZ v = s.c - cone.apex;
-    float t = Escalar(v, cone.axis); // projection along axis
+// bool SphereVsCone(const Sphere& s, const ConeBound& cone) {
+//     // vector from apex to sphere center
+//     XYZ v = s.c - cone.apex;
+//     float t = Escalar(v, cone.axis); // projection along axis
 
-    // case 1: sphere center before apex (check apex point)
-    if (t <= 0.0f) {
-        // distance to apex point
-        XYZ d = s.c - cone.apex;
-        return Length2(d) <= (s.r * s.r);
-    }
+//     // case 1: sphere center before apex (check apex point)
+//     if (t <= 0.0f) {
+//         // distance to apex point
+//         XYZ d = s.c - cone.apex;
+//         return Length2(d) <= (s.r * s.r);
+//     }
 
-    // case 2: beyond base plane -> check disk of base (center at apex + axis*h)
-    if (t >= cone.h) {
-        XYZ baseCenter = cone.apex + cone.axis * cone.h;
-        XYZ d = s.c - baseCenter;
-        float dist2 = Length2(d);
-        float rsum = s.r + cone.R;
-        return dist2 <= (rsum * rsum);
-    }
+//     // case 2: beyond base plane -> check disk of base (center at apex + axis*h)
+//     if (t >= cone.h) {
+//         XYZ baseCenter = cone.apex + cone.axis * cone.h;
+//         XYZ d = s.c - baseCenter;
+//         float dist2 = Length2(d);
+//         float rsum = s.r + cone.R;
+//         return dist2 <= (rsum * rsum);
+//     }
 
-    // case 3: inside slab [0,h] -> check radial distance vs cone local radius
-    XYZ proj = cone.apex + cone.axis * t;
-    XYZ perp = s.c - proj;
-    float distPerp2 = Length2(perp);
+//     // case 3: inside slab [0,h] -> check radial distance vs cone local radius
+//     XYZ proj = cone.apex + cone.axis * t;
+//     XYZ perp = s.c - proj;
+//     float distPerp2 = Length2(perp);
 
-    float localR = (t / cone.h) * cone.R; // linear interpolation from apex(0) to base(R)
-    float rsum = localR + s.r;
-    return distPerp2 <= (rsum * rsum);
-}
+//     float localR = (t / cone.h) * cone.R; // linear interpolation from apex(0) to base(R)
+//     float rsum = localR + s.r;
+//     return distPerp2 <= (rsum * rsum);
+// }
 
 // retorna AABB que engloba ambas
 AABB unionAABB(const AABB &a, const AABB &b) {

@@ -35,7 +35,7 @@ class Jogador : public Entidade{
         void morre(int& vidas);
         void desenha_mascara(int stacks = 30, int fatias = 30);
         void desenha_mira(SDL_Window* window);
-        void debugAdesivo(const Adesivo& a);
+        //void debugAdesivo(const Adesivo& a);
         XYZ centroAABB(const AABB& box);
         float distancia_ponto(const XYZ& a, const XYZ& b);
         bool RayIntersectsAABB(const XYZ& orig, const XYZ& dir, const AABB& box, float& t);
