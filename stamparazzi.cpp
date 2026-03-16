@@ -59,7 +59,7 @@ bool flash_ativo = false;
 float flash_alpha = 0.0f;
 bool rodando = true;
 Uint32 inicio, fim;
-float dt;
+float dt, dt_ms, fps;
 const Uint8* state;
 
 // Textura, largura, altura
@@ -68,7 +68,7 @@ struct TextoInfo {
     int w, h;
 };
 map<string, TextoInfo> textos;
-vector<string> Chaves = {"Tempo", "Objetivo", "Pause", "Morto", "Vida", "Lista_Cooldown"};
+vector<string> Chaves = {"Tempo", "Objetivo", "Pause", "Morto", "Vida", "Lista_Cooldown", "FPS"};
 GLuint texBlocoBase = 0;
 
 vector<int> cores_solidos;
@@ -405,6 +405,12 @@ void inicializa_ttf(){
     texto = str.c_str();
     textos["Lista_Cooldown"].tex = criaTexturaDoTexto(texto, fonte, preto, textos["Lista_Cooldown"].w, textos["Lista_Cooldown"].h);
 
+    ostringstream foss;
+    foss << (int)fps << "fps " << (int)dt_ms << "ms";
+    str = foss.str();
+    texto = str.c_str();
+    textos["FPS"].tex = criaTexturaDoTexto(texto, fonte, preto, textos["FPS"].w, textos["FPS"].h);
+
     cria_textura_bloco_base();
 }
 
@@ -516,6 +522,11 @@ void ajusta_tamanho_fonte() {
     if(lista_cd) oss << "Lista disponivel em " << lista_cd;
     else oss << "Lista disponivel";
     atualizaTexto(oss.str(), textos["Lista_Cooldown"].tex, textos["Lista_Cooldown"].w, textos["Lista_Cooldown"].h);
+
+    // FPS
+    oss.str(""); oss.clear();
+    oss << (int)fps << "fps " << (int)dt_ms << "ms";
+    atualizaTexto(oss.str(), textos["FPS"].tex, textos["FPS"].w, textos["FPS"].h);
 }
 
 void define_objetivos(int n) {
@@ -1638,6 +1649,26 @@ void atualiza_cooldown_lista(float dt) {
                 string str = oss.str();
                 atualizaTexto(str,textos["Lista_Cooldown"].tex,textos["Lista_Cooldown"].w,textos["Lista_Cooldown"].h);
             }
+        }
+    }
+}
+
+void calcula_FPS(float dt) {
+    static float acumulador = 0.0f;
+
+    if(!pause){
+        acumulador += dt;
+
+        if(acumulador >= 1.0f) {
+            fps = 1.0f / dt;
+
+            dt_ms = dt * 1000.0f;
+
+            ostringstream oss;
+            oss << (int)fps << "fps " << (int)dt_ms << "ms";
+            atualizaTexto(oss.str(), textos["FPS"].tex, textos["FPS"].w, textos["FPS"].h);
+        
+            acumulador -= 1.0f;
         }
     }
 }
@@ -2860,7 +2891,11 @@ void loop_jogo(){
     coss << "Lista disponivel";
     str = coss.str();
     atualizaTexto(str,textos["Lista_Cooldown"].tex,textos["Lista_Cooldown"].w,textos["Lista_Cooldown"].h);
-
+    // ostringstream foss;
+    // foss << (int)fps << "fps " << (int)dt_ms << "ms";
+    // str = foss.str();
+    // atualizaTexto(oss.str(), textos["FPS"].tex, textos["FPS"].w, textos["FPS"].h);
+    
     SDL_Event evento;
     inicio = SDL_GetTicks();
     bool overlay_antes = show_overlay;
@@ -2876,6 +2911,8 @@ void loop_jogo(){
         fim = SDL_GetTicks();
         dt = (fim - inicio) / 1000.0f;
         inicio = fim;
+
+        calcula_FPS(dt);
 
         atualiza_timer(dt);
         if(!timer) {rodando = false; mostrar_resultado("Seu tempo acabou!", false); break;}
@@ -3015,15 +3052,17 @@ void loop_jogo(){
         glLoadIdentity();
 
         // desenha texto
-        if(textos["Tempo"].tex && textos["Objetivo"].tex && textos["Pause"].tex && textos["Morto"].tex && textos["Vida"].tex && textos["Lista_Cooldown"].tex) {
+        if(textos["Tempo"].tex && textos["Objetivo"].tex && textos["Pause"].tex && textos["Morto"].tex && textos["Vida"].tex && textos["Lista_Cooldown"].tex && textos["FPS"].tex) {
             // sempre desenha tempo
             desenhaTexto(textos["Tempo"].tex, 50, 50, textos["Tempo"].w, textos["Tempo"].h);
             if(dif != FACIL) desenhaTexto(textos["Vida"].tex, 50, 75, textos["Vida"].w, textos["Vida"].h);
             if(dif == DIFICIL) desenhaTexto(textos["Lista_Cooldown"].tex, 50, 125, textos["Lista_Cooldown"].w, textos["Lista_Cooldown"].h);
+            
+            int w, h;
+            SDL_GetWindowSize(window, &w, &h);
+            desenhaTexto(textos["FPS"].tex, w-150, 50, textos["FPS"].w, textos["FPS"].h);
 
             if (show_overlay) {
-                int w, h;
-                SDL_GetWindowSize(window, &w, &h);
 
                 glMatrixMode(GL_PROJECTION);
                 glPushMatrix();
