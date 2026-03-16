@@ -57,6 +57,7 @@ bool primeira_pessoa = true;
 bool modo_daltonico = false;
 bool flash_ativo = false;
 float flash_alpha = 0.0f;
+bool mostra_fps = false;
 bool rodando = true;
 Uint32 inicio, fim;
 float dt, dt_ms, fps;
@@ -2060,8 +2061,7 @@ void loop_ajuda() {
                     }
 
                     // fullscreen
-                    if (SDL_GameControllerGetButton(game_controller, SDL_CONTROLLER_BUTTON_LEFTSHOULDER) &&
-                        SDL_GameControllerGetButton(game_controller, SDL_CONTROLLER_BUTTON_RIGHTSHOULDER))
+                    if (SDL_GameControllerGetButton(game_controller, SDL_CONTROLLER_BUTTON_RIGHTSTICK))
                     {
                         tela_cheia = !tela_cheia;
                         if (tela_cheia)
@@ -2624,8 +2624,7 @@ void loop_menu() {
                     }
 
                     // fullscreen
-                    if (SDL_GameControllerGetButton(game_controller, SDL_CONTROLLER_BUTTON_LEFTSHOULDER) &&
-                        SDL_GameControllerGetButton(game_controller, SDL_CONTROLLER_BUTTON_RIGHTSHOULDER))
+                    if (SDL_GameControllerGetButton(game_controller, SDL_CONTROLLER_BUTTON_RIGHTSTICK))
                     {
                         tela_cheia = !tela_cheia;
                         if (tela_cheia)
@@ -2934,11 +2933,12 @@ void loop_jogo(){
             
             if(!game_controller){
                 if(evento.type == SDL_KEYDOWN){
-                    if(evento.key.keysym.sym == SDLK_p and jogador.estaVivo()){
+                    SDL_Keycode k = evento.key.keysym.sym;
+                    if(k == SDLK_p and jogador.estaVivo()){
                         pause = !pause;
                         SDL_SetRelativeMouseMode(pause ? SDL_FALSE : SDL_TRUE);
                         SDL_ShowCursor(pause ? SDL_ENABLE : SDL_DISABLE);
-                    } else if(evento.key.keysym.sym == SDLK_F11) {
+                    } else if(k == SDLK_F11) {
                         tela_cheia = !tela_cheia;
                         if (!pause) pause = true;
                         if (tela_cheia) {
@@ -2953,7 +2953,7 @@ void loop_jogo(){
                             ajustaProjecao(800, 600);
                         }
                         ajusta_tamanho_fonte();
-                    } else if(evento.key.keysym.sym == SDLK_ESCAPE) {
+                    } else if(k == SDLK_ESCAPE) {
                         // alterna overlay. Se quiser o comportamento antigo (trocar primeira_pessoa),
                         // use outra tecla — aqui ESC faz overlay conforme pedido.
                         //show_overlay = !show_overlay;
@@ -2971,7 +2971,7 @@ void loop_jogo(){
                             string str = oss.str();
                             atualizaTexto(str,textos["Lista_Cooldown"].tex,textos["Lista_Cooldown"].w,textos["Lista_Cooldown"].h);
                         }
-                    }
+                    } else if(k == SDLK_f) mostra_fps = !mostra_fps;
                 }
                 if(evento.type == SDL_MOUSEBUTTONDOWN and pause){
                     pause = false;
@@ -2989,9 +2989,10 @@ void loop_jogo(){
                 }
             } else {
                 if(evento.type == SDL_CONTROLLERBUTTONDOWN) {
-                    if(evento.cbutton.button == SDL_CONTROLLER_BUTTON_START and jogador.estaVivo())
+                    Uint8 b = evento.cbutton.button;
+                    if(b == SDL_CONTROLLER_BUTTON_START and jogador.estaVivo())
                         pause = !pause;
-                    else if(evento.cbutton.button == SDL_CONTROLLER_BUTTON_RIGHTSTICK) {
+                    else if(b == SDL_CONTROLLER_BUTTON_RIGHTSTICK) {
                         tela_cheia = !tela_cheia;
                         if (!pause) pause = true;
                         if (tela_cheia) {
@@ -3006,7 +3007,7 @@ void loop_jogo(){
                             ajustaProjecao(800, 600);
                         }
                         ajusta_tamanho_fonte();
-                    } else if(evento.cbutton.button == SDL_CONTROLLER_BUTTON_BACK) {
+                    } else if(b == SDL_CONTROLLER_BUTTON_BACK) {
                         if(!pause and jogador.estaVivo() and !lista_cd) {show_overlay = !show_overlay; overlay_antes = show_overlay;}
                         else if(pause) rodando = false;
                         if(!show_overlay and dif==DIFICIL and !lista_cd and jogador.estaVivo()) {
@@ -3017,7 +3018,7 @@ void loop_jogo(){
                             string str = oss.str();
                             atualizaTexto(str,textos["Lista_Cooldown"].tex,textos["Lista_Cooldown"].w,textos["Lista_Cooldown"].h);
                         }
-                    }
+                    } else if(b == SDL_CONTROLLER_BUTTON_Y) mostra_fps = !mostra_fps;
                 }
                 if(SDL_GameControllerGetAxis(game_controller,SDL_CONTROLLER_AXIS_TRIGGERRIGHT) > 16000 and !pause and !show_overlay and jogador.estaVivo()){
                     flash_alpha = 1.0f;
@@ -3060,7 +3061,7 @@ void loop_jogo(){
             
             int w, h;
             SDL_GetWindowSize(window, &w, &h);
-            desenhaTexto(textos["FPS"].tex, w-150, 50, textos["FPS"].w, textos["FPS"].h);
+            if(mostra_fps) desenhaTexto(textos["FPS"].tex, w-150, 50, textos["FPS"].w, textos["FPS"].h);
 
             if (show_overlay) {
 
@@ -3481,6 +3482,8 @@ void loop_jogo(){
                 }   
             }  
         }
+
+        if(flash_ativo) flash_ativo = false;
 
         // for (const auto& p : solidos){
         //     Adesivo* ade = p->getAdesivo();
